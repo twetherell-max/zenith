@@ -9,45 +9,40 @@ class ZenithWindow: NSWindow, ObservableObject {
     private var trackingArea: NSTrackingArea?
 
     init(notchFrame: CGRect, targetScreen: NSScreen?) {
-        let screen = targetScreen ?? NSScreen.main ?? NSScreen.screens[0]
-        let screenFrame = screen.frame
+        // The window must be tall enough to show the 'Drip' animation (slides down to y:10)
+        // We make it 120px tall, positioned so the top of the window matches the top of the screen.
+        let windowWidth: CGFloat = notchFrame.width
+        let windowHeight: CGFloat = 120 
         
-        // Center the 400x400 window on the target screen
-        let windowWidth: CGFloat = 400
-        let windowHeight: CGFloat = 400
-        let x = screenFrame.origin.x + (screenFrame.width - windowWidth) / 2
-        let y = screenFrame.origin.y + (screenFrame.height - windowHeight) / 2
-        let windowFrame = NSRect(x: x, y: y, width: windowWidth, height: windowHeight)
-        
-        print("Targeting Screen: \(screen.localizedName) with Frame: \(screen.frame)")
+        let windowFrame = NSRect(
+            x: notchFrame.origin.x,
+            y: notchFrame.origin.y + notchFrame.height - windowHeight,
+            width: windowWidth,
+            height: windowHeight
+        )
         
         super.init(
             contentRect: windowFrame,
-            styleMask: [.titled, .closable],
+            styleMask: [.borderless],
             backing: .buffered,
             defer: false
         )
         
-        self.title = "Zenith Debug Window"
-        self.isOpaque = true
-        self.hasShadow = true
-        self.backgroundColor = .green
-        self.alphaValue = 1.0
+        self.isOpaque = false
+        self.backgroundColor = .clear
+        self.hasShadow = false
         self.level = .screenSaver
         self.ignoresMouseEvents = false
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         
         self.canHide = false
-        self.isExcludedFromWindowsMenu = false
+        self.isExcludedFromWindowsMenu = true
         self.hidesOnDeactivate = false
-        
-        self.center()
-        print("FORCED Zenith Window Frame: \(self.frame)")
         
         let hostingView = NSHostingView(rootView: ZenithDropletView(isHovering: Binding(get: { self.isHovering }, set: { self.isHovering = $0 }), isPulsing: Binding(get: { self.isPulsing }, set: { self.isPulsing = $0 })))
         self.contentView = hostingView
         
-        // setupTrackingArea(notchFrame: notchFrame) // Disabled for debug
+        setupTrackingArea(notchFrame: notchFrame)
         
         self.orderFrontRegardless()
     }
@@ -59,9 +54,9 @@ class ZenithWindow: NSWindow, ObservableObject {
             contentView.removeTrackingArea(existing)
         }
         
-        // Tracking area is still at the top of the notch
-        // In local coordinates of the window's contentView
-        let trackingRect = NSRect(x: 0, y: 100 + notchFrame.height - 2, width: notchFrame.width, height: 2)
+        // Invisible 'tripwire' at the very top (2px tall)
+        // In local coordinates of the 120px tall window, local y for top is windowHeight - 2
+        let trackingRect = NSRect(x: 0, y: 118, width: notchFrame.width, height: 2)
         
         let options: NSTrackingArea.Options = [
             .mouseEnteredAndExited,

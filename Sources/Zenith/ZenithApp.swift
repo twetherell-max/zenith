@@ -16,32 +16,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var zenithWindow: ZenithWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Force Foreground Mode (Dock icon visible)
-        NSApp.setActivationPolicy(.regular)
+        // Re-enable Background Mode (No Dock icon)
+        NSApp.setActivationPolicy(.accessory)
         
-        // --- Hard Diagnostic Alert ---
-        let alert = NSAlert()
-        alert.messageText = "Zenith is Alive!"
-        alert.informativeText = "If you see this, the app started successfully."
-        alert.addButton(withTitle: "OK")
-        alert.runModal()
-        // -----------------------------
-
-        // Where Am I? Log
-        print("DEBUG: Application started. Main screen resolution: \(NSScreen.main?.frame ?? .zero)")
-        
-        // Print All Screen Info
-        print("--- Connected Screens ---")
+        // Final Screen Info for terminal confirmation
+        print("--- Final Notch Calibration ---")
         for screen in NSScreen.screens {
-            print("Screen: \(screen.localizedName) Frame: \(screen.frame) VisibleFrame: \(screen.visibleFrame) SafeArea: \(screen.safeAreaInsets)")
+            print("Screen: \(screen.localizedName) Frame: \(screen.frame) SafeArea: \(screen.safeAreaInsets)")
         }
-        print("-------------------------")
+        print("-------------------------------")
         
         let builtInScreen = NotchManager.shared.findBuiltInScreen()
         let notchFrame = NotchManager.shared.notchFrame
-        // Unconditional creation for debugging
+        
         let window = ZenithWindow(notchFrame: notchFrame, targetScreen: builtInScreen)
-        window.makeKeyAndOrderFront(nil)
         self.zenithWindow = window
         
         ShortcutManager.shared.startMonitoring { [weak self] type in
