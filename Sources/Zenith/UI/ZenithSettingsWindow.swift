@@ -36,11 +36,17 @@ struct SettingsView: View {
     @AppStorage("isDarkGlass") private var isDarkGlass: Bool = false
     
     var body: some View {
-        Form {
-            Section(header: Text("Appearance").font(.headline)) {
-                Toggle("High Contrast (Dark Glass)", isOn: $isDarkGlass)
-                    .padding(.vertical, 8)
-            }
+        VStack {
+            Text("Settings Loaded")
+                .font(.caption)
+                .foregroundColor(.green)
+                .padding(.top, 10)
+            
+            Form {
+                Section(header: Text("Appearance").font(.headline)) {
+                    Toggle("High Contrast (Dark Glass)", isOn: $isDarkGlass)
+                        .padding(.vertical, 8)
+                }
             
             Section(header: Text("Geometry").font(.headline)) {
                 VStack(alignment: .leading) {
@@ -70,5 +76,6 @@ struct SettingsView: View {
         }
         .padding(20)
         .frame(width: 400, height: 350)
+        }
     }
 }

@@ -77,15 +77,7 @@ struct CrustButton: View {
             .contextMenu { // ADD MENUBAR EXACTLY ON THE BUTTON ORB
                 let _ = print(">>> Right-click detected on button \(id)")
                 Button("Settings...") {
-                    let settings = NSWindow(
-                        contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
-                        styleMask: [.titled, .closable, .miniaturizable],
-                        backing: .buffered,
-                        defer: false
-                    )
-                    settings.center()
-                    settings.title = "Zenith Preferences"
-                    settings.makeKeyAndOrderFront(nil)
+                    ZenithSettingsWindow.show()
                 }
                 Button("Check for Updates") {
                     print("Check Updates")
