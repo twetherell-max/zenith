@@ -12,6 +12,7 @@ struct ZenithDropletView: View {
             
             VStack(spacing: 0) {
                 Spacer()
+                    .allowsHitTesting(false) // Don't block the Crust buttons behind
                 
                 Capsule()
                     .fill(
