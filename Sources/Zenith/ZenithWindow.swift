@@ -9,7 +9,8 @@ class ZenithWindow: NSWindow, ObservableObject {
     private var trackingArea: NSTrackingArea?
 
     init(notchFrame: CGRect, targetScreen: NSScreen?) {
-        let screen = targetScreen ?? NSScreen.main ?? NSScreen.screens[0]
+        // Force the window to the first screen (usually the built-in notch display)
+        let screen = NSScreen.screens.first ?? targetScreen ?? NSScreen.main ?? NSScreen.screens[0]
         let screenFrame = screen.frame
         let windowWidth: CGFloat = 800
         let windowHeight: CGFloat = 400
@@ -26,10 +27,10 @@ class ZenithWindow: NSWindow, ObservableObject {
             defer: false
         )
         
-        // Critical Transparency Settings
-        self.isOpaque = true
-        self.backgroundColor = .systemPink
-        // self.hasShadow = false
+        // Transparency Settings restored
+        self.isOpaque = false
+        self.backgroundColor = .clear
+        self.hasShadow = false
         self.alphaValue = 1.0
         
         self.level = .screenSaver
@@ -85,7 +86,8 @@ class ZenithWindow: NSWindow, ObservableObject {
 
     private func updateWindowFrame() {
         print("WINDOW FRAME (BEFORE UPDATE): \(self.frame)")
-        guard let screen = self.screen else { return }
+        // Force the window to the first screen (usually the built-in notch display)
+        let screen = NSScreen.screens.first ?? self.screen ?? NSScreen.main ?? NSScreen.screens[0]
         let screenFrame = screen.frame
         let windowWidth: CGFloat = 800
         let windowHeight: CGFloat = 400

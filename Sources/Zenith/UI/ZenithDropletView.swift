@@ -5,7 +5,7 @@ struct ZenithDropletView: View {
     @Binding var isPulsing: Bool
     
     var body: some View {
-        ZStack(alignment: .top) {
+        ZStack(alignment: .top) { // PIN TO TOP
             // Radial Menu (The Crust) - Behind the droplet
             ZenithCrustView(isHovering: isHovering)
                 .offset(y: 40) // Position orbs closer to the notch top boundary

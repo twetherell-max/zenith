@@ -5,7 +5,7 @@ struct ZenithCrustView: View {
     let isHovering: Bool
     
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) { // ALIGN TO TOP FOR NOTCH CONTACT
             // Button 1 (Left)
             CrustButton(id: 1, icon: "command", isHovering: isHovering, offset: CGSize(width: -70, height: 30)) {
                 print("Button 1 (Command) tapped")
@@ -22,8 +22,8 @@ struct ZenithCrustView: View {
             }
         }
         .frame(width: 800, height: 400)
-        .background(Color.blue) // SOLID BLUE TEST
-        .opacity(1.0) // FORCE OPAQUE
+        .background(Color.blue) // FINAL ALIGNMENT TEST
+        .opacity(1.0)
     }
 }
 
@@ -38,10 +38,10 @@ struct CrustButton: View {
         Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(Color.black.opacity(0.7)) // SOLID BLACK FALLBACK
+                    .fill(Color.black.opacity(0.9)) // HIGH-CONTRAST DARK MODE
                     .frame(width: 50, height: 50)
-                    .shadow(color: .black.opacity(0.5), radius: 10, x: 0, y: 5) // HEAVY SHADOW
-                    .overlay(Circle().stroke(Color.white, lineWidth: 2)) // THICK WHITE BORDER
+                    .shadow(color: .black.opacity(0.6), radius: 10, x: 0, y: 5)
+                    .overlay(Circle().stroke(Color.white, lineWidth: 2))
                 
                 Image(systemName: icon)
                     .font(.system(size: 20, weight: .bold)) // BOLD ICON
