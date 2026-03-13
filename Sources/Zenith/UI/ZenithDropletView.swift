@@ -6,10 +6,13 @@ struct ZenithDropletView: View {
     
     var body: some View {
         ZStack(alignment: .top) {
-            /* Hiding Droplet for Visibility Debug
+            // Radial Menu (The Crust) - Behind the droplet
+            ZenithCrustView(isHovering: isHovering)
+                .offset(y: 40) // Center of expansion relative to pill
+            
             VStack(spacing: 0) {
                 Spacer()
-                    .frame(height: 20)
+                    .frame(height: 32)
                     .allowsHitTesting(false)
                 
                 Capsule()
@@ -23,15 +26,8 @@ struct ZenithDropletView: View {
                     .frame(width: 60, height: 35)
                     .shadow(color: .cyan.opacity(0.8), radius: 8)
                     .scaleEffect(isPulsing ? 1.15 : 1.0)
-                    .opacity(0.8) // DEBUG OPACITY
                     .animation(.spring(response: 0.3, dampingFraction: 0.4), value: isPulsing)
             }
-            .zIndex(1)
-            */
-            
-            // Radial Menu (The Crust) - ON TOP
-            ZenithCrustView(isHovering: isHovering)
-                .zIndex(999)
         }
         .frame(width: 800, height: 400)
     }

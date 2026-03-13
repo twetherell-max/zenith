@@ -18,7 +18,6 @@ class ZenithWindow: NSWindow, ObservableObject {
         
         // Initial "Peeking" frame: 5px visible on screen, 395px above
         let windowFrame = NSRect(x: centerX, y: topY - 5, width: windowWidth, height: windowHeight)
-        print("WINDOW FRAME (INIT): \(windowFrame)")
         
         super.init(
             contentRect: windowFrame,
@@ -95,10 +94,12 @@ class ZenithWindow: NSWindow, ObservableObject {
         // When hovering, slide the window down by 195px so it's partially on screen (200px down)
         let targetY = isHovering ? topY - 200 : topY - 5
         let targetFrame = NSRect(x: centerX, y: targetY, width: windowWidth, height: windowHeight)
-        print("WINDOW FRAME (TARGET): \(targetFrame)")
         
-        // TELEPORT (No Animation)
-        self.setFrame(targetFrame, display: true)
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.4
+            context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            self.animator().setFrame(targetFrame, display: true)
+        }
     }
 
     func pulse() {
