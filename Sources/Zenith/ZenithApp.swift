@@ -24,5 +24,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.makeKeyAndOrderFront(nil)
             self.zenithWindow = window
         }
+        
+        // Initialize shortcut monitoring (Cmd+Shift+Z)
+        ShortcutManager.shared.startMonitoring {
+            print("Shortcut triggered: Cmd+Shift+Z")
+            // Future logic: Toggle Zenith UI
+        }
+    }
+    
+    func applicationWillTerminate(_ notification: Notification) {
+        ShortcutManager.shared.stopMonitoring()
     }
 }
