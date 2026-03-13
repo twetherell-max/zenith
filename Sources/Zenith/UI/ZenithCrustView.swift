@@ -5,6 +5,8 @@ struct ZenithCrustView: View {
     let isHovering: Bool
     
     var body: some View {
+        let _ = print(">>> BUTTONS SHOULD BE VISIBLE NOW")
+        
         ZStack(alignment: .top) { // ALIGN TO TOP
             VStack {
                 HStack(spacing: 60) { // REFINED SPACING
@@ -28,6 +30,7 @@ struct ZenithCrustView: View {
             }
             .frame(width: 400, height: 250) // EXPANDED HEIGHT
             .padding(.top, 50)
+            .background(Color.black.opacity(0.01)) // GHOST BACKGROUND TO KEEP WINDOW ACTIVE
         }
         .frame(width: 800, height: 400)
     }
@@ -44,9 +47,10 @@ struct CrustButton: View {
         Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(.ultraThinMaterial) // GLASSMORPHISM
+                    .fill(Color.gray.opacity(0.2)) // SOLID FALLBACK
+                    .background(Circle().fill(.thickMaterial)) // HEAVY GLASS
                     .frame(width: 60, height: 60)
-                    .shadow(color: .black.opacity(0.3), radius: 10)
+                    .shadow(color: .black, radius: 10) // HEAVY SHADOW
                     .overlay(Circle().stroke(.white.opacity(0.3), lineWidth: 0.5)) // THIN BORDER
                 
                 Image(systemName: icon)
@@ -57,9 +61,6 @@ struct CrustButton: View {
         .frame(width: 60, height: 60) // EXPLICIT BUTTON FRAME
         .buttonStyle(PlainButtonStyle())
         .contentShape(Circle())
-        .offset(isHovering ? offset : .zero) // SLIDE ANIMATION
-        .scaleEffect(isHovering ? 1.0 : 0.01) // POP ANIMATION
-        .opacity(isHovering ? 1.0 : 0.0) // FADE ANIMATION
-        .animation(.spring(response: 0.5, dampingFraction: 0.7), value: isHovering)
+        .offset(isHovering ? offset : .zero) // SLIDE ONLY
     }
 }

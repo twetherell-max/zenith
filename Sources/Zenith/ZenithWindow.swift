@@ -74,16 +74,16 @@ class ZenithWindow: NSWindow, ObservableObject {
     }
 
     override func mouseEntered(with event: NSEvent) {
-        withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+        // withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
             self.isHovering = true
-        }
+        // }
         updateWindowFrame()
     }
 
     override func mouseExited(with event: NSEvent) {
-        withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
+        // withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
             self.isHovering = false
-        }
+        // }
         updateWindowFrame()
     }
 
