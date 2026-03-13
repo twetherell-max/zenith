@@ -5,26 +5,27 @@ struct ZenithCrustView: View {
     
     var body: some View {
         ZStack {
-            // Button 1 (Left): Command - Red border
-            CrustButton(icon: "command", isHovering: isHovering, offset: CGSize(width: -80, height: 50), color: .red) {
+            // Button 1 (Left)
+            CrustButton(id: 1, icon: "command", isHovering: isHovering, offset: CGSize(width: -80, height: 50), color: .red) {
                 print("Button 1 (Command) tapped")
             }
             
-            // Button 2 (Center): CPU - Green border
-            CrustButton(icon: "cpu", isHovering: isHovering, offset: CGSize(width: 0, height: 90), color: .green) {
+            // Button 2 (Center)
+            CrustButton(id: 2, icon: "cpu", isHovering: isHovering, offset: CGSize(width: 0, height: 90), color: .green) {
                 print("Button 2 (CPU) tapped")
             }
             
-            // Button 3 (Right): Flowchart - Blue border
-            CrustButton(icon: "flowchart", isHovering: isHovering, offset: CGSize(width: 80, height: 50), color: .blue) {
+            // Button 3 (Right)
+            CrustButton(id: 3, icon: "flowchart", isHovering: isHovering, offset: CGSize(width: 80, height: 50), color: .blue) {
                 print("Button 3 (Flowchart) tapped")
             }
         }
-        .background(Color.clear)
+        .background(Color.clear) // Aggressive clear
     }
 }
 
 struct CrustButton: View {
+    let id: Int
     let icon: String
     let isHovering: Bool
     let offset: CGSize
@@ -32,15 +33,13 @@ struct CrustButton: View {
     let action: () -> Void
     
     var body: some View {
+        let _ = print(">>> CRUST: Rendering Button \(id) at \(Date())")
+        
         Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(.ultraThinMaterial)
+                    .fill(color) // GAP TEST: Solid color
                     .frame(width: 50, height: 50)
-                    .overlay(
-                        Circle()
-                            .stroke(color.opacity(0.8), lineWidth: 2) // Debug border
-                    )
                 
                 Image(systemName: icon)
                     .font(.system(size: 20, weight: .bold))
@@ -48,9 +47,10 @@ struct CrustButton: View {
             }
         }
         .buttonStyle(PlainButtonStyle())
-        .contentShape(Rectangle()) // Standard hit-area expansion
+        .contentShape(Circle())
+        .background(Color.clear)
         .offset(isHovering ? offset : .zero)
-        .scaleEffect(isHovering ? 1.0 : 0.01) // 0.01 to keep hit area sometimes? No, 0 is fine if offset is used correctly. 
+        .scaleEffect(isHovering ? 1.0 : 0.01)
         .opacity(isHovering ? 1.0 : 0.0)
         .animation(.spring(response: 0.5, dampingFraction: 0.6), value: isHovering)
     }

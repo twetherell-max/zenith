@@ -9,6 +9,7 @@ struct ZenithDropletView: View {
             // Radial Menu (The Crust) - Behind the droplet
             ZenithCrustView(isHovering: isHovering)
                 .offset(y: 40) // Center of expansion
+                .background(Color.clear)
             
             VStack(spacing: 0) {
                 Spacer()
@@ -27,7 +28,9 @@ struct ZenithDropletView: View {
                     .scaleEffect(isPulsing ? 1.15 : 1.0)
                     .animation(.spring(response: 0.3, dampingFraction: 0.4), value: isPulsing)
             }
+            .background(Color.clear)
         }
+        .background(Color.clear)
         .frame(width: 250, height: 250) // Increased height for orbital range
     }
 }

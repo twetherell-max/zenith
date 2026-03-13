@@ -26,9 +26,11 @@ class ZenithWindow: NSWindow, ObservableObject {
             defer: false
         )
         
+        // Critical Transparency Settings
         self.isOpaque = false
         self.backgroundColor = .clear
         self.hasShadow = false
+        
         self.level = .screenSaver
         self.ignoresMouseEvents = false
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
