@@ -5,6 +5,11 @@ struct ZenithCrustView: View {
     let isHovering: Bool
     @State private var hoveredButton: Int? = nil // TRACK HOVER STATE
     
+    // LIVE GEOMETRY & THEME BINDINGS
+    @AppStorage("arcSpread") private var arcSpread: Double = 100.0
+    @AppStorage("iconSize") private var iconSize: Double = 14.0
+    @AppStorage("isDarkGlass") private var isDarkGlass: Bool = false
+    
     var body: some View {
         let _ = print(">>> BUTTONS SHOULD BE VISIBLE NOW")
         
@@ -18,17 +23,17 @@ struct ZenithCrustView: View {
             VStack {
                 HStack(spacing: 60) { // REFINED SPACING
                     // Button 1 (Left) - Open Downloads
-                    CrustButton(id: 1, icon: "command", tooltip: "Open Downloads", isHovering: isHovering, hoveredButton: $hoveredButton, offset: CGSize(width: -100, height: -40)) {
+                    CrustButton(id: 1, icon: "command", tooltip: "Open Downloads", isHovering: isHovering, hoveredButton: $hoveredButton, offset: CGSize(width: -arcSpread, height: -(arcSpread / 4)), iconSize: iconSize, isDarkGlass: isDarkGlass) {
                         NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: ("~/Downloads" as NSString).expandingTildeInPath)
                     }
                     
                     // Button 2 (Center) - Activity Monitor
-                    CrustButton(id: 2, icon: "cpu", tooltip: "Activity Monitor", isHovering: isHovering, hoveredButton: $hoveredButton, offset: CGSize(width: 0, height: 20)) {
+                    CrustButton(id: 2, icon: "cpu", tooltip: "Activity Monitor", isHovering: isHovering, hoveredButton: $hoveredButton, offset: CGSize(width: 0, height: 20), iconSize: iconSize, isDarkGlass: isDarkGlass) {
                         NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app"))
                     }
                     
                     // Button 3 (Right) - Mission Control
-                    CrustButton(id: 3, icon: "flowchart", tooltip: "Mission Control", isHovering: isHovering, hoveredButton: $hoveredButton, offset: CGSize(width: 100, height: -40)) {
+                    CrustButton(id: 3, icon: "flowchart", tooltip: "Mission Control", isHovering: isHovering, hoveredButton: $hoveredButton, offset: CGSize(width: arcSpread, height: -(arcSpread / 4)), iconSize: iconSize, isDarkGlass: isDarkGlass) {
                         NSWorkspace.shared.launchApplication("Mission Control")
                     }
                 }
@@ -50,6 +55,8 @@ struct CrustButton: View {
     let isHovering: Bool
     @Binding var hoveredButton: Int?
     let offset: CGSize
+    let iconSize: Double // LIVE SIZE
+    let isDarkGlass: Bool // LIVE THEME
     let action: () -> Void
     
     var body: some View {
@@ -63,9 +70,10 @@ struct CrustButton: View {
                     .overlay(Circle().stroke(.white.opacity(0.4), lineWidth: 0.5)) // THIN BORDER
                 
                 Image(systemName: icon)
-                    .font(.system(size: 14, weight: .semibold)) // SMALLER, BREATHABLE ICON
+                    .font(.system(size: iconSize, weight: .semibold)) // DYNAMIC SIZE
                     .foregroundColor(hoveredButton == id ? .white : .white.opacity(0.8)) // ICON BRIGHTNESS
             }
+            .environment(\.colorScheme, isDarkGlass ? .dark : .light) // LIVE MATERIAL THEME
             .contextMenu { // ADD MENUBAR EXACTLY ON THE BUTTON ORB
                 let _ = print(">>> Right-click detected on button \(id)")
                 Button("Settings...") {

@@ -31,19 +31,29 @@ class ZenithSettingsWindow: NSWindow {
 }
 
 struct SettingsView: View {
-    @AppStorage("launchAtLogin") private var launchAtLogin: Bool = false
-    @AppStorage("arcIntensity") private var arcIntensity: Double = 50.0
+    @AppStorage("arcSpread") private var arcSpread: Double = 100.0
+    @AppStorage("iconSize") private var iconSize: Double = 14.0
+    @AppStorage("isDarkGlass") private var isDarkGlass: Bool = false
     
     var body: some View {
         Form {
-            Section(header: Text("General").font(.headline)) {
-                Toggle("Launch at Login", isOn: $launchAtLogin)
+            Section(header: Text("Appearance").font(.headline)) {
+                Toggle("High Contrast (Dark Glass)", isOn: $isDarkGlass)
                     .padding(.vertical, 8)
-                
+            }
+            
+            Section(header: Text("Geometry").font(.headline)) {
                 VStack(alignment: .leading) {
-                    Slider(value: $arcIntensity, in: 10...100, label: { Text("Arc Curve") })
+                    Text("Arc Spread: \(Int(arcSpread))px")
+                    Slider(value: $arcSpread, in: 50...150, step: 1.0)
                 }
                 .padding(.vertical, 8)
+                
+                VStack(alignment: .leading) {
+                    Text("Icon Size: \(Int(iconSize))pt")
+                    Slider(value: $iconSize, in: 10...25, step: 1.0)
+                }
+                .padding(.bottom, 8)
             }
             
             Section(header: Text("About").font(.headline)) {
@@ -59,6 +69,6 @@ struct SettingsView: View {
             }
         }
         .padding(20)
-        .frame(width: 400, height: 300)
+        .frame(width: 400, height: 350)
     }
 }
