@@ -10,6 +10,7 @@ struct ZenithDropletView: View {
             ZenithCrustView(isHovering: isHovering)
                 .zIndex(10)
             
+            /* Hiding Droplet for Visibility Debug
             VStack(spacing: 0) {
                 Spacer()
                     .frame(height: 20)
@@ -30,6 +31,7 @@ struct ZenithDropletView: View {
                     .animation(.spring(response: 0.3, dampingFraction: 0.4), value: isPulsing)
             }
             .zIndex(1)
+            */
         }
         .frame(width: 800, height: 400)
     }

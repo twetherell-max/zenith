@@ -32,7 +32,7 @@ class ZenithWindow: NSWindow, ObservableObject {
         self.backgroundColor = .clear
         self.hasShadow = false
         
-        self.level = .statusBar // HIGHER THAN MENU BAR
+        self.level = .screenSaver // HIGHEST PRIORITY LEVEL
         self.ignoresMouseEvents = false
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         

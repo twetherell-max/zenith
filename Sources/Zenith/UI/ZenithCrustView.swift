@@ -23,7 +23,7 @@ struct ZenithCrustView: View {
             }
             .zIndex(100)
         }
-        .offset(y: 150) // Force down into visible area
+        .offset(y: 200) // EXTREME OFF-NOTCH OFFSET
     }
 }
 
@@ -39,7 +39,7 @@ struct CrustButton: View {
         
         Button(action: action) {
             ZStack {
-                Circle()
+                Rectangle() // SOLID COLOR BLOCK
                     .fill(color)
                     .frame(width: 50, height: 50)
                 
@@ -49,7 +49,7 @@ struct CrustButton: View {
             }
         }
         .buttonStyle(PlainButtonStyle())
-        .contentShape(Circle())
+        .contentShape(Rectangle())
         .scaleEffect(isHovering ? 1.0 : 0.01)
         .opacity(isHovering ? 1.0 : 0.0)
         .animation(.spring(response: 0.5, dampingFraction: 0.6), value: isHovering)
