@@ -9,20 +9,26 @@ struct ZenithCrustView: View {
         let _ = print(">>> BUTTONS SHOULD BE VISIBLE NOW")
         
         ZStack(alignment: .top) { // ALIGN TO TOP
+            // THE DROPLET BRIDGE
+            Rectangle()
+                .fill(Color.black)
+                .frame(width: 150, height: 40)
+                .offset(y: -40) // REACH UP TO THE PHYSICAL NOTCH
+            
             VStack {
                 HStack(spacing: 60) { // REFINED SPACING
-                    // Button 1 (Left) - Appears slightly up and left
-                    CrustButton(id: 1, icon: "command", tooltip: "Open Applications", isHovering: isHovering, hoveredButton: $hoveredButton, offset: CGSize(width: -70, height: 20)) {
+                    // Button 1 (Left) - Appears higher and left
+                    CrustButton(id: 1, icon: "command", tooltip: "Open Applications", isHovering: isHovering, hoveredButton: $hoveredButton, offset: CGSize(width: -80, height: -20)) {
                         NSWorkspace.shared.open(URL(fileURLWithPath: "/Applications"))
                     }
                     
-                    // Button 2 (Center) - Appears straight down
-                    CrustButton(id: 2, icon: "cpu", tooltip: "Activity Monitor", isHovering: isHovering, hoveredButton: $hoveredButton, offset: CGSize(width: 0, height: 50)) {
+                    // Button 2 (Center) - Appears lower and centered
+                    CrustButton(id: 2, icon: "cpu", tooltip: "Activity Monitor", isHovering: isHovering, hoveredButton: $hoveredButton, offset: CGSize(width: 0, height: 10)) {
                         NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app"))
                     }
                     
-                    // Button 3 (Right) - Appears slightly up and right
-                    CrustButton(id: 3, icon: "flowchart", tooltip: "Zen Mode", isHovering: isHovering, hoveredButton: $hoveredButton, offset: CGSize(width: 70, height: 20)) {
+                    // Button 3 (Right) - Appears higher and right
+                    CrustButton(id: 3, icon: "flowchart", tooltip: "Zen Mode", isHovering: isHovering, hoveredButton: $hoveredButton, offset: CGSize(width: 80, height: -20)) {
                         print("Zen Active")
                     }
                 }
@@ -65,7 +71,9 @@ struct CrustButton: View {
         .buttonStyle(PlainButtonStyle())
         .contentShape(Circle())
         .offset(isHovering ? offset : .zero) // SLIDE ONLY
+        .animation(.spring(response: 0.4, dampingFraction: 0.6), value: isHovering) // ORBITAL ENTRANCE BOUNCE
         .scaleEffect(hoveredButton == id ? 1.2 : 1.0) // JUICY SCALING
+        .blur(radius: (hoveredButton != nil && hoveredButton != id) ? 0.5 : 0) // DEFOCUS OTHERS
         .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hoveredButton) // SPRING ANIMATION
         .onHover { isHovered in
             hoveredButton = isHovered ? id : nil
