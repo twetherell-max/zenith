@@ -29,10 +29,10 @@ class ZenithWindow: NSWindow, ObservableObject {
         )
         
         self.isOpaque = false
-        self.backgroundColor = .clear
+        self.backgroundColor = .blue // DIAGNOSTIC BLUE
         self.hasShadow = false
         self.alphaValue = 1.0
-        self.level = .screenSaver
+        self.level = .statusBar
         self.ignoresMouseEvents = false
         
         let rootView = ZenithDropletView(
@@ -41,22 +41,13 @@ class ZenithWindow: NSWindow, ObservableObject {
         )
         
         let hostingView = NSHostingView(rootView: rootView)
-        hostingView.translatesAutoresizingMaskIntoConstraints = false
+        hostingView.frame = NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight)
+        hostingView.autoresizingMask = [.width, .height] // FORCE RESIZE TO WINDOW
         hostingView.layer?.masksToBounds = false
         
-        self.contentView = NSView(frame: NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight))
-        self.contentView?.wantsLayer = true
-        self.contentView?.layer?.masksToBounds = false
-        self.contentView?.addSubview(hostingView)
+        self.contentView = hostingView
         
-        NSLayoutConstraint.activate([
-            hostingView.topAnchor.constraint(equalTo: self.contentView!.topAnchor),
-            hostingView.bottomAnchor.constraint(equalTo: self.contentView!.bottomAnchor),
-            hostingView.leadingAnchor.constraint(equalTo: self.contentView!.leadingAnchor),
-            hostingView.trailingAnchor.constraint(equalTo: self.contentView!.trailingAnchor)
-        ])
-        
-        print(">>> ZENITH: NSHostingView force-anchored. ContentView: \(String(describing: self.contentView))")
+        print(">>> ZENITH: NSHostingView bridge established. ContentView: \(String(describing: self.contentView))")
         
         setupTrackingArea()
         self.orderFrontRegardless()
