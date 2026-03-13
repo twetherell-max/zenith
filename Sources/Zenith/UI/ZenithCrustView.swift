@@ -23,7 +23,7 @@ struct ZenithCrustView: View {
             VStack {
                 HStack(spacing: 60) { // REFINED SPACING
                     // Button 1 (Left) - Open Downloads
-                    CrustButton(id: 1, icon: "command", tooltip: "Open Downloads", isHovering: isHovering, hoveredButton: $hoveredButton, offset: CGSize(width: -arcSpread, height: -(arcSpread / 4)), iconSize: iconSize, isDarkGlass: isDarkGlass) {
+                    CrustButton(id: 1, icon: "command", tooltip: "Open Downloads", isHovering: isHovering, hoveredButton: $hoveredButton, offset: CGSize(width: -(arcSpread + iconSize), height: -(arcSpread / 4)), iconSize: iconSize, isDarkGlass: isDarkGlass) {
                         NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: ("~/Downloads" as NSString).expandingTildeInPath)
                     }
                     
@@ -33,7 +33,7 @@ struct ZenithCrustView: View {
                     }
                     
                     // Button 3 (Right) - Mission Control
-                    CrustButton(id: 3, icon: "flowchart", tooltip: "Mission Control", isHovering: isHovering, hoveredButton: $hoveredButton, offset: CGSize(width: arcSpread, height: -(arcSpread / 4)), iconSize: iconSize, isDarkGlass: isDarkGlass) {
+                    CrustButton(id: 3, icon: "flowchart", tooltip: "Mission Control", isHovering: isHovering, hoveredButton: $hoveredButton, offset: CGSize(width: (arcSpread + iconSize), height: -(arcSpread / 4)), iconSize: iconSize, isDarkGlass: isDarkGlass) {
                         NSWorkspace.shared.launchApplication("Mission Control")
                     }
                 }
@@ -65,7 +65,7 @@ struct CrustButton: View {
                 Circle()
                     .fill(Color.gray.opacity(0.2)) // SOLID FALLBACK
                     .background(Circle().fill(.thickMaterial)) // HEAVY GLASS
-                    .frame(width: 50, height: 50) // SMALLER ORB
+                    .frame(width: iconSize * 3.0, height: iconSize * 3.0) // ELASTIC ORB DYNAMICS
                     .shadow(color: hoveredButton == id ? .white : .black.opacity(0.8), radius: hoveredButton == id ? 15 : 10) // DYNAMIC GLOW
                     .overlay(Circle().stroke(.white.opacity(0.4), lineWidth: 0.5)) // THIN BORDER
                 
@@ -88,7 +88,7 @@ struct CrustButton: View {
                 }
             }
         }
-        .frame(width: 50, height: 50) // EXPLICIT BUTTON FRAME
+        .frame(width: iconSize * 3.0, height: iconSize * 3.0) // ELASTIC EXPLICIT FRAME
         .buttonStyle(PlainButtonStyle())
         .contentShape(Circle())
         .offset(isHovering ? offset : .zero) // SLIDE ONLY
@@ -96,6 +96,7 @@ struct CrustButton: View {
         .scaleEffect(hoveredButton == id ? 1.2 : 1.0) // JUICY SCALING
         .blur(radius: (hoveredButton != nil && hoveredButton != id) ? 0.5 : 0) // DEFOCUS OTHERS
         .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hoveredButton) // SPRING ANIMATION
+        .animation(.interactiveSpring(response: 0.3, dampingFraction: 0.6), value: iconSize) // ELASTIC RESIZING
         .onHover { isHovered in
             hoveredButton = isHovered ? id : nil
         }
