@@ -22,6 +22,7 @@ struct ZenithCrustView: View {
             }
         }
         .frame(width: 800, height: 400)
+        .opacity(1.0) // FORCE OPAQUE
     }
 }
 
@@ -36,16 +37,13 @@ struct CrustButton: View {
         Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(.clear)
-                    .background(.ultraThinMaterial)
-                    .clipShape(Circle())
+                    .fill(Color.black.opacity(0.7)) // SOLID BLACK FALLBACK
                     .frame(width: 50, height: 50)
-                    .background(Circle().fill(Color.white.opacity(0.2))) // SOLID FALLBACK
-                    .shadow(color: .blue.opacity(0.5), radius: 10) // GLOW DEBUG
-                    .overlay(Circle().stroke(.white.opacity(0.4), lineWidth: 1))
+                    .shadow(color: .black.opacity(0.5), radius: 10, x: 0, y: 5) // HEAVY SHADOW
+                    .overlay(Circle().stroke(Color.white, lineWidth: 2)) // THICK WHITE BORDER
                 
                 Image(systemName: icon)
-                    .font(.system(size: 20, weight: .bold))
+                    .font(.system(size: 20, weight: .bold)) // BOLD ICON
                     .foregroundColor(.white)
             }
         }
