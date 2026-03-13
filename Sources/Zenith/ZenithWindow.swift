@@ -1,16 +1,24 @@
 import AppKit
+import SwiftUI
 import Combine
 
 class ZenithWindow: NSWindow, ObservableObject {
     @Published var isHovering: Bool = false
+    @Published var isPulsing: Bool = false
     
     private var trackingArea: NSTrackingArea?
 
     init(notchFrame: CGRect) {
-        // The window itself should probably cover the same area as the notch, 
-        // but the tracking area is specifically the top 2 pixels.
+        // We make the window larger than the notch to allow for the animation space
+        let windowFrame = NSRect(
+            x: notchFrame.origin.x,
+            y: notchFrame.origin.y - 100, // Extra space below for the drip
+            width: notchFrame.width,
+            height: notchFrame.height + 100 // Extra space above for starting position
+        )
+        
         super.init(
-            contentRect: notchFrame,
+            contentRect: windowFrame,
             styleMask: [.borderless],
             backing: .buffered,
             defer: false
@@ -22,6 +30,9 @@ class ZenithWindow: NSWindow, ObservableObject {
         self.ignoresMouseEvents = false
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         
+        let hostingView = NSHostingView(rootView: ZenithDropletView(isHovering: Binding(get: { self.isHovering }, set: { self.isHovering = $0 }), isPulsing: Binding(get: { self.isPulsing }, set: { self.isPulsing = $0 })))
+        self.contentView = hostingView
+        
         setupTrackingArea(notchFrame: notchFrame)
     }
 
@@ -30,9 +41,10 @@ class ZenithWindow: NSWindow, ObservableObject {
             contentView?.removeTrackingArea(existing)
         }
         
-        // Define tracking area as the top 2 pixels of the notch frame
+        // Tracking area is still at the top of the notch
         // In local coordinates of the window's contentView
-        let trackingRect = NSRect(x: 0, y: notchFrame.height - 2, width: notchFrame.width, height: 2)
+        // The window's y starts 100 points below the notch's y
+        let trackingRect = NSRect(x: 0, y: 100 + notchFrame.height - 2, width: notchFrame.width, height: 2)
         
         let options: NSTrackingArea.Options = [
             .mouseEnteredAndExited,
@@ -46,10 +58,21 @@ class ZenithWindow: NSWindow, ObservableObject {
     }
 
     override func mouseEntered(with event: NSEvent) {
-        isHovering = true
+        withAnimation {
+            isHovering = true
+        }
     }
 
     override func mouseExited(with event: NSEvent) {
-        isHovering = false
+        withAnimation {
+            isHovering = false
+        }
+    }
+    
+    func pulse() {
+        isPulsing = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            self.isPulsing = false
+        }
     }
 }

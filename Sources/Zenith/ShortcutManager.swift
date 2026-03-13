@@ -6,23 +6,24 @@ class ShortcutManager {
     private var globalMonitor: Any?
     private var localMonitor: Any?
     
-    // Default shortcut: Cmd + Shift + Z
-    func startMonitoring(onTrigger: @escaping () -> Void) {
-        // Stop any existing monitoring
+    enum ShortcutType {
+        case toggle
+        case pulse
+    }
+    
+    func startMonitoring(onTrigger: @escaping (ShortcutType) -> Void) {
         stopMonitoring()
         
-        // Monitor for global events (when app is in background)
         globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            if self?.isShortcutMatch(event: event) == true {
-                onTrigger()
+            if let type = self?.matchShortcut(event: event) {
+                onTrigger(type)
             }
         }
         
-        // Monitor for local events (when app is in foreground)
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            if self?.isShortcutMatch(event: event) == true {
-                onTrigger()
-                return nil // Swallow the event
+            if let type = self?.matchShortcut(event: event) {
+                onTrigger(type)
+                return nil
             }
             return event
         }
@@ -39,13 +40,20 @@ class ShortcutManager {
         }
     }
     
-    private func isShortcutMatch(event: NSEvent) -> Bool {
-        // Cmd + Shift + Z
-        // Z key code is 6
+    private func matchShortcut(event: NSEvent) -> ShortcutType? {
         let cmdPressed = event.modifierFlags.contains(.command)
         let shiftPressed = event.modifierFlags.contains(.shift)
-        let zPressed = event.keyCode == 6
         
-        return cmdPressed && shiftPressed && zPressed
+        // Z key code is 6 (Cmd+Shift+Z)
+        if cmdPressed && shiftPressed && event.keyCode == 6 {
+            return .toggle
+        }
+        
+        // J key code is 38 (Cmd+Shift+J)
+        if cmdPressed && shiftPressed && event.keyCode == 38 {
+            return .pulse
+        }
+        
+        return nil
     }
 }

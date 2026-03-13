@@ -25,10 +25,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self.zenithWindow = window
         }
         
-        // Initialize shortcut monitoring (Cmd+Shift+Z)
-        ShortcutManager.shared.startMonitoring {
-            print("Shortcut triggered: Cmd+Shift+Z")
-            // Future logic: Toggle Zenith UI
+        ShortcutManager.shared.startMonitoring { [weak self] type in
+            switch type {
+            case .toggle:
+                print("Shortcut triggered: Toggle")
+            case .pulse:
+                print("Shortcut triggered: Pulse")
+                DispatchQueue.main.async {
+                    self?.zenithWindow?.pulse()
+                }
+            }
         }
     }
     
