@@ -4,26 +4,32 @@ struct ZenithCrustView: View {
     let isHovering: Bool
     
     var body: some View {
-        HStack(spacing: 50) { // VISIBLE TEST SPACING
-            // Button 1 (Left)
-            CrustButton(id: 1, icon: "command", isHovering: isHovering, color: .red) {
-                print("Button 1 (Command) tapped")
-            }
-            .zIndex(100)
+        ZStack {
+            // DEBUG BACKGROUND
+            Color.yellow.opacity(0.5)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             
-            // Button 2 (Center)
-            CrustButton(id: 2, icon: "cpu", isHovering: isHovering, color: .green) {
-                print("Button 2 (CPU) tapped")
+            HStack(spacing: 50) { // VISIBLE TEST SPACING
+                // Button 1 (Left)
+                CrustButton(id: 1, icon: "command", isHovering: isHovering, color: .red) {
+                    print("Button 1 (Command) tapped")
+                }
+                .zIndex(999)
+                
+                // Button 2 (Center)
+                CrustButton(id: 2, icon: "cpu", isHovering: isHovering, color: .green) {
+                    print("Button 2 (CPU) tapped")
+                }
+                .zIndex(999)
+                
+                // Button 3 (Right)
+                CrustButton(id: 3, icon: "flowchart", isHovering: isHovering, color: .blue) {
+                    print("Button 3 (Flowchart) tapped")
+                }
+                .zIndex(999)
             }
-            .zIndex(100)
-            
-            // Button 3 (Right)
-            CrustButton(id: 3, icon: "flowchart", isHovering: isHovering, color: .blue) {
-                print("Button 3 (Flowchart) tapped")
-            }
-            .zIndex(100)
+            .offset(y: 50) // Keep near top of the 400px window
         }
-        .offset(y: 200) // EXTREME OFF-NOTCH OFFSET
     }
 }
 

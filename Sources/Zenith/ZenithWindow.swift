@@ -97,11 +97,8 @@ class ZenithWindow: NSWindow, ObservableObject {
         let targetFrame = NSRect(x: centerX, y: targetY, width: windowWidth, height: windowHeight)
         print("WINDOW FRAME (TARGET): \(targetFrame)")
         
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.4
-            context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-            self.animator().setFrame(targetFrame, display: true)
-        }
+        // TELEPORT (No Animation)
+        self.setFrame(targetFrame, display: true)
     }
 
     func pulse() {
