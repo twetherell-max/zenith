@@ -4,23 +4,22 @@ struct ZenithCrustView: View {
     let isHovering: Bool
     
     var body: some View {
-        ZStack {
+        HStack(spacing: 150) { // DAYLIGHT TEST SPACING
             // Button 1 (Left)
-            CrustButton(id: 1, icon: "command", isHovering: isHovering, offset: CGSize(width: -80, height: 50), color: .red) {
+            CrustButton(id: 1, icon: "command", isHovering: isHovering, color: .red) {
                 print("Button 1 (Command) tapped")
             }
             
             // Button 2 (Center)
-            CrustButton(id: 2, icon: "cpu", isHovering: isHovering, offset: CGSize(width: 0, height: 90), color: .green) {
+            CrustButton(id: 2, icon: "cpu", isHovering: isHovering, color: .green) {
                 print("Button 2 (CPU) tapped")
             }
             
             // Button 3 (Right)
-            CrustButton(id: 3, icon: "flowchart", isHovering: isHovering, offset: CGSize(width: 80, height: 50), color: .blue) {
+            CrustButton(id: 3, icon: "flowchart", isHovering: isHovering, color: .blue) {
                 print("Button 3 (Flowchart) tapped")
             }
         }
-        .background(Color.clear) // Aggressive clear
     }
 }
 
@@ -28,7 +27,6 @@ struct CrustButton: View {
     let id: Int
     let icon: String
     let isHovering: Bool
-    let offset: CGSize
     let color: Color
     let action: () -> Void
     
@@ -38,7 +36,7 @@ struct CrustButton: View {
         Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(color) // GAP TEST: Solid color
+                    .fill(color) // SOLID RED/GREEN/BLUE
                     .frame(width: 50, height: 50)
                 
                 Image(systemName: icon)
@@ -48,8 +46,6 @@ struct CrustButton: View {
         }
         .buttonStyle(PlainButtonStyle())
         .contentShape(Circle())
-        .background(Color.clear)
-        .offset(isHovering ? offset : .zero)
         .scaleEffect(isHovering ? 1.0 : 0.01)
         .opacity(isHovering ? 1.0 : 0.0)
         .animation(.spring(response: 0.5, dampingFraction: 0.6), value: isHovering)
