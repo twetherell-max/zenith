@@ -6,6 +6,11 @@ struct ZenithCrustView: View {
     
     var body: some View {
         ZStack(alignment: .top) { // ALIGN TO TOP
+            Text("CONNECTION ACTIVE")
+                .font(.caption2)
+                .foregroundColor(.white.opacity(0.5))
+                .padding(.top, 5)
+            
             HStack(spacing: 40) { // RIGID SPACING
                 // Button 1 (Left)
                 CrustButton(id: 1, label: "!!!", icon: "command", isHovering: isHovering, offset: CGSize(width: -70, height: 30)) {

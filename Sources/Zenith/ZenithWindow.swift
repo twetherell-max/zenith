@@ -9,13 +9,12 @@ class ZenithWindow: NSWindow, ObservableObject {
     private var trackingArea: NSTrackingArea?
 
     init(notchFrame: CGRect, targetScreen: NSScreen?) {
-        // Force the window to the first screen (usually the built-in notch display)
-        let screen = NSScreen.screens.first ?? targetScreen ?? NSScreen.main ?? NSScreen.screens[0]
+        // Use the screen with the mouse (main) or the built-in display (screens.first)
+        let screen = NSScreen.main ?? NSScreen.screens.first ?? NSScreen.screens[0]
         let visibleFrame = screen.visibleFrame
         let windowWidth: CGFloat = 800
         let windowHeight: CGFloat = 400
         
-        // Center relative to visible frame (excluding dock/menubar areas)
         let centerX = visibleFrame.origin.x + (visibleFrame.width - windowWidth) / 2
         let topY = visibleFrame.origin.y + visibleFrame.height
         
@@ -29,26 +28,26 @@ class ZenithWindow: NSWindow, ObservableObject {
             defer: false
         )
         
-        // Transparency Settings
         self.isOpaque = false
         self.backgroundColor = .clear
         self.hasShadow = false
         self.alphaValue = 1.0
-        
         self.level = .screenSaver
         self.ignoresMouseEvents = false
-        self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         
-        self.canHide = false
-        self.isExcludedFromWindowsMenu = true
-        self.hidesOnDeactivate = false
+        let rootView = ZenithDropletView(
+            isHovering: Binding(get: { self.isHovering }, set: { self.isHovering = $0 }),
+            isPulsing: Binding(get: { self.isPulsing }, set: { self.isPulsing = $0 })
+        )
         
-        let hostingView = NSHostingView(rootView: ZenithDropletView(isHovering: Binding(get: { self.isHovering }, set: { self.isHovering = $0 }), isPulsing: Binding(get: { self.isPulsing }, set: { self.isPulsing = $0 })))
+        let hostingView = NSHostingView(rootView: rootView)
+        hostingView.frame = NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight)
         hostingView.layer?.masksToBounds = false
         self.contentView = hostingView
         
-        setupTrackingArea()
+        print(">>> ZENITH: NSHostingView established. ContentView: \(String(describing: self.contentView))")
         
+        setupTrackingArea()
         self.orderFrontRegardless()
     }
 
@@ -87,8 +86,8 @@ class ZenithWindow: NSWindow, ObservableObject {
     }
 
     private func updateWindowFrame() {
-        // Force the window to the first screen (usually the built-in notch display)
-        let screen = NSScreen.screens.first ?? self.screen ?? NSScreen.main ?? NSScreen.screens[0]
+        // Use the screen with the mouse (main) or the built-in display (screens.first)
+        let screen = NSScreen.main ?? self.screen ?? NSScreen.screens.first ?? NSScreen.screens[0]
         let visibleFrame = screen.visibleFrame
         let windowWidth: CGFloat = 800
         let windowHeight: CGFloat = 400
