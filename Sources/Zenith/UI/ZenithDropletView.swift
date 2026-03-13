@@ -6,10 +6,6 @@ struct ZenithDropletView: View {
     
     var body: some View {
         ZStack(alignment: .top) {
-            // Radial Menu (The Crust)
-            ZenithCrustView(isHovering: isHovering)
-                .zIndex(10)
-            
             /* Hiding Droplet for Visibility Debug
             VStack(spacing: 0) {
                 Spacer()
@@ -32,6 +28,10 @@ struct ZenithDropletView: View {
             }
             .zIndex(1)
             */
+            
+            // Radial Menu (The Crust) - ON TOP
+            ZenithCrustView(isHovering: isHovering)
+                .zIndex(999)
         }
         .frame(width: 800, height: 400)
     }
