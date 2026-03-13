@@ -30,8 +30,9 @@ class ZenithWindow: NSWindow, ObservableObject {
         self.isOpaque = false
         self.backgroundColor = .clear
         self.hasShadow = false
+        self.alphaValue = 1.0
         
-        self.level = .screenSaver // HIGHEST PRIORITY LEVEL
+        self.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.mainMenuWindow)) + 1)
         self.ignoresMouseEvents = false
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         

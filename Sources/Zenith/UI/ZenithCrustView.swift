@@ -40,6 +40,8 @@ struct CrustButton: View {
                     .background(.ultraThinMaterial)
                     .clipShape(Circle())
                     .frame(width: 50, height: 50)
+                    .background(Circle().fill(Color.white.opacity(0.2))) // SOLID FALLBACK
+                    .shadow(color: .blue.opacity(0.5), radius: 10) // GLOW DEBUG
                     .overlay(Circle().stroke(.white.opacity(0.4), lineWidth: 1))
                 
                 Image(systemName: icon)
