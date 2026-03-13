@@ -25,11 +25,14 @@ class ZenithWindow: NSWindow, ObservableObject {
         )
         
         self.isOpaque = false
-        // Debug Visuals: Semi-transparent red
-        self.backgroundColor = NSColor.red.withAlphaComponent(0.3)
+        // Debug Visuals: Solid red with 0.8 alpha
+        self.backgroundColor = .red
+        self.alphaValue = 0.8
         self.level = .screenSaver
         self.ignoresMouseEvents = false
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        
+        print("Zenith Window Frame: \(self.frame)")
         
         let hostingView = NSHostingView(rootView: ZenithDropletView(isHovering: Binding(get: { self.isHovering }, set: { self.isHovering = $0 }), isPulsing: Binding(get: { self.isPulsing }, set: { self.isPulsing = $0 })))
         self.contentView = hostingView
