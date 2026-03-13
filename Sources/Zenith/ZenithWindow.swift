@@ -9,40 +9,36 @@ class ZenithWindow: NSWindow, ObservableObject {
     private var trackingArea: NSTrackingArea?
 
     init(notchFrame: CGRect, targetScreen: NSScreen?) {
-        // The window must be tall enough to show the 'Drip' animation (slides down to y:10)
-        // We make it 120px tall, positioned so the top of the window matches the top of the screen.
-        let windowWidth: CGFloat = notchFrame.width
-        let windowHeight: CGFloat = 120 
-        
-        let windowFrame = NSRect(
-            x: notchFrame.origin.x,
-            y: notchFrame.origin.y + notchFrame.height - windowHeight,
-            width: windowWidth,
-            height: windowHeight
-        )
+        // Centered 400x400 window for debugging permissions and visibility
+        let windowWidth: CGFloat = 400
+        let windowHeight: CGFloat = 400
+        let windowFrame = NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight)
         
         super.init(
             contentRect: windowFrame,
-            styleMask: [.borderless],
+            styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
         )
         
-        self.isOpaque = false
-        self.backgroundColor = .clear
-        self.hasShadow = false
-        self.level = .screenSaver
+        self.title = "Zenith Permission Debug"
+        self.isOpaque = true
+        self.backgroundColor = .green
+        self.hasShadow = true
+        self.level = .floating
         self.ignoresMouseEvents = false
-        self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        self.collectionBehavior = [.canJoinAllSpaces]
         
         self.canHide = false
-        self.isExcludedFromWindowsMenu = true
+        self.isExcludedFromWindowsMenu = false
         self.hidesOnDeactivate = false
+        
+        self.center()
         
         let hostingView = NSHostingView(rootView: ZenithDropletView(isHovering: Binding(get: { self.isHovering }, set: { self.isHovering = $0 }), isPulsing: Binding(get: { self.isPulsing }, set: { self.isPulsing = $0 })))
         self.contentView = hostingView
         
-        setupTrackingArea(notchFrame: notchFrame)
+        // setupTrackingArea(notchFrame: notchFrame) // Disabled for debug
         
         self.orderFrontRegardless()
     }

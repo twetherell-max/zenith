@@ -16,15 +16,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var zenithWindow: ZenithWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Re-enable Background Mode (No Dock icon)
-        NSApp.setActivationPolicy(.accessory)
+        // Force Foreground Mode (Dock icon visible)
+        NSApp.setActivationPolicy(.regular)
         
         // Final Screen Info for terminal confirmation
-        print("--- Final Notch Calibration ---")
+        print("--- First Launch Debug ---")
         for screen in NSScreen.screens {
             print("Screen: \(screen.localizedName) Frame: \(screen.frame) SafeArea: \(screen.safeAreaInsets)")
         }
-        print("-------------------------------")
+        print("--------------------------")
+        
+        // Trigger Accessibility Permission Prompt
+        NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { _ in }
         
         let builtInScreen = NotchManager.shared.findBuiltInScreen()
         let notchFrame = NotchManager.shared.notchFrame
