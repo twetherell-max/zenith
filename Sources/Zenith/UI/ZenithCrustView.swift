@@ -4,22 +4,26 @@ struct ZenithCrustView: View {
     let isHovering: Bool
     
     var body: some View {
-        HStack(spacing: 150) { // DAYLIGHT TEST SPACING
+        HStack(spacing: 50) { // VISIBLE TEST SPACING
             // Button 1 (Left)
             CrustButton(id: 1, icon: "command", isHovering: isHovering, color: .red) {
                 print("Button 1 (Command) tapped")
             }
+            .zIndex(100)
             
             // Button 2 (Center)
             CrustButton(id: 2, icon: "cpu", isHovering: isHovering, color: .green) {
                 print("Button 2 (CPU) tapped")
             }
+            .zIndex(100)
             
             // Button 3 (Right)
             CrustButton(id: 3, icon: "flowchart", isHovering: isHovering, color: .blue) {
                 print("Button 3 (Flowchart) tapped")
             }
+            .zIndex(100)
         }
+        .offset(y: 150) // Force down into visible area
     }
 }
 
@@ -36,7 +40,7 @@ struct CrustButton: View {
         Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(color) // SOLID RED/GREEN/BLUE
+                    .fill(color)
                     .frame(width: 50, height: 50)
                 
                 Image(systemName: icon)

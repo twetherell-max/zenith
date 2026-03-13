@@ -5,13 +5,14 @@ struct ZenithDropletView: View {
     @Binding var isPulsing: Bool
     
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             // Radial Menu (The Crust)
             ZenithCrustView(isHovering: isHovering)
-                .offset(y: 50)
+                .zIndex(10)
             
             VStack(spacing: 0) {
                 Spacer()
+                    .frame(height: 20)
                     .allowsHitTesting(false)
                 
                 Capsule()
@@ -28,6 +29,7 @@ struct ZenithDropletView: View {
                     .opacity(0.8) // DEBUG OPACITY
                     .animation(.spring(response: 0.3, dampingFraction: 0.4), value: isPulsing)
             }
+            .zIndex(1)
         }
         .frame(width: 800, height: 400)
     }
