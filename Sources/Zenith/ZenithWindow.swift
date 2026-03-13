@@ -28,8 +28,8 @@ class ZenithWindow: NSWindow, ObservableObject {
             defer: false
         )
         
-        self.isOpaque = false
-        self.backgroundColor = .clear // RESTORE TRANSPARENCY
+        self.isOpaque = true
+        self.backgroundColor = .black // SLEDGEHAMMER SOLID BACKGROUND
         self.hasShadow = true // FORCE MACOS TO RENDER WINDOW
         self.alphaValue = 1.0
         self.level = .statusBar
@@ -74,16 +74,16 @@ class ZenithWindow: NSWindow, ObservableObject {
     }
 
     override func mouseEntered(with event: NSEvent) {
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+        // withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
             self.isHovering = true
-        }
+        // }
         updateWindowFrame()
     }
 
     override func mouseExited(with event: NSEvent) {
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+        // withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
             self.isHovering = false
-        }
+        // }
         updateWindowFrame()
     }
 

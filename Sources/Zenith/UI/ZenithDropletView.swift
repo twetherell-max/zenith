@@ -17,6 +17,7 @@ struct ZenithDropletView: View {
         }
         .frame(width: 800, height: 400)
         .padding(.top, 40) // PUSH DOWN TO CLEAR PHYSICAL NOTCH
+        .background(Color.black)
     }
 }
 
