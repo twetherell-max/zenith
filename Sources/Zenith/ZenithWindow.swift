@@ -38,6 +38,7 @@ class ZenithWindow: NSWindow, ObservableObject {
         self.hidesOnDeactivate = false
         
         let hostingView = NSHostingView(rootView: ZenithDropletView(isHovering: Binding(get: { self.isHovering }, set: { self.isHovering = $0 }), isPulsing: Binding(get: { self.isPulsing }, set: { self.isPulsing = $0 })))
+        hostingView.layer?.masksToBounds = false
         self.contentView = hostingView
         
         setupTrackingArea()
