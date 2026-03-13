@@ -23,7 +23,7 @@ class ZenithWindow: NSWindow, ObservableObject {
         
         super.init(
             contentRect: windowFrame,
-            styleMask: [.titled, .closable, .resizable, .miniaturizable],
+            styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
         )

@@ -19,6 +19,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Force Foreground Mode (Dock icon visible)
         NSApp.setActivationPolicy(.regular)
         
+        // --- Hard Diagnostic Alert ---
+        let alert = NSAlert()
+        alert.messageText = "Zenith is Alive!"
+        alert.informativeText = "If you see this, the app started successfully."
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+        // -----------------------------
+
+        // Where Am I? Log
+        print("DEBUG: Application started. Main screen resolution: \(NSScreen.main?.frame ?? .zero)")
+        
         // Print All Screen Info
         print("--- Connected Screens ---")
         for screen in NSScreen.screens {
