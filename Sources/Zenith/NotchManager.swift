@@ -3,10 +3,23 @@ import AppKit
 class NotchManager {
     static let shared = NotchManager()
 
+    func findBuiltInScreen() -> NSScreen? {
+        // Search all screens for the one with top safe area insets (the notch)
+        let screens = NSScreen.screens
+        for screen in screens {
+            if screen.safeAreaInsets.top > 0 {
+                return screen
+            }
+        }
+        // Fallback to main screen if no notch-screen detected
+        return NSScreen.main
+    }
+
     var notchFrame: CGRect {
-        guard let screen = NSScreen.main else { return .zero }
+        guard let screen = findBuiltInScreen() else { return .zero }
         let safeArea = screen.safeAreaInsets
         let screenFrame = screen.frame
+// ... remainder existing but we'll use findBuiltInScreen now
 
         // safeArea.top gives the height of the notch area (usually around 32-37px)
         // If there is no notch, safeArea.top might be 0 or equal to standard menu bar height.

@@ -8,9 +8,18 @@ class ZenithWindow: NSWindow, ObservableObject {
     
     private var trackingArea: NSTrackingArea?
 
-    init(notchFrame: CGRect) {
-        // Hardcoded massive frame for debugging visibility
-        let windowFrame = NSRect(x: 500, y: 500, width: 400, height: 400)
+    init(notchFrame: CGRect, targetScreen: NSScreen?) {
+        let screen = targetScreen ?? NSScreen.main ?? NSScreen.screens[0]
+        let screenFrame = screen.frame
+        
+        // Center the 400x400 window on the target screen
+        let windowWidth: CGFloat = 400
+        let windowHeight: CGFloat = 400
+        let x = screenFrame.origin.x + (screenFrame.width - windowWidth) / 2
+        let y = screenFrame.origin.y + (screenFrame.height - windowHeight) / 2
+        let windowFrame = NSRect(x: x, y: y, width: windowWidth, height: windowHeight)
+        
+        print("Targeting Screen: \(screen.localizedName) with Frame: \(screen.frame)")
         
         super.init(
             contentRect: windowFrame,
@@ -28,6 +37,7 @@ class ZenithWindow: NSWindow, ObservableObject {
         
         self.canHide = false
         self.isExcludedFromWindowsMenu = false
+        self.hidesOnDeactivate = false
         
         print("FORCED Zenith Window Frame: \(self.frame)")
         

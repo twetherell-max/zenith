@@ -18,9 +18,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         
+        let builtInScreen = NotchManager.shared.findBuiltInScreen()
         let notchFrame = NotchManager.shared.notchFrame
         // Unconditional creation for debugging
-        let window = ZenithWindow(notchFrame: notchFrame)
+        let window = ZenithWindow(notchFrame: notchFrame, targetScreen: builtInScreen)
         window.makeKeyAndOrderFront(nil)
         self.zenithWindow = window
         
