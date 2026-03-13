@@ -28,12 +28,24 @@ class ZenithSettingsWindow: NSWindow {
         shared?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
+    
+    // WINDOW LIFECYCLE SYNC
+    override func becomeKey() {
+        super.becomeKey()
+        UserDefaults.standard.set(true, forKey: "isSettingsOpen")
+    }
+    
+    override func close() {
+        super.close()
+        UserDefaults.standard.set(false, forKey: "isSettingsOpen")
+    }
 }
 
 struct SettingsView: View {
     @AppStorage("arcSpread") private var arcSpread: Double = 100.0
     @AppStorage("iconSize") private var iconSize: Double = 14.0
     @AppStorage("isDarkGlass") private var isDarkGlass: Bool = false
+    @AppStorage("isSettingsOpen") private var isSettingsOpen: Bool = false
     
     var body: some View {
         VStack {

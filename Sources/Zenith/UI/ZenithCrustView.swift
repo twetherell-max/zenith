@@ -9,6 +9,12 @@ struct ZenithCrustView: View {
     @AppStorage("arcSpread") private var arcSpread: Double = 100.0
     @AppStorage("iconSize") private var iconSize: Double = 14.0
     @AppStorage("isDarkGlass") private var isDarkGlass: Bool = false
+    @AppStorage("isSettingsOpen") private var isSettingsOpen: Bool = false
+    
+    // LIVE EXPANSION LOGIC
+    private var isExpanded: Bool {
+        isHovering || isSettingsOpen
+    }
     
     var body: some View {
         let _ = print(">>> BUTTONS SHOULD BE VISIBLE NOW")
@@ -23,17 +29,17 @@ struct ZenithCrustView: View {
             VStack {
                 HStack(spacing: 60) { // REFINED SPACING
                     // Button 1 (Left) - Open Downloads
-                    CrustButton(id: 1, icon: "command", tooltip: "Open Downloads", isHovering: isHovering, hoveredButton: $hoveredButton, offset: CGSize(width: -(arcSpread + iconSize), height: -(arcSpread / 4)), iconSize: iconSize, isDarkGlass: isDarkGlass) {
+                    CrustButton(id: 1, icon: "command", tooltip: "Open Downloads", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: CGSize(width: -(arcSpread + iconSize), height: -(arcSpread / 4)), iconSize: iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
                         NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: ("~/Downloads" as NSString).expandingTildeInPath)
                     }
                     
                     // Button 2 (Center) - Activity Monitor
-                    CrustButton(id: 2, icon: "cpu", tooltip: "Activity Monitor", isHovering: isHovering, hoveredButton: $hoveredButton, offset: CGSize(width: 0, height: 20), iconSize: iconSize, isDarkGlass: isDarkGlass) {
+                    CrustButton(id: 2, icon: "cpu", tooltip: "Activity Monitor", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: CGSize(width: 0, height: 20), iconSize: iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
                         NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app"))
                     }
                     
                     // Button 3 (Right) - Mission Control
-                    CrustButton(id: 3, icon: "flowchart", tooltip: "Mission Control", isHovering: isHovering, hoveredButton: $hoveredButton, offset: CGSize(width: (arcSpread + iconSize), height: -(arcSpread / 4)), iconSize: iconSize, isDarkGlass: isDarkGlass) {
+                    CrustButton(id: 3, icon: "flowchart", tooltip: "Mission Control", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: CGSize(width: (arcSpread + iconSize), height: -(arcSpread / 4)), iconSize: iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
                         NSWorkspace.shared.launchApplication("Mission Control")
                     }
                 }
@@ -52,11 +58,12 @@ struct CrustButton: View {
     let id: Int
     let icon: String
     let tooltip: String
-    let isHovering: Bool
+    let isExpanded: Bool // LIVE PREVIEW SYNC
     @Binding var hoveredButton: Int?
     let offset: CGSize
     let iconSize: Double // LIVE SIZE
     let isDarkGlass: Bool // LIVE THEME
+    let isSettingsOpen: Bool // LIVE INDICATOR
     let action: () -> Void
     
     var body: some View {
@@ -67,11 +74,23 @@ struct CrustButton: View {
                     .background(Circle().fill(.thickMaterial)) // HEAVY GLASS
                     .frame(width: iconSize * 3.0, height: iconSize * 3.0) // ELASTIC ORB DYNAMICS
                     .shadow(color: hoveredButton == id ? .white : .black.opacity(0.8), radius: hoveredButton == id ? 15 : 10) // DYNAMIC GLOW
-                    .overlay(Circle().stroke(.white.opacity(0.4), lineWidth: 0.5)) // THIN BORDER
+                    .overlay(
+                        Circle()
+                            .stroke((id == 2 && isSettingsOpen) ? Color.white : .white.opacity(0.4), lineWidth: (id == 2 && isSettingsOpen) ? 2 : 0.5)
+                            .shadow(color: (id == 2 && isSettingsOpen) ? .white : .clear, radius: 5)
+                    ) // LIVE PREVIEW GLOW RING
                 
-                Image(systemName: icon)
-                    .font(.system(size: iconSize, weight: .semibold)) // DYNAMIC SIZE
-                    .foregroundColor(hoveredButton == id ? .white : .white.opacity(0.8)) // ICON BRIGHTNESS
+                VStack(spacing: 2) {
+                    Image(systemName: icon)
+                        .font(.system(size: iconSize, weight: .semibold)) // DYNAMIC SIZE
+                        .foregroundColor(hoveredButton == id ? .white : .white.opacity(0.8)) // ICON BRIGHTNESS
+                    
+                    if id == 2 && isSettingsOpen {
+                        Text("OPEN")
+                            .font(.system(size: 8, weight: .bold))
+                            .foregroundColor(.white)
+                    }
+                }
             }
             .environment(\.colorScheme, isDarkGlass ? .dark : .light) // LIVE MATERIAL THEME
             .contextMenu { // ADD MENUBAR EXACTLY ON THE BUTTON ORB
@@ -91,8 +110,8 @@ struct CrustButton: View {
         .frame(width: iconSize * 3.0, height: iconSize * 3.0) // ELASTIC EXPLICIT FRAME
         .buttonStyle(PlainButtonStyle())
         .contentShape(Circle())
-        .offset(isHovering ? offset : .zero) // SLIDE ONLY
-        .animation(.spring(response: 0.4, dampingFraction: 0.6), value: isHovering) // ORBITAL ENTRANCE BOUNCE
+        .offset(isExpanded ? offset : .zero) // SLIDE ON PREVIEW OR HOVER
+        .animation(.spring(response: 0.4, dampingFraction: 0.6), value: isExpanded) // ORBITAL ENTRANCE BOUNCE
         .scaleEffect(hoveredButton == id ? 1.2 : 1.0) // JUICY SCALING
         .blur(radius: (hoveredButton != nil && hoveredButton != id) ? 0.5 : 0) // DEFOCUS OTHERS
         .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hoveredButton) // SPRING ANIMATION
