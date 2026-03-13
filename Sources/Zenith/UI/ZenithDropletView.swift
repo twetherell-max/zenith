@@ -8,6 +8,7 @@ struct ZenithDropletView: View {
         ZStack(alignment: .top) { // PIN TO TOP
             // Radial Menu (The Crust) - Behind the droplet
             ZenithCrustView(isHovering: isHovering)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .offset(y: 40) // Position orbs closer to the notch top boundary
             
             VStack(spacing: 0) {
