@@ -8,26 +8,23 @@ struct ZenithCrustView: View {
         ZStack(alignment: .top) { // ALIGN TO TOP
             VStack {
                 HStack(spacing: 60) { // REFINED SPACING
-                    // Button 1 (Left)
-                    CrustButton(id: 1, label: "1", color: .red, isHovering: isHovering, offset: CGSize(width: -80, height: 20)) {
-                        print("Button 1 (Left) tapped")
+                    // Button 1 (Left) - Appears slightly up and left
+                    CrustButton(id: 1, icon: "command", isHovering: isHovering, offset: CGSize(width: -70, height: 20)) {
+                        print("Button 1 (Command) tapped")
                     }
                     
-                    // Button 2 (Center)
-                    CrustButton(id: 2, label: "2", color: .green, isHovering: isHovering, offset: CGSize(width: 0, height: 40)) {
-                        print("Button 2 (Center) tapped")
+                    // Button 2 (Center) - Appears straight down
+                    CrustButton(id: 2, icon: "cpu", isHovering: isHovering, offset: CGSize(width: 0, height: 50)) {
+                        print("Button 2 (CPU) tapped")
                     }
                     
-                    // Button 3 (Right)
-                    CrustButton(id: 3, label: "3", color: .blue, isHovering: isHovering, offset: CGSize(width: 80, height: 20)) {
-                        print("Button 3 (Right) tapped")
+                    // Button 3 (Right) - Appears slightly up and right
+                    CrustButton(id: 3, icon: "flowchart", isHovering: isHovering, offset: CGSize(width: 70, height: 20)) {
+                        print("Button 3 (Flowchart) tapped")
                     }
                 }
                 .frame(width: 400, height: 100)
                 .zIndex(5) // FORCE FOREGROUND
-                
-                Text("VISIBLE NOW")
-                    .foregroundColor(.white)
             }
             .frame(width: 400, height: 250) // EXPANDED HEIGHT
             .padding(.top, 50)
@@ -38,8 +35,7 @@ struct ZenithCrustView: View {
 
 struct CrustButton: View {
     let id: Int
-    let label: String
-    let color: Color
+    let icon: String // RESTORED ICON PARAM
     let isHovering: Bool
     let offset: CGSize
     let action: () -> Void
@@ -48,19 +44,22 @@ struct CrustButton: View {
         Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(color) // SLEDGEHAMMER COLOR
+                    .fill(.ultraThinMaterial) // GLASSMORPHISM
                     .frame(width: 60, height: 60)
-                    .shadow(color: .black.opacity(0.4), radius: 8, x: 0, y: 4)
-                    .overlay(Circle().stroke(Color.white, lineWidth: 4)) // THICK STROKE
+                    .shadow(color: .black.opacity(0.3), radius: 10)
+                    .overlay(Circle().stroke(.white.opacity(0.3), lineWidth: 0.5)) // THIN BORDER
                 
-                Text(label)
-                    .font(.system(size: 24, weight: .bold))
+                Image(systemName: icon)
+                    .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.white)
             }
         }
         .frame(width: 60, height: 60) // EXPLICIT BUTTON FRAME
         .buttonStyle(PlainButtonStyle())
         .contentShape(Circle())
-        // SLEDGEHAMMER: REMOVED ALL OFFSETS AND OPACITY
+        .offset(isHovering ? offset : .zero) // SLIDE ANIMATION
+        .scaleEffect(isHovering ? 1.0 : 0.01) // POP ANIMATION
+        .opacity(isHovering ? 1.0 : 0.0) // FADE ANIMATION
+        .animation(.spring(response: 0.5, dampingFraction: 0.7), value: isHovering)
     }
 }
