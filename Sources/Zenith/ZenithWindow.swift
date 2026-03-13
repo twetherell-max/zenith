@@ -16,7 +16,7 @@ class ZenithWindow: NSWindow, ObservableObject {
         
         super.init(
             contentRect: windowFrame,
-            styleMask: [.titled, .closable],
+            styleMask: [.titled, .closable, .borderless],
             backing: .buffered,
             defer: false
         )
@@ -40,6 +40,8 @@ class ZenithWindow: NSWindow, ObservableObject {
         
         // setupTrackingArea(notchFrame: notchFrame) // Disabled for debug
         
+        self.makeKeyAndOrderFront(nil)
+        self.setIsVisible(true)
         self.orderFrontRegardless()
     }
 

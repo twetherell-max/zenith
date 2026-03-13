@@ -16,15 +16,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var zenithWindow: ZenithWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        print("WINDOW SETUP STARTED")
+        
         // Force Foreground Mode (Dock icon visible)
         NSApp.setActivationPolicy(.regular)
         
-        // Final Screen Info for terminal confirmation
-        print("--- First Launch Debug ---")
+        // --- First Launch Debug ---
         for screen in NSScreen.screens {
             print("Screen: \(screen.localizedName) Frame: \(screen.frame) SafeArea: \(screen.safeAreaInsets)")
         }
-        print("--------------------------")
         
         // Trigger Accessibility Permission Prompt
         NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { _ in }
@@ -33,6 +33,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let notchFrame = NotchManager.shared.notchFrame
         
         let window = ZenithWindow(notchFrame: notchFrame, targetScreen: builtInScreen)
+        window.makeKeyAndOrderFront(nil)
+        window.setIsVisible(true)
+        
         self.zenithWindow = window
         
         ShortcutManager.shared.startMonitoring { [weak self] type in
