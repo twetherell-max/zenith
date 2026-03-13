@@ -11,12 +11,12 @@ class ZenithWindow: NSWindow, ObservableObject {
     init(notchFrame: CGRect, targetScreen: NSScreen?) {
         let screen = targetScreen ?? NSScreen.main ?? NSScreen.screens[0]
         let screenFrame = screen.frame
-        let centerX = screenFrame.origin.x + (screenFrame.width - 200) / 2
+        let windowWidth: CGFloat = 250
+        let windowHeight: CGFloat = 150
+        let centerX = screenFrame.origin.x + (screenFrame.width - windowWidth) / 2
         let topY = screenFrame.origin.y + screenFrame.height
         
-        // Initial "Peeking" frame: 5px visible on screen, 115px above
-        let windowWidth: CGFloat = 200
-        let windowHeight: CGFloat = 120
+        // Initial "Peeking" frame: 5px visible on screen, 145px above
         let windowFrame = NSRect(x: centerX, y: topY - 5, width: windowWidth, height: windowHeight)
         
         super.init(
@@ -83,12 +83,14 @@ class ZenithWindow: NSWindow, ObservableObject {
     private func updateWindowFrame() {
         guard let screen = self.screen else { return }
         let screenFrame = screen.frame
-        let centerX = screenFrame.origin.x + (screenFrame.width - 200) / 2
+        let windowWidth: CGFloat = 250
+        let windowHeight: CGFloat = 150
+        let centerX = screenFrame.origin.x + (screenFrame.width - windowWidth) / 2
         let topY = screenFrame.origin.y + screenFrame.height
         
-        // When hovering, slide the window down by 115px so it's fully on screen (120px tall)
-        let targetY = isHovering ? topY - 120 : topY - 5
-        let targetFrame = NSRect(x: centerX, y: targetY, width: 200, height: 120)
+        // When hovering, slide the window down by 145px so it's fully on screen (150px tall)
+        let targetY = isHovering ? topY - windowHeight : topY - 5
+        let targetFrame = NSRect(x: centerX, y: targetY, width: windowWidth, height: windowHeight)
         
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.4
