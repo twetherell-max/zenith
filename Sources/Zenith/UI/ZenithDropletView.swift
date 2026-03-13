@@ -6,6 +6,13 @@ struct ZenithDropletView: View {
     
     var body: some View {
         ZStack(alignment: .top) { // PIN TO TOP
+            Text("SWIFTUI ALIVE")
+                .font(.largeTitle)
+                .fontWeight(.black)
+                .foregroundColor(.white)
+                .padding(.top, 100)
+                .zIndex(1000)
+            
             // Radial Menu (The Crust) - Behind the droplet
             ZenithCrustView(isHovering: isHovering)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

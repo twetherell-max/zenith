@@ -9,8 +9,8 @@ class ZenithWindow: NSWindow, ObservableObject {
     private var trackingArea: NSTrackingArea?
 
     init(notchFrame: CGRect, targetScreen: NSScreen?) {
-        // Use the screen with the mouse (main) or the built-in display (screens.first)
-        let screen = NSScreen.main ?? NSScreen.screens.first ?? NSScreen.screens[0]
+        // Force strictly to the built-in display (Retina) for frame calculations
+        let screen = NSScreen.screens.first ?? targetScreen ?? NSScreen.main ?? NSScreen.screens[0]
         let visibleFrame = screen.visibleFrame
         let windowWidth: CGFloat = 800
         let windowHeight: CGFloat = 400
@@ -41,11 +41,22 @@ class ZenithWindow: NSWindow, ObservableObject {
         )
         
         let hostingView = NSHostingView(rootView: rootView)
-        hostingView.frame = NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight)
+        hostingView.translatesAutoresizingMaskIntoConstraints = false
         hostingView.layer?.masksToBounds = false
-        self.contentView = hostingView
         
-        print(">>> ZENITH: NSHostingView established. ContentView: \(String(describing: self.contentView))")
+        self.contentView = NSView(frame: NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight))
+        self.contentView?.wantsLayer = true
+        self.contentView?.layer?.masksToBounds = false
+        self.contentView?.addSubview(hostingView)
+        
+        NSLayoutConstraint.activate([
+            hostingView.topAnchor.constraint(equalTo: self.contentView!.topAnchor),
+            hostingView.bottomAnchor.constraint(equalTo: self.contentView!.bottomAnchor),
+            hostingView.leadingAnchor.constraint(equalTo: self.contentView!.leadingAnchor),
+            hostingView.trailingAnchor.constraint(equalTo: self.contentView!.trailingAnchor)
+        ])
+        
+        print(">>> ZENITH: NSHostingView force-anchored. ContentView: \(String(describing: self.contentView))")
         
         setupTrackingArea()
         self.orderFrontRegardless()
@@ -86,8 +97,8 @@ class ZenithWindow: NSWindow, ObservableObject {
     }
 
     private func updateWindowFrame() {
-        // Use the screen with the mouse (main) or the built-in display (screens.first)
-        let screen = NSScreen.main ?? self.screen ?? NSScreen.screens.first ?? NSScreen.screens[0]
+        // Force strictly to the built-in display (Retina)
+        let screen = NSScreen.screens.first ?? self.screen ?? NSScreen.main ?? NSScreen.screens[0]
         let visibleFrame = screen.visibleFrame
         let windowWidth: CGFloat = 800
         let windowHeight: CGFloat = 400
