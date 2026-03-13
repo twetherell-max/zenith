@@ -24,10 +24,12 @@ struct ZenithCrustView: View {
                     }
                 }
                 .frame(width: 400, height: 100)
+                .zIndex(5) // FORCE FOREGROUND
                 
                 Text("VISIBLE NOW")
                     .foregroundColor(.white)
             }
+            .frame(width: 400, height: 250) // EXPANDED HEIGHT
             .padding(.top, 50)
         }
         .frame(width: 800, height: 400)
@@ -49,18 +51,16 @@ struct CrustButton: View {
                     .fill(color) // SLEDGEHAMMER COLOR
                     .frame(width: 60, height: 60)
                     .shadow(color: .black.opacity(0.4), radius: 8, x: 0, y: 4)
-                    .overlay(Circle().stroke(Color.white.opacity(0.5), lineWidth: 1))
+                    .overlay(Circle().stroke(Color.white, lineWidth: 4)) // THICK STROKE
                 
                 Text(label)
                     .font(.system(size: 24, weight: .bold))
                     .foregroundColor(.white)
             }
         }
+        .frame(width: 60, height: 60) // EXPLICIT BUTTON FRAME
         .buttonStyle(PlainButtonStyle())
         .contentShape(Circle())
-        .offset(isHovering ? offset : .zero)
-        .scaleEffect(isHovering ? 1.0 : 0.01)
-        .opacity(isHovering ? 1.0 : 0.0)
-        .animation(.spring(response: 0.4, dampingFraction: 0.6), value: isHovering)
+        // SLEDGEHAMMER: REMOVED ALL OFFSETS AND OPACITY
     }
 }
