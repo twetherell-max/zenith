@@ -92,8 +92,8 @@ class ZenithWindow: NSWindow, ObservableObject {
         let centerX = screenFrame.origin.x + (screenFrame.width - windowWidth) / 2
         let topY = screenFrame.origin.y + screenFrame.height
         
-        // When hovering, slide the window down by 395px so it's fully on screen (400px tall)
-        let targetY = isHovering ? topY - windowHeight : topY - 5
+        // When hovering, slide the window down by 95px so it's partially on screen (100px down)
+        let targetY = isHovering ? topY - 100 : topY - 5
         let targetFrame = NSRect(x: centerX, y: targetY, width: windowWidth, height: windowHeight)
         print("WINDOW FRAME (TARGET): \(targetFrame)")
         
