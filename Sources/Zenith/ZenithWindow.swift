@@ -14,8 +14,10 @@ class ZenithWindow: NSWindow, ObservableObject {
         let centerX = screenFrame.origin.x + (screenFrame.width - 200) / 2
         let topY = screenFrame.origin.y + screenFrame.height
         
-        // Initial "Peeking" frame: 5px visible on screen, 75px above
-        let windowFrame = NSRect(x: centerX, y: topY - 5, width: 200, height: 80)
+        // Initial "Peeking" frame: 5px visible on screen, 115px above
+        let windowWidth: CGFloat = 200
+        let windowHeight: CGFloat = 120
+        let windowFrame = NSRect(x: centerX, y: topY - 5, width: windowWidth, height: windowHeight)
         
         super.init(
             contentRect: windowFrame,
@@ -50,8 +52,7 @@ class ZenithWindow: NSWindow, ObservableObject {
             contentView.removeTrackingArea(existing)
         }
         
-        // Tracking area covers the entire window, but since the window is mostly off-screen,
-        // it effectively acts as a tripwire for the visible part.
+        // Tracking area covers the entire window
         let trackingRect = contentView.bounds
         
         let options: NSTrackingArea.Options = [
@@ -85,9 +86,9 @@ class ZenithWindow: NSWindow, ObservableObject {
         let centerX = screenFrame.origin.x + (screenFrame.width - 200) / 2
         let topY = screenFrame.origin.y + screenFrame.height
         
-        // When hovering, slide the window down by 75px so it's fully on screen (80px tall)
-        let targetY = isHovering ? topY - 80 : topY - 5
-        let targetFrame = NSRect(x: centerX, y: targetY, width: 200, height: 80)
+        // When hovering, slide the window down by 115px so it's fully on screen (120px tall)
+        let targetY = isHovering ? topY - 120 : topY - 5
+        let targetFrame = NSRect(x: centerX, y: targetY, width: 200, height: 120)
         
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.4
