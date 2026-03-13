@@ -29,7 +29,7 @@ class ZenithWindow: NSWindow, ObservableObject {
         )
         
         self.isOpaque = false
-        self.backgroundColor = .blue // DIAGNOSTIC BLUE
+        self.backgroundColor = .clear // RESTORE TRANSPARENCY
         self.hasShadow = false
         self.alphaValue = 1.0
         self.level = .statusBar
