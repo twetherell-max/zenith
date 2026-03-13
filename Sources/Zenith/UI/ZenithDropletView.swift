@@ -17,6 +17,24 @@ struct ZenithDropletView: View {
         }
         .frame(width: 800, height: 400)
         .padding(.top, 40) // PUSH DOWN TO CLEAR PHYSICAL NOTCH
+        .background(Color.white.opacity(0.01)) // FIX HITBOX TRANSPARENCY BUG
+        .contextMenu { // ADD MENUBAR TO ENTIRE DROPLET
+            Button("Settings...") {
+                openSettingsWindow()
+            }
+            Button("Check for Updates") {
+                print("Check Updates")
+            }
+            Divider()
+            Button("Quit") {
+                NSApplication.shared.terminate(nil)
+            }
+        }
+    }
+    
+    private func openSettingsWindow() {
+        print(">>> OPENING SETTINGS WINDOW")
+        ZenithSettingsWindow.show()
     }
 }
 
