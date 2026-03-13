@@ -12,11 +12,11 @@ class ZenithWindow: NSWindow, ObservableObject {
         let screen = targetScreen ?? NSScreen.main ?? NSScreen.screens[0]
         let screenFrame = screen.frame
         let windowWidth: CGFloat = 250
-        let windowHeight: CGFloat = 150
+        let windowHeight: CGFloat = 250 // Increased for orbital expansion
         let centerX = screenFrame.origin.x + (screenFrame.width - windowWidth) / 2
         let topY = screenFrame.origin.y + screenFrame.height
         
-        // Initial "Peeking" frame: 5px visible on screen, 145px above
+        // Initial "Peeking" frame: 5px visible on screen, 245px above
         let windowFrame = NSRect(x: centerX, y: topY - 5, width: windowWidth, height: windowHeight)
         
         super.init(
@@ -84,11 +84,11 @@ class ZenithWindow: NSWindow, ObservableObject {
         guard let screen = self.screen else { return }
         let screenFrame = screen.frame
         let windowWidth: CGFloat = 250
-        let windowHeight: CGFloat = 150
+        let windowHeight: CGFloat = 250
         let centerX = screenFrame.origin.x + (screenFrame.width - windowWidth) / 2
         let topY = screenFrame.origin.y + screenFrame.height
         
-        // When hovering, slide the window down by 145px so it's fully on screen (150px tall)
+        // When hovering, slide the window down by 245px so it's fully on screen (250px tall)
         let targetY = isHovering ? topY - windowHeight : topY - 5
         let targetFrame = NSRect(x: centerX, y: targetY, width: windowWidth, height: windowHeight)
         

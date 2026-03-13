@@ -4,30 +4,29 @@ struct ZenithCrustView: View {
     let isHovering: Bool
     
     var body: some View {
-        HStack(spacing: 20) {
+        ZStack {
             // Button 1 (Left): Command
-            CrustButton(icon: "command", isHovering: isHovering) {
+            CrustButton(icon: "command", isHovering: isHovering, offset: CGSize(width: -60, height: 40)) {
                 print("Button 1 (Command) tapped")
             }
             
             // Button 2 (Center): CPU
-            CrustButton(icon: "cpu", isHovering: isHovering) {
+            CrustButton(icon: "cpu", isHovering: isHovering, offset: CGSize(width: 0, height: 70)) {
                 print("Button 2 (CPU) tapped")
             }
             
             // Button 3 (Right): Flowchart
-            CrustButton(icon: "flowchart", isHovering: isHovering) {
+            CrustButton(icon: "flowchart", isHovering: isHovering, offset: CGSize(width: 60, height: 40)) {
                 print("Button 3 (Flowchart) tapped")
             }
         }
-        .background(Color.clear)
-        .padding(.bottom, 20) // Give it some padding from the bottom of the droplet
     }
 }
 
 struct CrustButton: View {
     let icon: String
     let isHovering: Bool
+    let offset: CGSize
     let action: () -> Void
     
     var body: some View {
@@ -44,8 +43,9 @@ struct CrustButton: View {
                 )
         }
         .buttonStyle(PlainButtonStyle())
+        .offset(isHovering ? offset : .zero)
         .scaleEffect(isHovering ? 1.0 : 0.0)
         .opacity(isHovering ? 1.0 : 0.0)
-        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: isHovering)
+        .animation(.spring(response: 0.5, dampingFraction: 0.6), value: isHovering)
     }
 }
