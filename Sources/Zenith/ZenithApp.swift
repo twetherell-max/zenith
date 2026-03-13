@@ -16,10 +16,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var zenithWindow: ZenithWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        print("WINDOW SETUP STARTED")
-        
-        // Force Foreground Mode (Dock icon visible)
-        NSApp.setActivationPolicy(.regular)
+        // Re-enable Background Mode (No Dock icon)
+        NSApp.setActivationPolicy(.accessory)
         
         let builtInScreen = NotchManager.shared.findBuiltInScreen()
         let notchFrame = NotchManager.shared.notchFrame
@@ -27,11 +25,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Initialize window and store in strong property
         let window = ZenithWindow(notchFrame: notchFrame, targetScreen: builtInScreen)
         self.zenithWindow = window
-        
-        window.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
-        
-        print(">>> SYSTEM: Zenith window is now initialized. Check your screens. <<<")
         
         ShortcutManager.shared.startMonitoring { [weak self] type in
             switch type {

@@ -9,51 +9,50 @@ class ZenithWindow: NSWindow, ObservableObject {
     private var trackingArea: NSTrackingArea?
 
     init(notchFrame: CGRect, targetScreen: NSScreen?) {
-        // Centered 400x400 window for debugging permissions and visibility
-        let windowWidth: CGFloat = 400
-        let windowHeight: CGFloat = 400
-        let windowFrame = NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight)
+        let screen = targetScreen ?? NSScreen.main ?? NSScreen.screens[0]
+        let screenFrame = screen.frame
+        let centerX = screenFrame.origin.x + (screenFrame.width - 200) / 2
+        let topY = screenFrame.origin.y + screenFrame.height
+        
+        // Initial "Peeking" frame: 5px visible on screen, 75px above
+        let windowFrame = NSRect(x: centerX, y: topY - 5, width: 200, height: 80)
         
         super.init(
             contentRect: windowFrame,
-            styleMask: [.titled, .closable],
+            styleMask: [.borderless],
             backing: .buffered,
             defer: false
         )
         
-        self.title = "Zenith Baseline Test"
-        self.isOpaque = true
-        self.backgroundColor = .green
-        self.hasShadow = true
-        self.level = .floating
+        self.isOpaque = false
+        self.backgroundColor = .clear
+        self.hasShadow = false
+        self.level = .screenSaver
         self.ignoresMouseEvents = false
-        self.collectionBehavior = [.canJoinAllSpaces]
+        self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         
         self.canHide = false
-        self.isExcludedFromWindowsMenu = false
+        self.isExcludedFromWindowsMenu = true
         self.hidesOnDeactivate = false
-        
-        self.center()
         
         let hostingView = NSHostingView(rootView: ZenithDropletView(isHovering: Binding(get: { self.isHovering }, set: { self.isHovering = $0 }), isPulsing: Binding(get: { self.isPulsing }, set: { self.isPulsing = $0 })))
         self.contentView = hostingView
         
-        // setupTrackingArea(notchFrame: notchFrame) // Disabled for debug
+        setupTrackingArea()
         
-        self.makeKeyAndOrderFront(nil)
         self.orderFrontRegardless()
     }
 
-    private func setupTrackingArea(notchFrame: CGRect) {
+    private func setupTrackingArea() {
         guard let contentView = self.contentView else { return }
         
         if let existing = trackingArea {
             contentView.removeTrackingArea(existing)
         }
         
-        // Invisible 'tripwire' at the very top (2px tall)
-        // In local coordinates of the 120px tall window, local y for top is windowHeight - 2
-        let trackingRect = NSRect(x: 0, y: 118, width: notchFrame.width, height: 2)
+        // Tracking area covers the entire window, but since the window is mostly off-screen,
+        // it effectively acts as a tripwire for the visible part.
+        let trackingRect = contentView.bounds
         
         let options: NSTrackingArea.Options = [
             .mouseEnteredAndExited,
@@ -67,20 +66,39 @@ class ZenithWindow: NSWindow, ObservableObject {
     }
 
     override func mouseEntered(with event: NSEvent) {
-        withAnimation {
-            isHovering = true
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+            self.isHovering = true
         }
+        updateWindowFrame()
     }
 
     override func mouseExited(with event: NSEvent) {
-        withAnimation {
-            isHovering = false
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+            self.isHovering = false
+        }
+        updateWindowFrame()
+    }
+
+    private func updateWindowFrame() {
+        guard let screen = self.screen else { return }
+        let screenFrame = screen.frame
+        let centerX = screenFrame.origin.x + (screenFrame.width - 200) / 2
+        let topY = screenFrame.origin.y + screenFrame.height
+        
+        // When hovering, slide the window down by 75px so it's fully on screen (80px tall)
+        let targetY = isHovering ? topY - 80 : topY - 5
+        let targetFrame = NSRect(x: centerX, y: targetY, width: 200, height: 80)
+        
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.4
+            context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            self.animator().setFrame(targetFrame, display: true)
         }
     }
-    
+
     func pulse() {
-        isPulsing = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+        self.isPulsing = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             self.isPulsing = false
         }
     }
