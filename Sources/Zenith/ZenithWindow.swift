@@ -23,12 +23,14 @@ class ZenithWindow: NSWindow, ObservableObject {
         
         super.init(
             contentRect: windowFrame,
-            styleMask: [.borderless],
+            styleMask: [.titled, .closable, .resizable, .miniaturizable],
             backing: .buffered,
             defer: false
         )
         
+        self.title = "Zenith Debug Window"
         self.isOpaque = true
+        self.hasShadow = true
         self.backgroundColor = .green
         self.alphaValue = 1.0
         self.level = .screenSaver
@@ -39,6 +41,7 @@ class ZenithWindow: NSWindow, ObservableObject {
         self.isExcludedFromWindowsMenu = false
         self.hidesOnDeactivate = false
         
+        self.center()
         print("FORCED Zenith Window Frame: \(self.frame)")
         
         let hostingView = NSHostingView(rootView: ZenithDropletView(isHovering: Binding(get: { self.isHovering }, set: { self.isHovering = $0 }), isPulsing: Binding(get: { self.isPulsing }, set: { self.isPulsing = $0 })))

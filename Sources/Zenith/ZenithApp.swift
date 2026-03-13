@@ -16,7 +16,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var zenithWindow: ZenithWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NSApp.setActivationPolicy(.accessory)
+        // Force Foreground Mode (Dock icon visible)
+        NSApp.setActivationPolicy(.regular)
+        
+        // Print All Screen Info
+        print("--- Connected Screens ---")
+        for screen in NSScreen.screens {
+            print("Screen: \(screen.localizedName) Frame: \(screen.frame) VisibleFrame: \(screen.visibleFrame) SafeArea: \(screen.safeAreaInsets)")
+        }
+        print("-------------------------")
         
         let builtInScreen = NotchManager.shared.findBuiltInScreen()
         let notchFrame = NotchManager.shared.notchFrame
