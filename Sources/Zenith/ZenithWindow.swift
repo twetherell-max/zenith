@@ -11,17 +11,17 @@ class ZenithWindow: NSWindow, ObservableObject {
     init(notchFrame: CGRect, targetScreen: NSScreen?) {
         let screen = targetScreen ?? NSScreen.main ?? NSScreen.screens[0]
         let screenFrame = screen.frame
-        let windowWidth: CGFloat = 600
-        let windowHeight: CGFloat = 300
+        let windowWidth: CGFloat = 800
+        let windowHeight: CGFloat = 400
         let centerX = screenFrame.origin.x + (screenFrame.width - windowWidth) / 2
         let topY = screenFrame.origin.y + screenFrame.height
         
-        // Initial "Peeking" frame: 5px visible on screen, 295px above
+        // Initial "Peeking" frame: 5px visible on screen, 395px above
         let windowFrame = NSRect(x: centerX, y: topY - 5, width: windowWidth, height: windowHeight)
         
         super.init(
             contentRect: windowFrame,
-            styleMask: [.borderless], // STRICTLY BORDERLESS
+            styleMask: [.borderless],
             backing: .buffered,
             defer: false
         )
@@ -31,7 +31,7 @@ class ZenithWindow: NSWindow, ObservableObject {
         self.backgroundColor = .clear
         self.hasShadow = false
         
-        self.level = .screenSaver
+        self.level = .statusBar // HIGHER THAN MENU BAR
         self.ignoresMouseEvents = false
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         
@@ -85,12 +85,12 @@ class ZenithWindow: NSWindow, ObservableObject {
     private func updateWindowFrame() {
         guard let screen = self.screen else { return }
         let screenFrame = screen.frame
-        let windowWidth: CGFloat = 600
-        let windowHeight: CGFloat = 300
+        let windowWidth: CGFloat = 800
+        let windowHeight: CGFloat = 400
         let centerX = screenFrame.origin.x + (screenFrame.width - windowWidth) / 2
         let topY = screenFrame.origin.y + screenFrame.height
         
-        // When hovering, slide the window down by 295px so it's fully on screen (300px tall)
+        // When hovering, slide the window down by 395px so it's fully on screen (400px tall)
         let targetY = isHovering ? topY - windowHeight : topY - 5
         let targetFrame = NSRect(x: centerX, y: targetY, width: windowWidth, height: windowHeight)
         
