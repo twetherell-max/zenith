@@ -30,7 +30,7 @@ class ZenithWindow: NSWindow, ObservableObject {
         
         self.isOpaque = false
         self.backgroundColor = .clear // RESTORE TRANSPARENCY
-        self.hasShadow = false
+        self.hasShadow = true // FORCE MACOS TO RENDER WINDOW
         self.alphaValue = 1.0
         self.level = .statusBar
         self.ignoresMouseEvents = false

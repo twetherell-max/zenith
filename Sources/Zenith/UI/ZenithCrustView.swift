@@ -6,23 +6,26 @@ struct ZenithCrustView: View {
     
     var body: some View {
         ZStack(alignment: .top) { // ALIGN TO TOP
-            HStack(spacing: 60) { // REFINED SPACING
-                // Button 1 (Left)
-                CrustButton(id: 1, icon: "command", isHovering: isHovering, offset: CGSize(width: -80, height: 20)) {
-                    print("Button 1 (Command) tapped")
-                }
-                
-                // Button 2 (Center)
-                CrustButton(id: 2, icon: "cpu", isHovering: isHovering, offset: CGSize(width: 0, height: 40)) {
-                    print("Button 2 (CPU) tapped")
-                }
-                
-                // Button 3 (Right)
-                CrustButton(id: 3, icon: "flowchart", isHovering: isHovering, offset: CGSize(width: 80, height: 20)) {
-                    print("Button 3 (Flowchart) tapped")
+            VStack {
+                HStack(spacing: 60) { // REFINED SPACING
+                    // Button 1 (Left)
+                    CrustButton(id: 1, label: "1", isHovering: isHovering, offset: CGSize(width: -80, height: 20)) {
+                        print("Button 1 (Left) tapped")
+                    }
+                    
+                    // Button 2 (Center)
+                    CrustButton(id: 2, label: "2", isHovering: isHovering, offset: CGSize(width: 0, height: 40)) {
+                        print("Button 2 (Center) tapped")
+                    }
+                    
+                    // Button 3 (Right)
+                    CrustButton(id: 3, label: "3", isHovering: isHovering, offset: CGSize(width: 80, height: 20)) {
+                        print("Button 3 (Right) tapped")
+                    }
                 }
             }
-            .frame(width: 400, height: 100)
+            .frame(width: 400, height: 200)
+            .padding(.top, 50)
         }
         .frame(width: 800, height: 400)
     }
@@ -30,7 +33,7 @@ struct ZenithCrustView: View {
 
 struct CrustButton: View {
     let id: Int
-    let icon: String
+    let label: String
     let isHovering: Bool
     let offset: CGSize
     let action: () -> Void
@@ -39,13 +42,13 @@ struct CrustButton: View {
         Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(Color.black.opacity(0.85)) // HIGH-CONTRAST DARK MODE
+                    .fill(Color.black) // NO TRANSPARENCY
                     .frame(width: 60, height: 60)
                     .shadow(color: .black.opacity(0.4), radius: 8, x: 0, y: 4)
-                    .overlay(Circle().stroke(Color.white.opacity(0.5), lineWidth: 1)) // DECENT WHITE STROKE
+                    .overlay(Circle().stroke(Color.white.opacity(0.5), lineWidth: 1))
                 
-                Image(systemName: icon)
-                    .font(.system(size: 20, weight: .bold))
+                Text(label)
+                    .font(.system(size: 24, weight: .bold))
                     .foregroundColor(.white)
             }
         }
