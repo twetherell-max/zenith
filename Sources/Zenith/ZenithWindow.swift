@@ -9,13 +9,8 @@ class ZenithWindow: NSWindow, ObservableObject {
     private var trackingArea: NSTrackingArea?
 
     init(notchFrame: CGRect) {
-        // We make the window larger than the notch to allow for the animation space
-        let windowFrame = NSRect(
-            x: notchFrame.origin.x,
-            y: notchFrame.origin.y - 100, // Extra space below for the drip
-            width: notchFrame.width,
-            height: notchFrame.height + 100 // Extra space above for starting position
-        )
+        // Hardcoded massive frame for debugging visibility
+        let windowFrame = NSRect(x: 500, y: 500, width: 400, height: 400)
         
         super.init(
             contentRect: windowFrame,
@@ -24,20 +19,24 @@ class ZenithWindow: NSWindow, ObservableObject {
             defer: false
         )
         
-        self.isOpaque = false
-        // Debug Visuals: Solid red with 0.8 alpha
-        self.backgroundColor = .red
-        self.alphaValue = 0.8
+        self.isOpaque = true
+        self.backgroundColor = .green
+        self.alphaValue = 1.0
         self.level = .screenSaver
         self.ignoresMouseEvents = false
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         
-        print("Zenith Window Frame: \(self.frame)")
+        self.canHide = false
+        self.isExcludedFromWindowsMenu = false
+        
+        print("FORCED Zenith Window Frame: \(self.frame)")
         
         let hostingView = NSHostingView(rootView: ZenithDropletView(isHovering: Binding(get: { self.isHovering }, set: { self.isHovering = $0 }), isPulsing: Binding(get: { self.isPulsing }, set: { self.isPulsing = $0 })))
         self.contentView = hostingView
         
-        setupTrackingArea(notchFrame: notchFrame)
+        // setupTrackingArea(notchFrame: notchFrame) // Disabled for debug
+        
+        self.orderFrontRegardless()
     }
 
     private func setupTrackingArea(notchFrame: CGRect) {
