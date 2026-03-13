@@ -13,11 +13,16 @@ struct ZenithApp: App {
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate {
+    var zenithWindow: ZenithWindow?
+
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Set as background agent (LSUIElement = 1)
-        // Note: For Swift Packages, this is often handled by the host app or custom Info.plist,
-        // but can be set programmatically or via target properties in Xcode.
-        // Programmatic way to ensure it doesn't show in Dock:
         NSApp.setActivationPolicy(.accessory)
+        
+        let notchFrame = NotchManager.shared.notchFrame
+        if notchFrame != .zero {
+            let window = ZenithWindow(notchFrame: notchFrame)
+            window.makeKeyAndOrderFront(nil)
+            self.zenithWindow = window
+        }
     }
 }
