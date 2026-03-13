@@ -7,7 +7,7 @@ class ZenithSettingsWindow: NSWindow {
     init() {
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
-            styleMask: [.titled, .closable, .miniaturizable],
+            styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
         )
@@ -31,22 +31,17 @@ class ZenithSettingsWindow: NSWindow {
 }
 
 struct SettingsView: View {
-    @AppStorage("theme") private var theme: String = "Light Glass"
-    @AppStorage("arcSpread") private var arcSpread: Double = 100.0
+    @AppStorage("launchAtLogin") private var launchAtLogin: Bool = false
+    @AppStorage("arcIntensity") private var arcIntensity: Double = 50.0
     
     var body: some View {
         Form {
-            Section(header: Text("Appearance").font(.headline)) {
-                Picker("Theme", selection: $theme) {
-                    Text("Light Glass").tag("Light Glass")
-                    Text("Dark Glass").tag("Dark Glass")
-                }
-                .pickerStyle(SegmentedPickerStyle())
-                .padding(.vertical, 8)
+            Section(header: Text("General").font(.headline)) {
+                Toggle("Launch at Login", isOn: $launchAtLogin)
+                    .padding(.vertical, 8)
                 
                 VStack(alignment: .leading) {
-                    Text("Arc Spread: \(Int(arcSpread))px")
-                    Slider(value: $arcSpread, in: 50...150, step: 10)
+                    Slider(value: $arcIntensity, in: 10...100, label: { Text("Arc Curve") })
                 }
                 .padding(.vertical, 8)
             }

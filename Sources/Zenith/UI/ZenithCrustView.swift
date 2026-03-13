@@ -33,6 +33,19 @@ struct ZenithCrustView: View {
                         print("Clipboard Cleared")
                     }
                 }
+                .contextMenu { // ADD MENUBAR SPECIFICALLY TO BUTTONS
+                    let _ = print(">>> Right-click detected")
+                    Button("Settings...") {
+                        ZenithSettingsWindow.show()
+                    }
+                    Button("Check for Updates") {
+                        print("Check Updates")
+                    }
+                    Divider()
+                    Button("Quit") {
+                        NSApplication.shared.terminate(nil)
+                    }
+                }
                 .frame(width: 400, height: 100)
                 .zIndex(5) // FORCE FOREGROUND
             }
