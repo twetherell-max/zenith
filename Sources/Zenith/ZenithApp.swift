@@ -21,22 +21,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Force Foreground Mode (Dock icon visible)
         NSApp.setActivationPolicy(.regular)
         
-        // --- First Launch Debug ---
-        for screen in NSScreen.screens {
-            print("Screen: \(screen.localizedName) Frame: \(screen.frame) SafeArea: \(screen.safeAreaInsets)")
-        }
-        
-        // Trigger Accessibility Permission Prompt
-        NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { _ in }
-        
         let builtInScreen = NotchManager.shared.findBuiltInScreen()
         let notchFrame = NotchManager.shared.notchFrame
         
+        // Initialize window and store in strong property
         let window = ZenithWindow(notchFrame: notchFrame, targetScreen: builtInScreen)
-        window.makeKeyAndOrderFront(nil)
-        window.setIsVisible(true)
-        
         self.zenithWindow = window
+        
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        
+        print(">>> SYSTEM: Zenith window is now initialized. Check your screens. <<<")
         
         ShortcutManager.shared.startMonitoring { [weak self] type in
             switch type {

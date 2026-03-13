@@ -16,12 +16,12 @@ class ZenithWindow: NSWindow, ObservableObject {
         
         super.init(
             contentRect: windowFrame,
-            styleMask: [.titled, .closable, .borderless],
+            styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
         )
         
-        self.title = "Zenith Permission Debug"
+        self.title = "Zenith Baseline Test"
         self.isOpaque = true
         self.backgroundColor = .green
         self.hasShadow = true
@@ -41,7 +41,6 @@ class ZenithWindow: NSWindow, ObservableObject {
         // setupTrackingArea(notchFrame: notchFrame) // Disabled for debug
         
         self.makeKeyAndOrderFront(nil)
-        self.setIsVisible(true)
         self.orderFrontRegardless()
     }
 
