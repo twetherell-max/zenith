@@ -43,14 +43,15 @@ class ShortcutManager {
     private func matchShortcut(event: NSEvent) -> ShortcutType? {
         let cmdPressed = event.modifierFlags.contains(.command)
         let shiftPressed = event.modifierFlags.contains(.shift)
+        let optionPressed = event.modifierFlags.contains(.option)
         
         // Z key code is 6 (Cmd+Shift+Z)
         if cmdPressed && shiftPressed && event.keyCode == 6 {
             return .toggle
         }
         
-        // J key code is 38 (Cmd+Shift+J)
-        if cmdPressed && shiftPressed && event.keyCode == 38 {
+        // J key code is 38 (Cmd+Option+J)
+        if cmdPressed && optionPressed && event.keyCode == 38 {
             return .pulse
         }
         

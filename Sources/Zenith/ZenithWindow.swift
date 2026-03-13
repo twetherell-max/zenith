@@ -25,7 +25,8 @@ class ZenithWindow: NSWindow, ObservableObject {
         )
         
         self.isOpaque = false
-        self.backgroundColor = .clear
+        // Debug Visuals: Semi-transparent red
+        self.backgroundColor = NSColor.red.withAlphaComponent(0.3)
         self.level = .screenSaver
         self.ignoresMouseEvents = false
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
@@ -37,13 +38,14 @@ class ZenithWindow: NSWindow, ObservableObject {
     }
 
     private func setupTrackingArea(notchFrame: CGRect) {
+        guard let contentView = self.contentView else { return }
+        
         if let existing = trackingArea {
-            contentView?.removeTrackingArea(existing)
+            contentView.removeTrackingArea(existing)
         }
         
         // Tracking area is still at the top of the notch
         // In local coordinates of the window's contentView
-        // The window's y starts 100 points below the notch's y
         let trackingRect = NSRect(x: 0, y: 100 + notchFrame.height - 2, width: notchFrame.width, height: 2)
         
         let options: NSTrackingArea.Options = [
@@ -53,7 +55,7 @@ class ZenithWindow: NSWindow, ObservableObject {
         ]
         
         let area = NSTrackingArea(rect: trackingRect, options: options, owner: self, userInfo: nil)
-        contentView?.addTrackingArea(area)
+        contentView.addTrackingArea(area)
         self.trackingArea = area
     }
 
