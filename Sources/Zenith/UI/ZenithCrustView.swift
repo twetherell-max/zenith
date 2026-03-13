@@ -22,6 +22,7 @@ struct ZenithCrustView: View {
             }
         }
         .frame(width: 800, height: 400)
+        .background(Color.blue) // SOLID BLUE TEST
         .opacity(1.0) // FORCE OPAQUE
     }
 }
