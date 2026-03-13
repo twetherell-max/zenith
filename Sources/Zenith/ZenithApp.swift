@@ -19,11 +19,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.accessory)
         
         let notchFrame = NotchManager.shared.notchFrame
-        if notchFrame != .zero {
-            let window = ZenithWindow(notchFrame: notchFrame)
-            window.makeKeyAndOrderFront(nil)
-            self.zenithWindow = window
-        }
+        // Unconditional creation for debugging
+        let window = ZenithWindow(notchFrame: notchFrame)
+        window.makeKeyAndOrderFront(nil)
+        self.zenithWindow = window
         
         ShortcutManager.shared.startMonitoring { [weak self] type in
             switch type {
