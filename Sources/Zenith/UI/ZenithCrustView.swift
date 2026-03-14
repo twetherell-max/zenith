@@ -13,7 +13,7 @@ struct ZenithCrustView: View {
     @AppStorage("isSettingsOpen") private var isSettingsOpen: Bool = false
     
     // VISIBILITY SYNC
-    private var isVisible: Bool {
+    private var isExpanded: Bool {
         isHovering || isSettingsOpen
     }
     
@@ -22,22 +22,26 @@ struct ZenithCrustView: View {
         arcSpread
     }
     
+    // DROP CUSHION ENGINE
+    private var baseDrop: Double {
+        isExpanded ? (dropDepth + 40) : -100
+    }
+    
     // POLAR COORDINATE MATH (RADIANS)
     // Left: 135 degrees (135 * pi / 180)
     private var leftOffset: CGSize {
         let radians = 135.0 * .pi / 180.0
         return CGSize(
             width: radius * cos(radians),
-            height: isVisible ? radius * sin(radians) : -100 // TUCK DEEPER
+            height: baseDrop - (radius * sin(radians)) // Y goes down, subtract sin to push outward up
         )
     }
     
     // Center: 90 degrees (90 * pi / 180)
     private var middleOffset: CGSize {
-        let radians = 90.0 * .pi / 180.0
         return CGSize(
-            width: radius * cos(radians), // Will be 0
-            height: isVisible ? radius * sin(radians) : -100
+            width: 0,
+            height: baseDrop
         )
     }
     
@@ -46,7 +50,7 @@ struct ZenithCrustView: View {
         let radians = 45.0 * .pi / 180.0
         return CGSize(
             width: radius * cos(radians),
-            height: isVisible ? radius * sin(radians) : -100
+            height: baseDrop - (radius * sin(radians))
         )
     }
     
@@ -63,17 +67,17 @@ struct ZenithCrustView: View {
             VStack {
                 ZStack { // POLAR COORDINATE ORIGIN (0,0)
                     // Button 1 (Left) - Open Downloads
-                    CrustButton(id: 1, icon: "command", tooltip: "Open Downloads", isVisible: isVisible, hoveredButton: $hoveredButton, offset: leftOffset, iconSize: iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
+                    CrustButton(id: 1, icon: "command", tooltip: "Open Downloads", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: leftOffset, iconSize: iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
                         NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: ("~/Downloads" as NSString).expandingTildeInPath)
                     }
                     
                     // Button 2 (Center) - Activity Monitor
-                    CrustButton(id: 2, icon: "cpu", tooltip: "Activity Monitor", isVisible: isVisible, hoveredButton: $hoveredButton, offset: middleOffset, iconSize: iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
+                    CrustButton(id: 2, icon: "cpu", tooltip: "Activity Monitor", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: middleOffset, iconSize: iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
                         NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app"))
                     }
                     
                     // Button 3 (Right) - Mission Control
-                    CrustButton(id: 3, icon: "flowchart", tooltip: "Mission Control", isVisible: isVisible, hoveredButton: $hoveredButton, offset: rightOffset, iconSize: iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
+                    CrustButton(id: 3, icon: "flowchart", tooltip: "Mission Control", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: rightOffset, iconSize: iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
                         NSWorkspace.shared.launchApplication("Mission Control")
                     }
                 }
@@ -92,7 +96,7 @@ struct CrustButton: View {
     let id: Int
     let icon: String
     let tooltip: String
-    let isVisible: Bool // LIVE PREVIEW SYNC
+    let isExpanded: Bool // LIVE PREVIEW SYNC
     @Binding var hoveredButton: Int?
     let offset: CGSize
     let iconSize: Double // LIVE SIZE
@@ -145,7 +149,7 @@ struct CrustButton: View {
         .buttonStyle(PlainButtonStyle())
         .contentShape(Circle())
         .offset(offset) // UNIFIED ABSOLUTE MATH
-        .animation(.spring(response: 0.4, dampingFraction: 0.6), value: isVisible) // ORBITAL ENTRANCE BOUNCE
+        .animation(.spring(response: 0.4, dampingFraction: 0.6), value: isExpanded) // ORBITAL ENTRANCE BOUNCE
         .scaleEffect(hoveredButton == id ? 1.2 : 1.0) // JUICY SCALING
         .blur(radius: (hoveredButton != nil && hoveredButton != id) ? 0.5 : 0) // DEFOCUS OTHERS
         .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hoveredButton) // SPRING ANIMATION

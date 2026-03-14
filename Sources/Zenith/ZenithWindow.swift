@@ -108,8 +108,8 @@ class ZenithWindow: NSWindow, ObservableObject {
         let isSettingsOpen = UserDefaults.standard.bool(forKey: "isSettingsOpen")
         let isExpanded = isHovering || isSettingsOpen
         
-        // When hovering or Settings are open, slide the window down by 195px so it's partially on screen (200px down)
-        let targetY = isExpanded ? topY - 200 : topY - 5
+        // When hovering or Settings are open, slide the window down by 245px so it's partially on screen (250px down to accommodate dropBuffer)
+        let targetY = isExpanded ? topY - 250 : topY - 5
         let targetFrame = NSRect(x: centerX, y: targetY, width: windowWidth, height: windowHeight)
         
         NSAnimationContext.runAnimationGroup { context in
