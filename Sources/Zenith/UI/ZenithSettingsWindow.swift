@@ -6,7 +6,7 @@ class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
     
     init() {
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: 300),
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 450),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -44,6 +44,7 @@ class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
 struct SettingsView: View {
     @AppStorage("arcSpread") private var arcSpread: Double = 100.0
     @AppStorage("iconSize") private var iconSize: Double = 14.0
+    @AppStorage("dropDepth") private var dropDepth: Double = 40.0
     @AppStorage("isDarkGlass") private var isDarkGlass: Bool = false
     @AppStorage("isSettingsOpen") private var isSettingsOpen: Bool = false
     
@@ -68,6 +69,12 @@ struct SettingsView: View {
                 .padding(.vertical, 8)
                 
                 VStack(alignment: .leading) {
+                    Text("Drop Depth: \(Int(dropDepth))px")
+                    Slider(value: $dropDepth, in: 20...100, step: 1.0)
+                }
+                .padding(.bottom, 8)
+                
+                VStack(alignment: .leading) {
                     Text("Icon Size: \(Int(iconSize))pt")
                     Slider(value: $iconSize, in: 10...25, step: 1.0)
                 }
@@ -87,7 +94,7 @@ struct SettingsView: View {
             }
         }
         .padding(20)
-        .frame(width: 400, height: 400)
+        .frame(width: 400, height: 450)
         
         Button("Close & Apply") {
             NSApp.keyWindow?.close()
