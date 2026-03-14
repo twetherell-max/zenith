@@ -18,11 +18,11 @@ struct ZenithCrustView: View {
     
     // UNIFIED OFFSET MATH
     private var leftOffset: CGSize {
-        CGSize(width: -(arcSpread + iconSize), height: -(arcSpread / 4))
+        CGSize(width: -arcSpread, height: abs(arcSpread) * -0.5)
     }
     
     private var rightOffset: CGSize {
-        CGSize(width: (arcSpread + iconSize), height: -(arcSpread / 4))
+        CGSize(width: arcSpread, height: abs(arcSpread) * -0.5)
     }
     
     var body: some View {
@@ -43,7 +43,7 @@ struct ZenithCrustView: View {
                     }
                     
                     // Button 2 (Center) - Activity Monitor
-                    CrustButton(id: 2, icon: "cpu", tooltip: "Activity Monitor", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: CGSize(width: 0, height: 20), iconSize: iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
+                    CrustButton(id: 2, icon: "cpu", tooltip: "Activity Monitor", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: CGSize(width: 0, height: 15), iconSize: iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
                         NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app"))
                     }
                     
@@ -119,7 +119,7 @@ struct CrustButton: View {
         .frame(width: iconSize * 3.0, height: iconSize * 3.0) // ELASTIC EXPLICIT FRAME
         .buttonStyle(PlainButtonStyle())
         .contentShape(Circle())
-        .offset(isExpanded ? offset : .zero) // SLIDE ON PREVIEW OR HOVER
+        .offset(isExpanded ? offset : CGSize(width: 0, height: -100)) // SLIDE ON PREVIEW OR HOVER, OTHERWISE TUCK AWAY
         .animation(.spring(response: 0.4, dampingFraction: 0.6), value: isExpanded) // ORBITAL ENTRANCE BOUNCE
         .scaleEffect(hoveredButton == id ? 1.2 : 1.0) // JUICY SCALING
         .blur(radius: (hoveredButton != nil && hoveredButton != id) ? 0.5 : 0) // DEFOCUS OTHERS
