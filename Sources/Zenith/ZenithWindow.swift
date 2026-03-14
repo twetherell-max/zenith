@@ -50,7 +50,15 @@ class ZenithWindow: NSWindow, ObservableObject {
         print(">>> ZENITH: NSHostingView bridge established. ContentView: \(String(describing: self.contentView))")
         
         setupTrackingArea()
+        
+        // KVO LIVE STATE SYNC
+        UserDefaults.standard.addObserver(self, forKeyPath: "isSettingsOpen", options: [.new], context: nil)
+        
         self.orderFrontRegardless()
+    }
+    
+    deinit {
+        UserDefaults.standard.removeObserver(self, forKeyPath: "isSettingsOpen")
     }
 
     private func setupTrackingArea() {
@@ -108,6 +116,15 @@ class ZenithWindow: NSWindow, ObservableObject {
             context.duration = 0.4
             context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
             self.animator().setFrame(targetFrame, display: true)
+        }
+    }
+    
+    // LISTEN TO APPKIT/USERDEFAULTS CHANGES
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        if keyPath == "isSettingsOpen" {
+            DispatchQueue.main.async {
+                self.updateWindowFrame()
+            }
         }
     }
 

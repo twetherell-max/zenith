@@ -16,6 +16,15 @@ struct ZenithCrustView: View {
         isHovering || isSettingsOpen
     }
     
+    // UNIFIED OFFSET MATH
+    private var leftOffset: CGSize {
+        CGSize(width: -(arcSpread + iconSize), height: -(arcSpread / 4))
+    }
+    
+    private var rightOffset: CGSize {
+        CGSize(width: (arcSpread + iconSize), height: -(arcSpread / 4))
+    }
+    
     var body: some View {
         let _ = print(">>> BUTTONS SHOULD BE VISIBLE NOW")
         
@@ -29,7 +38,7 @@ struct ZenithCrustView: View {
             VStack {
                 HStack(spacing: 60) { // REFINED SPACING
                     // Button 1 (Left) - Open Downloads
-                    CrustButton(id: 1, icon: "command", tooltip: "Open Downloads", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: CGSize(width: -(arcSpread + iconSize), height: -(arcSpread / 4)), iconSize: iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
+                    CrustButton(id: 1, icon: "command", tooltip: "Open Downloads", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: leftOffset, iconSize: iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
                         NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: ("~/Downloads" as NSString).expandingTildeInPath)
                     }
                     
@@ -39,7 +48,7 @@ struct ZenithCrustView: View {
                     }
                     
                     // Button 3 (Right) - Mission Control
-                    CrustButton(id: 3, icon: "flowchart", tooltip: "Mission Control", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: CGSize(width: (arcSpread + iconSize), height: -(arcSpread / 4)), iconSize: iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
+                    CrustButton(id: 3, icon: "flowchart", tooltip: "Mission Control", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: rightOffset, iconSize: iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
                         NSWorkspace.shared.launchApplication("Mission Control")
                     }
                 }

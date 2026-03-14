@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-class ZenithSettingsWindow: NSWindow {
+class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
     static var shared: ZenithSettingsWindow?
     
     init() {
@@ -16,9 +16,9 @@ class ZenithSettingsWindow: NSWindow {
         self.center()
         self.setFrameAutosaveName("ZenithSettingsWindow")
         self.isReleasedWhenClosed = false
-        
         let settingsView = SettingsView()
         self.contentView = NSHostingView(rootView: settingsView)
+        self.delegate = self
     }
     
     static func show() {
@@ -29,15 +29,15 @@ class ZenithSettingsWindow: NSWindow {
         NSApp.activate(ignoringOtherApps: true)
     }
     
+    
     // WINDOW LIFECYCLE SYNC
-    override func becomeKey() {
-        super.becomeKey()
+    func windowDidBecomeKey(_ notification: Notification) {
         UserDefaults.standard.set(true, forKey: "isSettingsOpen")
     }
     
-    override func close() {
-        super.close()
+    func windowWillClose(_ notification: Notification) {
         UserDefaults.standard.set(false, forKey: "isSettingsOpen")
+        ZenithSettingsWindow.shared = nil // FREE MEMORY
     }
 }
 
@@ -87,7 +87,12 @@ struct SettingsView: View {
             }
         }
         .padding(20)
-        .frame(width: 400, height: 350)
+        .frame(width: 400, height: 400)
+        
+        Button("Close & Apply") {
+            NSApp.keyWindow?.close()
+        }
+        .padding(.bottom, 20)
         }
     }
 }
