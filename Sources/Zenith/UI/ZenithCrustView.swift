@@ -17,17 +17,37 @@ struct ZenithCrustView: View {
         isHovering || isSettingsOpen
     }
     
-    // RIGID ARC MATH
+    // RADIUS ENGINE
+    private var radius: Double {
+        arcSpread
+    }
+    
+    // POLAR COORDINATE MATH (RADIANS)
+    // Left: 135 degrees (135 * pi / 180)
     private var leftOffset: CGSize {
-        CGSize(width: -arcSpread, height: isVisible ? (dropDepth - 25) : -60)
+        let radians = 135.0 * .pi / 180.0
+        return CGSize(
+            width: radius * cos(radians),
+            height: isVisible ? radius * sin(radians) : -100 // TUCK DEEPER
+        )
     }
     
+    // Center: 90 degrees (90 * pi / 180)
     private var middleOffset: CGSize {
-        CGSize(width: 0, height: isVisible ? dropDepth : -60)
+        let radians = 90.0 * .pi / 180.0
+        return CGSize(
+            width: radius * cos(radians), // Will be 0
+            height: isVisible ? radius * sin(radians) : -100
+        )
     }
     
+    // Right: 45 degrees (45 * pi / 180)
     private var rightOffset: CGSize {
-        CGSize(width: arcSpread, height: isVisible ? (dropDepth - 25) : -60)
+        let radians = 45.0 * .pi / 180.0
+        return CGSize(
+            width: radius * cos(radians),
+            height: isVisible ? radius * sin(radians) : -100
+        )
     }
     
     var body: some View {
@@ -41,7 +61,7 @@ struct ZenithCrustView: View {
                 .offset(y: -40) // REACH UP TO THE PHYSICAL NOTCH
             
             VStack {
-                HStack(spacing: 60) { // REFINED SPACING
+                ZStack { // POLAR COORDINATE ORIGIN (0,0)
                     // Button 1 (Left) - Open Downloads
                     CrustButton(id: 1, icon: "command", tooltip: "Open Downloads", isVisible: isVisible, hoveredButton: $hoveredButton, offset: leftOffset, iconSize: iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
                         NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: ("~/Downloads" as NSString).expandingTildeInPath)
