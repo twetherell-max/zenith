@@ -35,7 +35,7 @@ struct ZenithCrustView: View {
                     .zIndex(1)
                     
                     CrustButton(id: 2, icon: "gearshape.fill", tooltip: "Settings", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: .zero, iconSize: state.iconSize, isDarkGlass: state.isDarkGlass, isSettingsOpen: state.isSettingsOpen) {
-                        AppDelegate.shared.showSettings()
+                        AppDelegate.shared.showSettingsWindow()
                     }
                     .padding(10) 
                     .contentShape(Rectangle()) 

@@ -78,7 +78,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         appMenuItem.submenu = appMenu
         
         // SETTINGS (Cmd+,)
-        let settingsItem = NSMenuItem(title: "Settings...", action: #selector(showSettings), keyEquivalent: ",")
+        let settingsItem = NSMenuItem(title: "Settings...", action: #selector(showSettingsWindow), keyEquivalent: ",")
         appMenu.addItem(settingsItem)
         
         appMenu.addItem(NSMenuItem.separator())
@@ -95,18 +95,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem?.button {
             button.image = NSImage(systemSymbolName: "circle.hexagonpath", accessibilityDescription: nil)
-            button.action = #selector(showSettings)
+            button.action = #selector(showSettingsWindow)
             button.target = self
         }
         
         let menu = NSMenu()
-        menu.addItem(NSMenuItem(title: "Settings...", action: #selector(showSettings), keyEquivalent: ","))
+        menu.addItem(NSMenuItem(title: "Settings...", action: #selector(showSettingsWindow), keyEquivalent: ","))
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit Zenith", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         statusItem?.menu = menu
     }
     
-    @objc func showSettings() {
+    @objc func showSettingsWindow() {
         // ENFORCE SINGLE BRAIN UNIFICATION
         ZenithState.shared.isSettingsOpen = true
         ZenithState.shared.isExpanded = true
