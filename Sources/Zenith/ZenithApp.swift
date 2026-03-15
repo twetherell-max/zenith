@@ -5,10 +5,8 @@ struct ZenithApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        WindowGroup {
-            Color.clear
-                .frame(width: 0, height: 0)
-                .hidden()
+        Settings { 
+            EmptyView() 
         }
     }
 }
@@ -130,7 +128,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             print(">>> CREATING UNIFIED SETTINGS WINDOW")
             settingsWindow = ZenithSettingsWindow()
             
-            // Register closure cleanup
             NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: settingsWindow, queue: .main) { [weak self] _ in
                 print(">>> UNIFIED SETTINGS CLOSING | Cleaning flags")
                 ZenithState.shared.isSettingsOpen = false
@@ -140,7 +137,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         print(">>> ACTIVATING UNIFIED SETTINGS")
-        NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
         settingsWindow?.makeKeyAndOrderFront(nil)
         settingsWindow?.center()
