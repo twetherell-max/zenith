@@ -7,11 +7,20 @@ struct ZenithDropletView: View {
     // ROOT GEOMETRY MEMORY PIPELINE (Observes state instantly instead of polling disk)
     @EnvironmentObject var state: ZenithState
     
+    // DEBUG ID: If you see two different numbers, there are two windows.
+    private let debugID = Int.random(in: 1...100)
+    
     var body: some View {
         ZStack(alignment: .top) { // PIN TO TOP
             // Radial Menu (The Crust) - Behind the droplet
             ZenithCrustView(isHovering: isHovering)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+            
+            // DEBUG LABEL
+            Text("ID: \(debugID)")
+                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                .foregroundColor(.white.opacity(0.3))
+                .padding(.top, 2)
         }
         // FORCE COMPLETE VIEW RECONSTRUCTION ON LIVE COMBINE UPDATES
         .id("zenith-main-view") 

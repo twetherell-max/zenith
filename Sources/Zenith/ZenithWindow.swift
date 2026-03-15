@@ -35,6 +35,7 @@ class ZenithWindow: NSWindow {
         self.isOpaque = false
         self.backgroundColor = .clear // TOTAL TRANSPARENCY RESTORED
         self.hasShadow = false // REMOVE APPKIT BLACK BOX SHADOW
+        self.title = "ZenithWindow" // FOR IDENTIFICATION
         self.alphaValue = 1.0
         self.level = NSWindow.Level(Int(CGWindowLevelForKey(.maximumWindow))) // ABSOLUTE FOREGROUND
         self.ignoresMouseEvents = false

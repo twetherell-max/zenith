@@ -16,15 +16,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var zenithWindow: ZenithWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // 1. ZOMBIE PURGE: Kill any existing windows by title to clear remnants
+        NSApp.windows.forEach { window in
+            if window.title == "ZenithWindow" {
+                print(">>> STARTUP PURGE: Closing zombie window...")
+                window.close()
+            }
+        }
+
         // Re-enable Background Mode (No Dock icon)
         NSApp.setActivationPolicy(.accessory)
         
-        let builtInScreen = NotchManager.shared.findBuiltInScreen()
-        let notchFrame = NotchManager.shared.notchFrame
-        
-        // Initialize window and store in strong property
-        let window = ZenithWindow(notchFrame: notchFrame, targetScreen: builtInScreen)
-        self.zenithWindow = window
+        // 2. SINGLETON CHECK: Only create window if it doesn't exist
+        if self.zenithWindow == nil {
+            let builtInScreen = NotchManager.shared.findBuiltInScreen()
+            let notchFrame = NotchManager.shared.notchFrame
+            
+            let window = ZenithWindow(notchFrame: notchFrame, targetScreen: builtInScreen)
+            window.title = "ZenithWindow" // SET TITLE FOR PURGE IDENTIFICATION
+            self.zenithWindow = window
+        }
         
         ShortcutManager.shared.startMonitoring { [weak self] type in
             switch type {
