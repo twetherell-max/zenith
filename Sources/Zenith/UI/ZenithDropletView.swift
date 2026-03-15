@@ -27,7 +27,6 @@ struct ZenithDropletView: View {
         .onChange(of: state.arcSpread) { _ in } // LIVE REDRAW TRIGGER
         .onChange(of: state.dropDepth) { _ in }
         .frame(width: 800, height: 400)
-        .padding(.top, 40) // PUSH DOWN TO CLEAR PHYSICAL NOTCH
         .contentShape(Rectangle()) // MASSIVE HITBOX WALL
         .background(Color.black.opacity(0.001)) // FIX HITBOX TRANSPARENCY BUG AND KEEP WINDOW ACTIVE
         .onAppear {

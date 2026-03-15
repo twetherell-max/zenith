@@ -17,22 +17,27 @@ struct ZenithCrustView: View {
     @AppStorage("isDarkGlass") private var isDarkGlass: Bool = false
     @AppStorage("isSettingsOpen") private var isSettingsOpen: Bool = false
     
-    // Expansion Multiplier for rigid physics
-    private var expansionAmount: Double {
-        isExpanded ? 1.0 : 0.0
-    }    // VERTICAL U-SHAPE MATH ONLY (X is handled by HStack spacing)
-    private var leftYOffset: Double {
-        let y = state.dropDepth - (state.arcSpread * 0.3)
-        return -100 + (expansionAmount * (y + 100))
-    }
-    
-    private var middleYOffset: Double {
-        return -100 + (expansionAmount * (state.dropDepth + 100))
-    }
-    
-    private var rightYOffset: Double {
-        let y = state.dropDepth - (state.arcSpread * 0.3)
-        return -100 + (expansionAmount * (y + 100))
+    // UNIFIED POSITION ENGINE
+    private func getPosition(for id: Int) -> CGPoint {
+        if !isExpanded {
+            return CGPoint(x: 0, y: -100)
+        }
+        
+        let angle: Double
+        switch id {
+        case 1: angle = -45.0 * .pi / 180.0
+        case 2: angle = 0.0
+        case 3: angle = 45.0 * .pi / 180.0
+        default: angle = 0.0
+        }
+        
+        if id == 2 {
+            return CGPoint(x: 0, y: state.dropDepth)
+        } else {
+            let x = sin(angle) * state.arcSpread
+            let y = state.dropDepth - (cos(angle) * state.arcSpread * 0.5)
+            return CGPoint(x: x, y: y)
+        }
     }
     
     var body: some View {
@@ -40,13 +45,13 @@ struct ZenithCrustView: View {
         
         ZStack(alignment: .top) { // ALIGN TO TOP
             VStack {
-                HStack(spacing: state.arcSpread * expansionAmount) {
+                ZStack { // ABSOLUTE COORDINATE ORIGIN
                     // Button 1 (Left) - Open Downloads
                     CrustButton(id: 1, icon: "folder", tooltip: "Downloads", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: .zero, iconSize: state.iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
                         let downloadsURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
                         NSWorkspace.shared.open(downloadsURL)
                     }
-                    .offset(y: leftYOffset)
+                    .offset(x: getPosition(for: 1).x, y: getPosition(for: 1).y)
                     .zIndex(1)
                     
                     // Button 2 (Center) - App Settings
@@ -54,7 +59,7 @@ struct ZenithCrustView: View {
                         print("DEBUG: Settings Button Tapped")
                         let _ = print("Settings opened")
                     }
-                    .offset(y: middleYOffset)
+                    .offset(x: getPosition(for: 2).x, y: getPosition(for: 2).y)
                     .zIndex(2)
                     
                     // Button 3 (Right) - Mission Control
@@ -63,15 +68,13 @@ struct ZenithCrustView: View {
                             NSWorkspace.shared.open(url)
                         }
                     }
-                    .offset(y: rightYOffset)
+                    .offset(x: getPosition(for: 3).x, y: getPosition(for: 3).y)
                     .zIndex(1)
                 }
-                .id(UUID()) // THE MAGIC FIX: FORCE TOTAL RECONSTRUCTION
                 .frame(width: 600, height: 100)
                 .zIndex(5) // FORCE FOREGROUND
             }
             .frame(width: 800, height: 250) // EXPANDED HEIGHT
-            .padding(.top, 50)
             .background(Color.black.opacity(0.01)) // GHOST BACKGROUND TO KEEP WINDOW ACTIVE
         }
         .frame(width: 800, height: 400)
