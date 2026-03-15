@@ -12,9 +12,11 @@ struct ZenithApp: App {
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate {
+    static var shared: AppDelegate?
     var zenithWindow: ZenithWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        AppDelegate.shared = self
         // 0. PROCESS TERMINATION: Kill other running instances of Zenith
         let runningApps = NSWorkspace.shared.runningApplications
         let currentApp = NSRunningApplication.current
@@ -84,6 +86,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc func openSettings() {
+        ZenithState.shared.isSettingsOpen = true
+        NSApp.activate(ignoringOtherApps: true)
         ZenithSettingsWindow.show()
     }
     

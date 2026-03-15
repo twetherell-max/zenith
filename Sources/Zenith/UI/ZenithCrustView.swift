@@ -9,11 +9,10 @@ struct ZenithCrustView: View {
     @State private var hoveredButton: Int? = nil // TRACK HOVER STATE
     
     @AppStorage("isDarkGlass") private var isDarkGlass: Bool = false
-    @AppStorage("isSettingsOpen") private var isSettingsOpen: Bool = false
     
     // VISIBILITY SYNC
     private var isExpanded: Bool {
-        isHovering || isSettingsOpen
+        isHovering || state.isSettingsOpen
     }
     
     // REDUNDANT WRAPPERS REMOVED - DIRECT STATE BINDING ENFORCED
@@ -50,7 +49,7 @@ struct ZenithCrustView: View {
             VStack {
                 ZStack { // ABSOLUTE COORDINATE ORIGIN
                     // Button 1 (Left) - Open Downloads
-                    CrustButton(id: 1, icon: "folder", tooltip: "Downloads", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: .zero, iconSize: state.iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
+                    CrustButton(id: 1, icon: "folder", tooltip: "Downloads", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: .zero, iconSize: state.iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: state.isSettingsOpen) {
                         let downloadsURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
                         NSWorkspace.shared.open(downloadsURL)
                     }
@@ -58,15 +57,14 @@ struct ZenithCrustView: View {
                     .zIndex(1)
                     
                     // Button 2 (Center) - App Settings
-                    CrustButton(id: 2, icon: "gearshape.fill", tooltip: "Settings", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: .zero, iconSize: state.iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
-                        NSApp.activate(ignoringOtherApps: true)
-                        ZenithSettingsWindow.show()
+                    CrustButton(id: 2, icon: "gearshape.fill", tooltip: "Settings", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: .zero, iconSize: state.iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: state.isSettingsOpen) {
+                        AppDelegate.shared?.openSettings()
                     }
                     .offset(x: getPosition(for: 2).x, y: getPosition(for: 2).y)
                     .zIndex(2)
                     
                     // Button 3 (Right) - Mission Control
-                    CrustButton(id: 3, icon: "flowchart", tooltip: "Mission Control", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: .zero, iconSize: state.iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
+                    CrustButton(id: 3, icon: "flowchart", tooltip: "Mission Control", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: .zero, iconSize: state.iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: state.isSettingsOpen) {
                         if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.exposelauncher") {
                             NSWorkspace.shared.open(url)
                         }

@@ -50,6 +50,7 @@ class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
     }
     
     func windowWillClose(_ notification: Notification) {
+        ZenithState.shared.isSettingsOpen = false
         ZenithSettingsWindow.shared = nil
     }
 }

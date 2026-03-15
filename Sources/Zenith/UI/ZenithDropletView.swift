@@ -28,6 +28,19 @@ struct ZenithDropletView: View {
         .id("zenith-main-view") 
         .onChange(of: state.arcSpread) { _ in } // LIVE REDRAW TRIGGER
         .onChange(of: state.dropDepth) { _ in }
+        .onChange(of: state.isSettingsOpen) { isOpen in
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                if isOpen { isHovering = true }
+            }
+        }
+        .onHover { hovering in
+            // LOCK LOGIC: If settings are open, do NOT change expansion based on mouse
+            if !state.isSettingsOpen {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                    isHovering = hovering
+                }
+            }
+        }
         .frame(width: 800, height: 400)
         .contentShape(Rectangle()) // MASSIVE HITBOX WALL
         .background(Color.black.opacity(0.001)) // FIX HITBOX TRANSPARENCY BUG AND KEEP WINDOW ACTIVE
