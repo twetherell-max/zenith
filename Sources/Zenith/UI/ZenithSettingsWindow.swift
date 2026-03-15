@@ -11,8 +11,11 @@ class ZenithSettingsWindow: NSPanel, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
+        print(">>> SETTINGS PANEL LOADED | FRAME: \(self.frame)")
+        
         self.level = .floating // ENSURE VISIBILITY ABOVE TERMINAL
         self.isFloatingPanel = true
+        self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         self.becomesKeyOnlyIfNeeded = false
         self.center() // ENSURE VISIBILITY IN CENTER OF SCREEN
         self.title = "Zenith Settings"
@@ -28,11 +31,14 @@ class ZenithSettingsWindow: NSPanel, NSWindowDelegate {
             shared = ZenithSettingsWindow()
         }
         
-        // ACTIVATE APP SESSION & FORCE PANEL TO FRONT
+        // 1. ACTIVATE APP SESSION (Explicit focus request)
         NSApp.activate(ignoringOtherApps: true)
         
+        // 2. MAKE KEY AND ORDER FRONT (The 'Key' Fix)
         shared?.makeKeyAndOrderFront(nil)
-        shared?.orderFrontRegardless() // ENSURE VISIBILITY ABOVE TERMINAL
+        
+        // 3. FORCE ABOVE EVERYTHING
+        shared?.orderFrontRegardless()
     }
     
     
