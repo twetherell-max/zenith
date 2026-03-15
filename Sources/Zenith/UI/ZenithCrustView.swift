@@ -36,8 +36,6 @@ struct ZenithCrustView: View {
                     
                     CrustButton(id: 2, icon: "gearshape.fill", tooltip: "Settings", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: .zero, iconSize: state.iconSize, isDarkGlass: state.isDarkGlass, isSettingsOpen: state.isSettingsOpen) {
                         NSApp.activate(ignoringOtherApps: true)
-                        AppDelegate.shared.settingsWindow?.makeKeyAndOrderFront(nil)
-                        AppDelegate.shared.settingsWindow?.orderFrontRegardless()
                         AppDelegate.shared.showSettingsWindow()
                     }
                     .padding(10) 
@@ -91,7 +89,6 @@ struct CrustButton: View {
                     Image(systemName: icon)
                         .font(.system(size: iconSize, weight: .semibold)) 
                         .foregroundColor(hoveredButton == id ? .white : .white.opacity(0.8)) 
-                        .frame(width: icon == "gearshape.fill" ? 40 : nil, height: icon == "gearshape.fill" ? 40 : nil) 
                     
                     if id == 2 && isSettingsOpen {
                         Text("OPEN")

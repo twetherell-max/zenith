@@ -9,6 +9,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         super.init()
         AppDelegate.shared = self
     }
+    
     var zenithWindow: ZenithWindow?
     var settingsWindow: NSWindow?
     var statusItem: NSStatusItem?
@@ -20,6 +21,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.disableRelaunchOnLogin()
         
         setupStatusItem()
+
         // 1. ZOMBIE PURGE: Kill any existing windows by title to clear remnants
         NSApp.windows.forEach { window in
             if window.title == "ZenithWindow" || window.title == "Zenith Settings" {

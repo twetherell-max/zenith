@@ -6,7 +6,7 @@ import Combine
 class ZenithHitView: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? {
         let view = super.hitTest(point)
-        // If the hit lands strictly on this view (the background), return nil for passthrough.
+        // SILHOUETTE LOGIC: If the hit lands strictly on this view (the background), return nil for passthrough.
         // If it lands on a subview (like a button or the notch), return that view.
         return view === self ? nil : view
     }
