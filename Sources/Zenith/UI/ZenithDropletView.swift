@@ -3,8 +3,7 @@ import SwiftUI
 struct ZenithDropletView: View {
     @Binding var isPulsing: Bool
     
-    // ROOT GEOMETRY MEMORY PIPELINE (Observes state instantly instead of polling disk)
-    @EnvironmentObject var state: ZenithState
+    @ObservedObject var state = ZenithState.shared
     
     // DEBUG ID: If you see two different numbers, there are two windows.
     private let debugID = Int.random(in: 1...100)

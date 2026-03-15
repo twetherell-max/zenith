@@ -57,7 +57,7 @@ class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
 }
 
 struct SettingsView: View {
-    @ObservedObject var state: ZenithState
+    @ObservedObject var state = ZenithState.shared
     
     @AppStorage("isDarkGlass") private var isDarkGlass: Bool = false
     
@@ -98,6 +98,9 @@ struct SettingsView: View {
                 }
                 .formStyle(.grouped)
                 // MASTER MONITOR: Double-wire the data flow output to terminal
+                .onChange(of: state.arcSpread) { _ in
+                    print("GLOBAL SPREAD UPDATED: \(state.arcSpread)")
+                }
                 .onChange(of: state.arcSpread) { newValue in
                     print(">>> LIVE ARC SPREAD: \(newValue)")
                 }

@@ -4,7 +4,7 @@ import CoreGraphics
 struct ZenithCrustView: View {
     let isHovering: Bool
     
-    @EnvironmentObject var state: ZenithState
+    @ObservedObject var state = ZenithState.shared
     
     @State private var hoveredButton: Int? = nil // TRACK HOVER STATE
     
