@@ -32,12 +32,16 @@ struct ZenithDropletView: View {
         .background(Color.black.opacity(0.001)) // FIX HITBOX TRANSPARENCY BUG AND KEEP WINDOW ACTIVE
         .onAppear {
             print(">>> DROPLET VIEW APPEARED: Refreshing positions...")
+            state.load() // FORCE INITIAL SYNC
         }
     }
     
     private func openSettingsWindow() {
         print(">>> OPENING SETTINGS WINDOW")
+        // FORCE APP TO SHOW IN DOCK AND GAIN FOCUS
+        NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
+        
         ZenithSettingsWindow.show()
     }
 }

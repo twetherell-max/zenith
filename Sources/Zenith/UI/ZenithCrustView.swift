@@ -73,14 +73,14 @@ struct ZenithCrustView: View {
                         let downloadsURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
                         NSWorkspace.shared.open(downloadsURL)
                     }
-                    .zIndex(0)
+                    .zIndex(1)
                     
                     // Button 2 (Center) - App Settings
                     CrustButton(id: 2, icon: "gearshape.fill", tooltip: "Settings", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: middleOffset, iconSize: state.iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
                         // Action handled in button for now, but can be augmented
                         let _ = print("Settings opened")
                     }
-                    .zIndex(1)
+                    .zIndex(2)
                     
                     // Button 3 (Right) - Mission Control
                     CrustButton(id: 3, icon: "flowchart", tooltip: "Mission Control", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: rightOffset, iconSize: state.iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
@@ -88,7 +88,7 @@ struct ZenithCrustView: View {
                             NSWorkspace.shared.open(url)
                         }
                     }
-                    .zIndex(0)
+                    .zIndex(1)
                 }
                 .frame(width: 400, height: 100)
                 .zIndex(5) // FORCE FOREGROUND
