@@ -6,7 +6,7 @@ class ZenithSettingsWindow: NSPanel, NSWindowDelegate {
     
     init() {
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: 600),
+            contentRect: NSRect(x: 100, y: 100, width: 400, height: 400),
             styleMask: [.nonactivatingPanel, .titled, .closable, .resizable, .utilityWindow],
             backing: .buffered,
             defer: false

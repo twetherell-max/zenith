@@ -23,16 +23,20 @@ struct ZenithCrustView: View {
             return CGPoint(x: 0, y: -100)
         }
         
+        // 4. ANTI-CLUMP FALLBACKS: Force non-zero values inline
+        let effectiveSpread = state.arcSpread == 0 ? 80.0 : state.arcSpread
+        let effectiveDepth = state.dropDepth == 0 ? 40.0 : state.dropDepth
+        
         switch id {
         case 1: // Left
-            let x = -state.arcSpread
-            let y = state.dropDepth + (pow(state.arcSpread / 100, 2) * 20)
+            let x = -effectiveSpread
+            let y = effectiveDepth + (pow(effectiveSpread / 100, 2) * 20)
             return CGPoint(x: x, y: y)
         case 2: // Center
-            return CGPoint(x: 0, y: state.dropDepth)
+            return CGPoint(x: 0, y: effectiveDepth)
         case 3: // Right
-            let x = state.arcSpread
-            let y = state.dropDepth + (pow(state.arcSpread / 100, 2) * 20)
+            let x = effectiveSpread
+            let y = effectiveDepth + (pow(effectiveSpread / 100, 2) * 20)
             return CGPoint(x: x, y: y)
         default:
             return .zero

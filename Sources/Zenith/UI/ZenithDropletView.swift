@@ -10,6 +10,8 @@ struct ZenithDropletView: View {
     // DEBUG ID: If you see two different numbers, there are two windows.
     private let debugID = Int.random(in: 1...100)
     
+    private let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
+    
     var body: some View {
         ZStack(alignment: .top) { // PIN TO TOP
             // Radial Menu (The Crust) - Behind the droplet
@@ -29,6 +31,7 @@ struct ZenithDropletView: View {
         .frame(width: 800, height: 400)
         .contentShape(Rectangle()) // MASSIVE HITBOX WALL
         .background(Color.black.opacity(0.001)) // FIX HITBOX TRANSPARENCY BUG AND KEEP WINDOW ACTIVE
+        .onReceive(timer) { _ in state.objectWillChange.send() }
     }
     
     private func openSettingsWindow() {
