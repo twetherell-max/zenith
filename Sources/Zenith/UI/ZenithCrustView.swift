@@ -17,6 +17,11 @@ struct ZenithCrustView: View {
         isHovering || isSettingsOpen
     }
     
+    // Expansion Multiplier for rigid physics
+    private var expansionAmount: Double {
+        isExpanded ? 1.0 : 0.0
+    }
+    
     // RADIUS ENGINE
     private var radius: Double {
         arcSpread
@@ -26,9 +31,10 @@ struct ZenithCrustView: View {
     // Left: 135 degrees (135 * pi / 180)
     private var leftOffset: CGSize {
         let radians = 135.0 * .pi / 180.0
+        let targetDrop = dropDepth - (radius * sin(radians))
         return CGSize(
-            width: radius * cos(radians),
-            height: isExpanded ? dropDepth - (radius * sin(radians)) : -100 // Y goes down, subtract sin to push outward up
+            width: (radius * cos(radians)) * expansionAmount,
+            height: -100 + (expansionAmount * (targetDrop + 100))
         )
     }
     
@@ -36,16 +42,17 @@ struct ZenithCrustView: View {
     private var middleOffset: CGSize {
         return CGSize(
             width: 0,
-            height: isExpanded ? dropDepth : -100
+            height: -100 + (expansionAmount * (dropDepth + 100))
         )
     }
     
     // Right: 45 degrees (45 * pi / 180)
     private var rightOffset: CGSize {
         let radians = 45.0 * .pi / 180.0
+        let targetDrop = dropDepth - (radius * sin(radians))
         return CGSize(
-            width: radius * cos(radians),
-            height: isExpanded ? dropDepth - (radius * sin(radians)) : -100
+            width: (radius * cos(radians)) * expansionAmount,
+            height: -100 + (expansionAmount * (targetDrop + 100))
         )
     }
     
@@ -144,7 +151,7 @@ struct CrustButton: View {
         .buttonStyle(PlainButtonStyle())
         .contentShape(Circle())
         .offset(offset) // UNIFIED ABSOLUTE MATH
-        .animation(.spring(response: 0.4, dampingFraction: 0.6), value: isExpanded) // ORBITAL ENTRANCE BOUNCE
+        .animation(.spring(response: 0.35, dampingFraction: 0.7), value: isExpanded) // UNIFIED LAYOUT ANIMATION
         .scaleEffect(hoveredButton == id ? 1.2 : 1.0) // JUICY SCALING
         .blur(radius: (hoveredButton != nil && hoveredButton != id) ? 0.5 : 0) // DEFOCUS OTHERS
         .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hoveredButton) // SPRING ANIMATION
