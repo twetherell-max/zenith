@@ -2,6 +2,15 @@ import AppKit
 import SwiftUI
 import Combine
 
+class PassthroughView: NSView {
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        let view = super.hitTest(point)
+        // If the hit is strictly on this view (the background), return nil for passthrough.
+        // If it's on a subview (like a button in the HostingView), return that view.
+        return view === self ? nil : view
+    }
+}
+
 class ZenithHostingView<Content: View>: NSHostingView<Content> {
     override func hitTest(_ point: NSPoint) -> NSView? {
         let state = ZenithState.shared
@@ -98,13 +107,14 @@ class ZenithWindow: NSWindow {
         let rootView = ZenithDropletView(
             isPulsing: Binding(get: { self.isPulsing }, set: { self.isPulsing = $0 })
         )
-        
         let hostingView = ZenithHostingView(rootView: rootView)
-        hostingView.frame = NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight)
+        hostingView.frame = NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight) // hostingView should fill its parent container
         hostingView.autoresizingMask = [NSView.AutoresizingMask.width, NSView.AutoresizingMask.height] // FORCE RESIZE TO WINDOW
         hostingView.layer?.masksToBounds = false
         
-        self.contentView = hostingView
+        let container = PassthroughView(frame: windowFrame)
+        container.addSubview(hostingView)
+        self.contentView = container
         self.contentView?.wantsLayer = true
         self.contentView?.layer?.isGeometryFlipped = false
         
