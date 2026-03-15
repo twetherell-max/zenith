@@ -61,7 +61,6 @@ class ZenithWindow: NSWindow {
         let rootView = ZenithDropletView(
             isPulsing: Binding(get: { self.isPulsing }, set: { self.isPulsing = $0 })
         )
-        .environmentObject(ZenithState.shared) // INJECT LIVE MEMORY PIPELINE
         
         let hostingView = NSHostingView(rootView: rootView)
         hostingView.frame = NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight)

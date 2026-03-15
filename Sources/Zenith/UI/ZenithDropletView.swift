@@ -5,9 +5,6 @@ struct ZenithDropletView: View {
     
     @ObservedObject var state = ZenithState.shared
     
-    // DEBUG ID: If you see two different numbers, there are two windows.
-    private let debugID = Int.random(in: 1...100)
-    
     private let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
     
     var body: some View {
@@ -18,8 +15,8 @@ struct ZenithDropletView: View {
             ZenithCrustView(isHovering: state.isExpanded || state.isSettingsOpen)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             
-            // DEBUG LABEL
-            Text("ID: \(debugID)")
+            // DEBUG LABEL: SHARED STATE PROOF
+            Text("BRAIN ID: \(state.debugID)")
                 .font(.system(size: 8, weight: .bold, design: .monospaced))
                 .foregroundColor(.white.opacity(0.3))
                 .padding(.top, 2)

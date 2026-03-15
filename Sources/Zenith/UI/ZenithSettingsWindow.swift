@@ -36,7 +36,15 @@ struct SettingsView: View {
             // BLUE VISUAL ANCHOR (IF THIS IS GONE, SWIFTUI IS DEAD)
             Color.blue
                 .frame(height: 20)
-                .overlay(Text("ZENITH SETTINGS").font(.caption2).bold().foregroundColor(.white))
+                .overlay(
+                    HStack {
+                        Text("ZENITH SETTINGS").font(.caption2).bold()
+                        Spacer()
+                        Text("BRAIN ID: \(state.debugID)").font(.system(size: 8, weight: .bold, design: .monospaced))
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 10)
+                )
             
             VStack(spacing: 20) {
                 Form {

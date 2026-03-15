@@ -21,7 +21,7 @@ class ZenithState: ObservableObject {
     @Published var isExpanded: Bool = false
     
     // DEBUG ID: If you see two different numbers, there are two windows.
-    private let debugID = Int.random(in: 1...100)
+    let debugID = Int.random(in: 1...100)
     
     private let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
     
