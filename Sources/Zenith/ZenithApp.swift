@@ -25,7 +25,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // FORCE SHARED INIT EARLY
+        // THE HARD LINK - MUST BE FIRST
         AppDelegate.shared = self
         
         // Accessory mode keeps it alive but out of the Dock
@@ -34,6 +34,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Kill ghosts
         NSApp.disableRelaunchOnLogin()
         
+        // FORCE MENU BAR
         setupStatusItem()
 
         if self.zenithWindow == nil {
@@ -62,7 +63,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem?.button {
-            button.image = NSImage(systemSymbolName: "circle.hexagonpath", accessibilityDescription: nil)
+            button.image = NSImage(systemSymbolName: "circle.hexagonpath", accessibilityDescription: "Zenith")
             button.action = #selector(showSettingsWindow)
             button.target = self
         }
@@ -81,6 +82,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         if settingsWindow == nil {
             print(">>> CREATING SETTINGS WINDOW...")
+            // EXPLICIT CREATION
             settingsWindow = ZenithSettingsWindow()
             settingsWindow?.isRestorable = false
             

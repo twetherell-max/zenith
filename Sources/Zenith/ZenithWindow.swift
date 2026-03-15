@@ -78,7 +78,7 @@ class ZenithWindow: NSWindow {
         
         self.isOpaque = false
         self.backgroundColor = .clear 
-        self.hasShadow = false 
+        self.hasShadow = false // NO SHADOW FOR CLEAN SILHOUETTE
         self.title = "ZenithWindow"
         self.level = .statusBar 
         self.ignoresMouseEvents = false
