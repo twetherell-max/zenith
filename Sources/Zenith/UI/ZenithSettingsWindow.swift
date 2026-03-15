@@ -16,6 +16,9 @@ class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
         self.isOpaque = true
         self.hasShadow = true
         
+        // KILL GHOSTS: Explicitly disable restoration
+        self.isRestorable = false
+        
         let settingsView = ZenithSettingsView()
         let hostingView = NSHostingView(rootView: settingsView)
         hostingView.frame = NSRect(x: 0, y: 0, width: 300, height: 400)
@@ -28,66 +31,55 @@ struct ZenithSettingsView: View {
     @ObservedObject var state = ZenithState.shared
     
     var body: some View {
-        let _ = print("Spread value: \(state.arcSpread)")
-        
-        return VStack(spacing: 0) {
-            // BLUE VISUAL ANCHOR (IF THIS IS GONE, SWIFTUI IS DEAD)
-            Color.blue
-                .frame(height: 20)
-                .overlay(
-                    HStack {
-                        Text("ZENITH SETTINGS").font(.caption2).bold()
-                        Spacer()
-                        Text("BRAIN ID: \(state.debugID)").font(.system(size: 8, weight: .bold, design: .monospaced))
-                    }
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 10)
-                )
+        VStack(spacing: 0) {
+            // PRODUCTION HEADER
+            VStack(spacing: 4) {
+                HStack {
+                    Text("ZENITH").font(.system(size: 10, weight: .black))
+                    Spacer()
+                    Text("BRAIN ID: \(state.debugID)").font(.system(size: 8, weight: .bold, design: .monospaced))
+                }
+                .foregroundColor(.secondary)
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+                
+                Divider()
+            }
+            .background(Color(NSColor.windowBackgroundColor))
             
             VStack(spacing: 20) {
                 Form {
                     Section {
                         Toggle("High Contrast (Dark Glass)", isOn: $state.isDarkGlass)
                             .contentShape(Rectangle())
-                            .zIndex(100)
                     }
                 
                     Section(header: Text("Geometry").font(.caption).foregroundColor(.secondary)) {
-                        VStack {
+                        VStack(alignment: .leading, spacing: 12) {
                             VStack(alignment: .leading) {
                                 Text("Arc Spread: \(Int(state.arcSpread))px")
                                 Slider(value: $state.arcSpread, in: 20...150, step: 1.0)
-                                    .contentShape(Rectangle())
-                                    .zIndex(100)
-                                    .onChange(of: state.arcSpread) { val in print("New Spread: \(val)") }
+                                    .onChange(of: state.arcSpread) { oldValue, newValue in
+                                        print("New Spread: \(newValue)")
+                                    }
                             }
-                        }
-                        .padding(2)
-                        .zIndex(100)
-                        
-                        VStack {
+                            
                             VStack(alignment: .leading) {
                                 Text("Drop Depth: \(Int(state.dropDepth))px")
                                 Slider(value: $state.dropDepth, in: 0...100, step: 1.0)
-                                    .contentShape(Rectangle())
-                                    .zIndex(100)
-                                    .onChange(of: state.dropDepth) { val in print("New Depth: \(val)") }
+                                    .onChange(of: state.dropDepth) { oldValue, newValue in
+                                        print("New Depth: \(newValue)")
+                                    }
                             }
-                        }
-                        .padding(2)
-                        .zIndex(100)
-                        
-                        VStack {
+                            
                             VStack(alignment: .leading) {
                                 Text("Icon Size: \(Int(state.iconSize))pt")
                                 Slider(value: $state.iconSize, in: 10...25, step: 1.0)
-                                    .contentShape(Rectangle())
-                                    .zIndex(100)
-                                    .onChange(of: state.iconSize) { val in print("New Size: \(val)") }
+                                    .onChange(of: state.iconSize) { oldValue, newValue in
+                                        print("New Size: \(newValue)")
+                                    }
                             }
                         }
-                        .padding(2)
-                        .zIndex(100)
                     }
                 }
                 .formStyle(.grouped)

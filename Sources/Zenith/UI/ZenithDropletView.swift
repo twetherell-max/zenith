@@ -24,11 +24,15 @@ struct ZenithDropletView: View {
         .contentShape(Rectangle()) 
         // FORCE COMPLETE VIEW RECONSTRUCTION ON LIVE COMBINE UPDATES
         .id("zenith-main-view") 
-        .onChange(of: state.arcSpread) { _ in } // LIVE REDRAW TRIGGER
-        .onChange(of: state.dropDepth) { _ in }
-        .onChange(of: state.isSettingsOpen) { isOpen in
+        .onChange(of: state.arcSpread) { oldValue, newValue in
+            // MODERN OBSERVER
+        }
+        .onChange(of: state.dropDepth) { oldValue, newValue in
+            // MODERN OBSERVER
+        }
+        .onChange(of: state.isSettingsOpen) { oldValue, newValue in
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                if isOpen {
+                if newValue {
                     state.isExpanded = true
                 }
             }
