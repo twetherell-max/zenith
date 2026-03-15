@@ -29,11 +29,6 @@ struct ZenithDropletView: View {
         .frame(width: 800, height: 400)
         .contentShape(Rectangle()) // MASSIVE HITBOX WALL
         .background(Color.black.opacity(0.001)) // FIX HITBOX TRANSPARENCY BUG AND KEEP WINDOW ACTIVE
-        .onAppear {
-            print(">>> DROPLET VIEW APPEARED: Refreshing positions...")
-            if state.arcSpread == 0 { state.arcSpread = 80 }
-            state.load() // FORCE INITIAL SYNC
-        }
     }
     
     private func openSettingsWindow() {

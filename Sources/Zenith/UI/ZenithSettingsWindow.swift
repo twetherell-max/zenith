@@ -7,7 +7,7 @@ class ZenithSettingsWindow: NSPanel, NSWindowDelegate {
     init() {
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 600),
-            styleMask: [.titled, .closable, .resizable, .fullSizeContentView, .nonactivatingPanel],
+            styleMask: [.nonactivatingPanel, .titled, .closable, .resizable, .utilityWindow],
             backing: .buffered,
             defer: false
         )
@@ -16,8 +16,6 @@ class ZenithSettingsWindow: NSPanel, NSWindowDelegate {
         self.becomesKeyOnlyIfNeeded = false
         self.center() // ENSURE VISIBILITY IN CENTER OF SCREEN
         self.title = "Zenith Settings"
-        self.center()
-        self.setFrameAutosaveName("ZenithSettingsWindow")
         self.isReleasedWhenClosed = false
         let settingsView = SettingsView()
             .environmentObject(ZenithState.shared) // INJECT LINK TO NOTCH
@@ -30,11 +28,11 @@ class ZenithSettingsWindow: NSPanel, NSWindowDelegate {
             shared = ZenithSettingsWindow()
         }
         
-        // ACTIVATE APP SESSION BEFORE FOCUSING WINDOW
+        // ACTIVATE APP SESSION & FORCE PANEL TO FRONT
         NSApp.activate(ignoringOtherApps: true)
         
         shared?.makeKeyAndOrderFront(nil)
-        shared?.orderFrontRegardless() // FORCE ABOVE TERMINAL
+        shared?.orderFrontRegardless() // ENSURE VISIBILITY ABOVE TERMINAL
     }
     
     

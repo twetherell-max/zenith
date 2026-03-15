@@ -8,35 +8,34 @@ struct ZenithCrustView: View {
     
     @State private var hoveredButton: Int? = nil // TRACK HOVER STATE
     
+    @AppStorage("isDarkGlass") private var isDarkGlass: Bool = false
+    @AppStorage("isSettingsOpen") private var isSettingsOpen: Bool = false
+    
     // VISIBILITY SYNC
     private var isExpanded: Bool {
         isHovering || isSettingsOpen
     }
     
     // REDUNDANT WRAPPERS REMOVED - DIRECT STATE BINDING ENFORCED
-    @AppStorage("isDarkGlass") private var isDarkGlass: Bool = false
-    @AppStorage("isSettingsOpen") private var isSettingsOpen: Bool = false
-    
-    // UNIFIED POSITION ENGINE
+    // PARABOLIC POSITION ENGINE
     private func getPosition(for id: Int) -> CGPoint {
         if !isExpanded {
             return CGPoint(x: 0, y: -100)
         }
         
-        let angle: Double
         switch id {
-        case 1: angle = -45.0 * .pi / 180.0
-        case 2: angle = 0.0
-        case 3: angle = 45.0 * .pi / 180.0
-        default: angle = 0.0
-        }
-        
-        if id == 2 {
-            return CGPoint(x: 0, y: state.dropDepth)
-        } else {
-            let x = sin(angle) * state.arcSpread
-            let y = state.dropDepth - (cos(angle) * state.arcSpread * 0.5)
+        case 1: // Left
+            let x = -state.arcSpread
+            let y = state.dropDepth + (pow(state.arcSpread / 100, 2) * 20)
             return CGPoint(x: x, y: y)
+        case 2: // Center
+            return CGPoint(x: 0, y: state.dropDepth)
+        case 3: // Right
+            let x = state.arcSpread
+            let y = state.dropDepth + (pow(state.arcSpread / 100, 2) * 20)
+            return CGPoint(x: x, y: y)
+        default:
+            return .zero
         }
     }
     
@@ -71,7 +70,7 @@ struct ZenithCrustView: View {
                     .offset(x: getPosition(for: 3).x, y: getPosition(for: 3).y)
                     .zIndex(1)
                 }
-                .frame(width: 600, height: 100)
+                .frame(width: 800, height: 100)
                 .zIndex(5) // FORCE FOREGROUND
             }
             .frame(width: 800, height: 250) // EXPANDED HEIGHT
