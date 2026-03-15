@@ -40,9 +40,8 @@ struct ZenithCrustView: View {
                     .offset(x: getPosition(for: 1).x, y: getPosition(for: 1).y)
                     .zIndex(1)
                     
-                    // Button 2 (Center) - App Settings
                     CrustButton(id: 2, icon: "gearshape.fill", tooltip: "Settings", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: .zero, iconSize: state.iconSize, isDarkGlass: state.isDarkGlass, isSettingsOpen: state.isSettingsOpen) {
-                        AppDelegate.shared?.openSettings()
+                        AppDelegate.shared?.showSettings()
                     }
                     .offset(x: getPosition(for: 2).x, y: getPosition(for: 2).y)
                     .zIndex(2)

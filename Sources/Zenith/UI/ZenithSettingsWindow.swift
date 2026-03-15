@@ -16,7 +16,7 @@ class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
         self.isOpaque = true
         self.hasShadow = true
         
-        let settingsView = SettingsView()
+        let settingsView = ZenithSettingsView()
         let hostingView = NSHostingView(rootView: settingsView)
         hostingView.frame = NSRect(x: 0, y: 0, width: 300, height: 400)
         self.contentView = hostingView
@@ -24,7 +24,7 @@ class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
     }
 }
 
-struct SettingsView: View {
+struct ZenithSettingsView: View {
     @ObservedObject var state = ZenithState.shared
     
     var body: some View {
