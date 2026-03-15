@@ -23,13 +23,13 @@ struct ZenithCrustView: View {
         
         // SMILE CURVE ENGINE: Buttons move UP as they spread out
         let xPos = CGFloat(id - 2) * state.arcSpread
-        let yPos = abs(xPos) * -0.2 + state.dropDepth
+        let yPos = (abs(xPos) * -0.3) + state.dropDepth
         
         return CGPoint(x: xPos, y: yPos)
     }
     
     var body: some View {
-        let _ = print(">>> CRUST RENDER | SPREAD: \(state.arcSpread) | DEPTH: \(state.dropDepth)")
+        let _ = print("NOTCH DRAWING WITH SPREAD: \(state.arcSpread)")
         
         ZStack(alignment: .top) { // ALIGN TO TOP
             VStack {

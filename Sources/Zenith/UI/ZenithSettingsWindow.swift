@@ -80,6 +80,7 @@ struct SettingsView: View {
                         VStack(alignment: .leading) {
                             Text("Arc Spread: \(Int(state.arcSpread))px")
                             Slider(value: $state.arcSpread, in: 20...150, step: 1.0)
+                                .id(state.arcSpread)
                                 .onChange(of: state.arcSpread) { val in print("New Spread: \(val)") }
                         }
                         
