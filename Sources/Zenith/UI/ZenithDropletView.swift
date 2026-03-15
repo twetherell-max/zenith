@@ -8,37 +8,27 @@ struct ZenithDropletView: View {
     private let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
     
     var body: some View {
-        let _ = print("NOTCH DRAWING WITH SPREAD: \(state.arcSpread)")
-        
-        return ZStack(alignment: .top) { // PIN TO TOP
-            // Radial Menu (The Crust) - Behind the droplet
+        ZStack(alignment: .top) { 
+            // Radial Menu
             ZenithCrustView(isHovering: state.isExpanded || state.isSettingsOpen)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             
-            // DEBUG LABEL: SHARED STATE PROOF
+            // BRAIN ID ANCHOR
             Text("BRAIN ID: \(state.debugID)")
                 .font(.system(size: 8, weight: .bold, design: .monospaced))
                 .foregroundColor(.white.opacity(0.3))
                 .padding(.top, 2)
         }
         .contentShape(Rectangle()) 
-        // FORCE COMPLETE VIEW RECONSTRUCTION ON LIVE COMBINE UPDATES
         .id("zenith-main-view") 
-        .onChange(of: state.arcSpread) { oldValue, newValue in
-            // MODERN OBSERVER
-        }
-        .onChange(of: state.dropDepth) { oldValue, newValue in
-            // MODERN OBSERVER
-        }
-        .onChange(of: state.isSettingsOpen) { oldValue, newValue in
+        .onChange(of: state.arcSpread) { _, _ in }
+        .onChange(of: state.dropDepth) { _, _ in }
+        .onChange(of: state.isSettingsOpen) { _, newValue in
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                if newValue {
-                    state.isExpanded = true
-                }
+                if newValue { state.isExpanded = true }
             }
         }
         .onHover { hovering in
-            // GATEKEEPER LOGIC: If settings are open, do NOT change expansion based on mouse
             if !state.isSettingsOpen {
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
                     state.isExpanded = hovering
@@ -46,8 +36,8 @@ struct ZenithDropletView: View {
             }
         }
         .frame(width: 800, height: 200)
-        .contentShape(Rectangle()) // MASSIVE HITBOX WALL
-        .background(Color.black.opacity(0.001)) // FIX HITBOX TRANSPARENCY BUG AND KEEP WINDOW ACTIVE
+        .contentShape(Rectangle()) 
+        .background(Color.black.opacity(0.001)) 
         .onReceive(timer) { _ in state.objectWillChange.send() }
     }
 }

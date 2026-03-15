@@ -2,13 +2,12 @@ import AppKit
 import SwiftUI
 import Combine
 
-// THE SILHOUETTE ENGINE
+// THE SILHOUETTE ENGINE: Hard Physical Reification
 class ZenithHitView: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? {
         let hitView = super.hitTest(point)
         
-        // 1. PROTECT THE NOTCH (CENTER TOP)
-        // Ensure the Notch center itself is NOT ghost air.
+        // 1. NOTCH PROTECTION: The visible physical notch area
         let notchWidth: CGFloat = 200
         let notchHeight: CGFloat = 40
         let notchRect = NSRect(x: (self.bounds.width - notchWidth) / 2, y: self.bounds.height - notchHeight, width: notchWidth, height: notchHeight)
@@ -17,8 +16,9 @@ class ZenithHitView: NSView {
             return hitView ?? self
         }
         
-        // 2. SILHOUETTE LOGIC: If the hit lands strictly on this view (the background), return nil for passthrough.
-        // If it lands on a subview (like a button), return hitView.
+        // 2. THE SILHOUETTE RULE: 'view == self ? nil : view'
+        // If it's the background air, it's clickable for the desktop.
+        // If it's a button, it's clickable for Zenith.
         return hitView === self ? nil : hitView
     }
 }
@@ -27,7 +27,7 @@ class ZenithHostingView<Content: View>: NSHostingView<Content> {
     override func hitTest(_ point: NSPoint) -> NSView? {
         let state = ZenithState.shared
         
-        // 1. THE NOTCH (CENTER TOP)
+        // Protect the notch
         let notchWidth: CGFloat = 200
         let notchHeight: CGFloat = 40
         let notchRect = NSRect(x: (self.bounds.width - notchWidth) / 2, y: self.bounds.height - notchHeight, width: notchWidth, height: notchHeight)
@@ -36,7 +36,7 @@ class ZenithHostingView<Content: View>: NSHostingView<Content> {
             return super.hitTest(point)
         }
         
-        // 2. THE BUTTONS (SMILE ARC)
+        // Protect buttons
         if !state.isExpanded && !state.isSettingsOpen {
             return nil 
         }
@@ -48,7 +48,7 @@ class ZenithHostingView<Content: View>: NSHostingView<Content> {
             let centerX = self.bounds.width / 2 + xOffset
             let centerY = self.bounds.height - yOffset
             
-            let hWidth: CGFloat = state.iconSize + 15
+            let hWidth: CGFloat = (state.iconSize + 15) 
             let buttonRect = NSRect(x: centerX - hWidth, y: centerY - hWidth, width: hWidth * 2, height: hWidth * 2)
             
             if buttonRect.contains(point) {
@@ -56,7 +56,7 @@ class ZenithHostingView<Content: View>: NSHostingView<Content> {
             }
         }
         
-        return nil // SILHOUETTE PASSTHROUGH
+        return nil 
     }
 }
 
@@ -77,6 +77,7 @@ class ZenithWindow: NSWindow {
         let centerX = visibleFrame.origin.x + (visibleFrame.width - windowWidth) / 2
         let topY = visibleFrame.origin.y + visibleFrame.height
         
+        // Offset down slightly to ensure we overlap the notch
         let windowFrame = NSRect(x: centerX, y: topY - 5, width: windowWidth, height: windowHeight)
         
         super.init(
@@ -90,8 +91,7 @@ class ZenithWindow: NSWindow {
         self.backgroundColor = .clear 
         self.hasShadow = false 
         self.title = "ZenithWindow"
-        self.alphaValue = 1.0
-        self.level = .statusBar // FORCE TOP LEVEL
+        self.level = .statusBar 
         self.ignoresMouseEvents = false
         self.isRestorable = false 
         
@@ -105,30 +105,18 @@ class ZenithWindow: NSWindow {
             .sink { [weak self] _ in self?.updateWindowFrame() }
             .store(in: &cancellables)
 
-        ZenithState.shared.objectWillChange
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in
-                self?.contentView?.needsDisplay = true
-            }
-            .store(in: &cancellables)
-        
         let rootView = ZenithDropletView(
             isPulsing: Binding(get: { self.isPulsing }, set: { self.isPulsing = $0 })
         )
         let hostingView = ZenithHostingView(rootView: rootView)
         hostingView.frame = NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight)
         hostingView.autoresizingMask = [.width, .height]
-        hostingView.layer?.masksToBounds = false
         
-        // ASSIGN THE SILHOUETTE VIEW
-        let container = ZenithHitView(frame: windowFrame) 
+        let container = ZenithHitView(frame: NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight))
         container.addSubview(hostingView)
         self.contentView = container
-        self.contentView?.wantsLayer = true
-        self.contentView?.layer?.isGeometryFlipped = false
         
         setupTrackingArea()
-        // orderFrontRegardless in AppDelegate for reliability
     }
 
     private func setupTrackingArea() {
