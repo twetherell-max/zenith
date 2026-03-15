@@ -18,7 +18,7 @@ struct ZenithCrustView: View {
         }
         
         let xOffset = CGFloat(id - 2) * state.arcSpread
-        let yPos = (abs(xOffset) * -0.2) + state.dropDepth // SMILE MATH Restored
+        let yPos = (abs(xOffset) * -0.2) + state.dropDepth 
         
         return CGPoint(x: xOffset, y: yPos)
     }

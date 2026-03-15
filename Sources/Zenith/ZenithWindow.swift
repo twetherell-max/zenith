@@ -6,8 +6,19 @@ import Combine
 class ZenithHitView: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? {
         let hitView = super.hitTest(point)
-        // SILHOUETTE LOGIC: If the hit lands strictly on this view (the background), return nil for passthrough.
-        // If it lands on a subview (like a button or the notch), return hitView.
+        
+        // 1. PROTECT THE NOTCH (CENTER TOP)
+        // Ensure the Notch center itself is NOT ghost air.
+        let notchWidth: CGFloat = 200
+        let notchHeight: CGFloat = 40
+        let notchRect = NSRect(x: (self.bounds.width - notchWidth) / 2, y: self.bounds.height - notchHeight, width: notchWidth, height: notchHeight)
+        
+        if notchRect.contains(point) {
+            return hitView ?? self
+        }
+        
+        // 2. SILHOUETTE LOGIC: If the hit lands strictly on this view (the background), return nil for passthrough.
+        // If it lands on a subview (like a button), return hitView.
         return hitView === self ? nil : hitView
     }
 }
@@ -32,7 +43,7 @@ class ZenithHostingView<Content: View>: NSHostingView<Content> {
         
         for id in 1...3 {
             let xOffset = CGFloat(id - 2) * state.arcSpread
-            let yOffset = (abs(xOffset) * -0.2) + state.dropDepth // SMILE MATH: Upward lift
+            let yOffset = (abs(xOffset) * -0.2) + state.dropDepth 
             
             let centerX = self.bounds.width / 2 + xOffset
             let centerY = self.bounds.height - yOffset
@@ -80,7 +91,7 @@ class ZenithWindow: NSWindow {
         self.hasShadow = false 
         self.title = "ZenithWindow"
         self.alphaValue = 1.0
-        self.level = .statusBar 
+        self.level = .statusBar // FORCE TOP LEVEL
         self.ignoresMouseEvents = false
         self.isRestorable = false 
         
@@ -117,7 +128,7 @@ class ZenithWindow: NSWindow {
         self.contentView?.layer?.isGeometryFlipped = false
         
         setupTrackingArea()
-        self.orderFrontRegardless()
+        // orderFrontRegardless in AppDelegate for reliability
     }
 
     private func setupTrackingArea() {

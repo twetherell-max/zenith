@@ -15,14 +15,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // 0. INITIALIZE SHARED EARLY (ABSOLUTE TOP)
         AppDelegate.shared = self
         
-        // 0. RESTORATION PURGE: Kill macOS window state persistence
+        // 1. RESTORATION PURGE: Kill macOS window state persistence
         NSApp.disableRelaunchOnLogin()
         
         setupStatusItem()
 
-        // 1. ZOMBIE PURGE: Kill any existing windows by title to clear remnants
+        // 2. ZOMBIE PURGE: Kill any existing windows by title to clear remnants
         NSApp.windows.forEach { window in
             if window.title == "ZenithWindow" || window.title == "Zenith Settings" {
                 print(">>> STARTUP PURGE: Closing zombie window...")
@@ -30,13 +31,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        // 1. GLOBAL VISIBILITY: Show in Dock and App Switcher
+        // 3. GLOBAL VISIBILITY: Show in Dock and App Switcher
         NSApp.setActivationPolicy(.regular)
         
-        // 2. MENU BAR SETUP
+        // 4. MENU BAR SETUP
         setupMenu()
         
-        // 3. SINGLETON CHECK: Only create window if it doesn't exist
+        // 5. SINGLETON CHECK: Only create window if it doesn't exist
         if self.zenithWindow == nil {
             let builtInScreen = NotchManager.shared.findBuiltInScreen()
             let notchFrame = NotchManager.shared.notchFrame
@@ -53,6 +54,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.contentView?.wantsLayer = true
             window.contentView?.layer?.backgroundColor = NSColor.clear.cgColor
             window.contentView?.layer?.isGeometryFlipped = false
+            
+            // FORCE VISIBILITY
+            window.makeKeyAndOrderFront(nil)
+            window.orderFrontRegardless()
             
             self.zenithWindow = window
         }
