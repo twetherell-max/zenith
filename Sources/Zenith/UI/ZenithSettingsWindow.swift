@@ -40,15 +40,27 @@ class ZenithSettingsWindow: NSPanel, NSWindowDelegate {
             shared = ZenithSettingsWindow()
         }
         
-        // FORCE NUCLEAR ACTIVATION
+        guard let panel = shared else { return }
+        
+        // 1. FORCE NUCLEAR ACTIVATION
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
         
-        // FORCE POSITION
-        shared?.setFrameOrigin(NSPoint(x: 500, y: 500))
+        // 2. REPAIR CONTENT: Explicitly host the SwiftUI view
+        let settingsView = SettingsView()
+            .environmentObject(ZenithState.shared)
         
-        shared?.makeKeyAndOrderFront(nil)
-        shared?.orderFrontRegardless()
+        let hostingView = NSHostingView(rootView: settingsView)
+        hostingView.frame = NSRect(x: 0, y: 0, width: 400, height: 400)
+        
+        panel.contentView = hostingView
+        panel.setContentSize(NSSize(width: 400, height: 400))
+        
+        // 3. FORCE POSITION & REDRAW
+        panel.setFrameOrigin(NSPoint(x: 500, y: 500))
+        panel.display() // FORCE PIXEL DRAW
+        panel.makeKeyAndOrderFront(nil)
+        panel.orderFrontRegardless()
     }
     
     

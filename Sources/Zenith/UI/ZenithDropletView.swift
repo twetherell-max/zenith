@@ -35,9 +35,10 @@ struct ZenithDropletView: View {
     }
     
     private func openSettingsWindow() {
-        print(">>> OPENING SETTINGS WINDOW")
-        // FORCE NUCLEAR ACTIVATION POLICY
+        // FORCE DOCK ICON TO ALLOW WINDOWS TO REACH FRONT
         NSApp.setActivationPolicy(.regular)
+        
+        print(">>> OPENING SETTINGS WINDOW")
         NSApp.activate(ignoringOtherApps: true)
         
         ZenithSettingsWindow.show()
