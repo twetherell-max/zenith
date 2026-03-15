@@ -5,14 +5,21 @@ struct ZenithApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        Settings {
-            EmptyView()
+        WindowGroup {
+            Color.clear
+                .frame(width: 0, height: 0)
+                .hidden()
         }
     }
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     static var shared: AppDelegate?
+    
+    override init() {
+        super.init()
+        AppDelegate.shared = self
+    }
     var zenithWindow: ZenithWindow?
     var settingsWindow: NSWindow?
 
