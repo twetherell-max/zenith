@@ -1,78 +1,46 @@
 import AppKit
 import SwiftUI
 
-class ZenithSettingsWindow: NSPanel, NSWindowDelegate {
+class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
     static var shared: ZenithSettingsWindow?
     
     init() {
         super.init(
-            contentRect: NSRect(x: 100, y: 100, width: 400, height: 400),
-            styleMask: [.nonactivatingPanel, .titled, .closable, .resizable, .utilityWindow],
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 450),
+            styleMask: [.titled, .closable, .resizable, .miniaturizable],
             backing: .buffered,
             defer: false
         )
-        print(">>> SETTINGS PANEL LOADED | FRAME: \(self.frame)")
         
-        // NUCLEAR VISIBILITY: ABOVE EVERYTHING (NOTCH, DOCK, MENU BAR)
-        self.level = .screenSaver 
-        self.isFloatingPanel = true
-        
-        // PHYSICAL HARDENING: DISABLE TRANSPARENCY & FORCE SHADOW
-        self.isOpaque = true
-        self.hasShadow = true
-        self.backgroundColor = .windowBackgroundColor
-        
-        self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        self.becomesKeyOnlyIfNeeded = false
         self.title = "Zenith Settings"
         self.isReleasedWhenClosed = false
+        self.backgroundColor = .windowBackgroundColor
         
         let settingsView = SettingsView(state: ZenithState.shared)
-            .frame(width: 400, height: 400)
-            
         self.contentView = NSHostingView(rootView: settingsView)
-        self.contentView?.frame = NSRect(x: 0, y: 0, width: 400, height: 400)
         self.delegate = self
     }
     
     static func show() {
-        // 1. ELEVATE TO REGULAR APP IMMEDIATELY (REQUIRED FOR STABLE RENDERING)
+        // ENSURE APP PROMOTION
         NSApp.setActivationPolicy(.regular)
         
         if shared == nil {
             shared = ZenithSettingsWindow()
         }
         
-        guard let panel = shared else { return }
+        guard let window = shared else { return }
         
-        // 2. REPAIR CONTENT: Manual Subview Injection
-        let settingsView = SettingsView(state: ZenithState.shared)
-        let hostingView = NSHostingView(rootView: settingsView)
+        // RE-ATTACH VIEW (ENSURE FRESH STATE BRIDGE)
+        window.contentView = NSHostingView(rootView: SettingsView(state: ZenithState.shared))
         
-        // BYPASS CONTENTVIEW MAGIC: MANUALLY FORCE SIZE AND POSITION
-        hostingView.setFrameSize(NSSize(width: 400, height: 400))
-        panel.contentView?.addSubview(hostingView)
-        panel.setContentSize(NSSize(width: 400, height: 400))
-        
-        // 3. FORCE POSITION & REDRAW
-        panel.setFrameOrigin(NSPoint(x: 500, y: 500))
-        panel.display() 
-        
-        // 4. FINAL ACTIVATION HEARTBEAT
+        window.center()
+        window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
-        panel.makeKeyAndOrderFront(nil)
-        panel.orderFrontRegardless()
-    }
-    
-    
-    // WINDOW LIFECYCLE SYNC
-    func windowDidBecomeKey(_ notification: Notification) {
-        UserDefaults.standard.set(true, forKey: "isSettingsOpen")
     }
     
     func windowWillClose(_ notification: Notification) {
-        UserDefaults.standard.set(false, forKey: "isSettingsOpen")
-        ZenithSettingsWindow.shared = nil // FREE MEMORY
+        ZenithSettingsWindow.shared = nil
     }
 }
 
@@ -80,71 +48,43 @@ struct SettingsView: View {
     @ObservedObject var state: ZenithState
     
     @AppStorage("isDarkGlass") private var isDarkGlass: Bool = false
-    @AppStorage("isSettingsOpen") private var isSettingsOpen: Bool = false
     
     var body: some View {
-        VStack {
-            // PHYSICAL VISUAL ANCHOR (IF THIS IS GONE, SWIFTUI IS DEAD)
-            Color.red
-                .frame(width: 100, height: 100)
-                .cornerRadius(12)
-                .overlay(Text("ANCHOR").foregroundColor(.white).bold())
-                .padding(.top, 20)
-            
-            Text("HELLO WORLD")
-                .font(.largeTitle)
-                .bold()
-                .padding(.top, 20)
-            
-            Text("Settings Loaded")
-                .font(.caption)
-                .foregroundColor(.green)
+        VStack(spacing: 20) {
+            Text("Zenith Settings")
+                .font(.headline)
             
             Form {
-                Section(header: Text("Appearance").font(.headline)) {
+                Section {
                     Toggle("High Contrast (Dark Glass)", isOn: $isDarkGlass)
-                        .padding(.vertical, 8)
                 }
             
-            Section(header: Text("Geometry").font(.headline)) {
-                VStack(alignment: .leading) {
-                    Text("Arc Spread: \(Int(state.arcSpread))px")
-                    Slider(value: $state.arcSpread, in: 20...150, step: 1.0)
-                }
-                .padding(.vertical, 8)
-                
-                VStack(alignment: .leading) {
-                    Text("Drop Depth: \(Int(state.dropDepth))px")
-                    Slider(value: $state.dropDepth, in: 10...100, step: 1.0)
-                }
-                .padding(.bottom, 8)
-                
-                VStack(alignment: .leading) {
-                    Text("Icon Size: \(Int(state.iconSize))pt")
-                    Slider(value: $state.iconSize, in: 10...25, step: 1.0)
-                }
-                .padding(.bottom, 8)
-            }
-            
-            Section(header: Text("About").font(.headline)) {
-                HStack {
-                    Text("Zenith Version 1.0.0")
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    Button("Check for Updates") {
-                        print("Checking for updates...")
+                Section(header: Text("Geometry").font(.caption).foregroundColor(.secondary)) {
+                    VStack(alignment: .leading) {
+                        Text("Arc Spread: \(Int(state.arcSpread))px")
+                        Slider(value: $state.arcSpread, in: 20...150, step: 1.0)
+                    }
+                    
+                    VStack(alignment: .leading) {
+                        Text("Drop Depth: \(Int(state.dropDepth))px")
+                        Slider(value: $state.dropDepth, in: 10...100, step: 1.0)
+                    }
+                    
+                    VStack(alignment: .leading) {
+                        Text("Icon Size: \(Int(state.iconSize))pt")
+                        Slider(value: $state.iconSize, in: 10...25, step: 1.0)
                     }
                 }
-                .padding(.vertical, 8)
             }
+            .formStyle(.grouped)
+            
+            Button("Close") {
+                NSApp.keyWindow?.close()
+            }
+            .keyboardShortcut(.defaultAction)
+            .padding(.bottom, 10)
         }
-        .padding(20)
+        .padding()
         .frame(width: 400, height: 450)
-        
-        Button("Close & Apply") {
-            NSApp.keyWindow?.close()
-        }
-        .padding(.bottom, 20)
-        }
     }
 }

@@ -1,7 +1,6 @@
 import SwiftUI
 import AppKit
 
-@main
 struct ZenithApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
