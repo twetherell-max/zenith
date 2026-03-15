@@ -183,6 +183,9 @@ class ZenithWindow: NSWindow {
         }
     }
 
+    override var canBecomeKey: Bool { false }
+    override var canBecomeMain: Bool { false }
+
     func pulse() {
         self.isPulsing = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
