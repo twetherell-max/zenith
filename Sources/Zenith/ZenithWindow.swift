@@ -28,9 +28,9 @@ class ZenithWindow: NSWindow, ObservableObject {
             defer: false
         )
         
-        self.isOpaque = true
-        self.backgroundColor = .clear // RESTORE TRANSPARENCY
-        self.hasShadow = true // FORCE MACOS TO RENDER WINDOW
+        self.isOpaque = false
+        self.backgroundColor = .clear // TOTAL TRANSPARENCY RESTORED
+        self.hasShadow = false // REMOVE APPKIT BLACK BOX SHADOW
         self.alphaValue = 1.0
         self.level = .statusBar
         self.ignoresMouseEvents = false

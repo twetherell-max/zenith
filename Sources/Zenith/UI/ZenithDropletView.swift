@@ -4,11 +4,17 @@ struct ZenithDropletView: View {
     @Binding var isHovering: Bool
     @Binding var isPulsing: Bool
     
+    // ROOT GEOMETRY OBSERVERS (FORCES REDRAWS)
+    @AppStorage("arcSpread") private var arcSpread: Double = 100.0
+    @AppStorage("iconSize") private var iconSize: Double = 14.0
+    @AppStorage("dropDepth") private var dropDepth: Double = 40.0
+    
     var body: some View {
         ZStack(alignment: .top) { // PIN TO TOP
             // Radial Menu (The Crust) - Behind the droplet
             ZenithCrustView(isHovering: isHovering)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .id("\(arcSpread)_\(dropDepth)_\(iconSize)") // RUTHLESS GEOMETRY INVALIDATION
             
             VStack(spacing: 0) {
                 // The Main Droplet Pill
