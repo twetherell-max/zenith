@@ -17,9 +17,9 @@ class ZenithSettingsWindow: NSPanel, NSWindowDelegate {
         self.level = .screenSaver 
         self.isFloatingPanel = true
         
-        // PREVENT TRANSPARENCY BUGS: FORCE OPAQUE WHITE
+        // BACK TO SYSTEM COLORS: FIXES 'BLACK VOID' RENDERING BUG
         self.isOpaque = true
-        self.backgroundColor = .white
+        self.backgroundColor = .windowBackgroundColor
         
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         self.becomesKeyOnlyIfNeeded = false
@@ -42,11 +42,7 @@ class ZenithSettingsWindow: NSPanel, NSWindowDelegate {
         
         guard let panel = shared else { return }
         
-        // 1. FORCE NUCLEAR ACTIVATION
-        NSApp.setActivationPolicy(.regular)
-        NSApp.activate(ignoringOtherApps: true)
-        
-        // 2. REPAIR CONTENT: Explicitly host the SwiftUI view
+        // 1. REPAIR CONTENT: Explicitly host the SwiftUI view
         let settingsView = SettingsView()
             .environmentObject(ZenithState.shared)
         
@@ -56,9 +52,13 @@ class ZenithSettingsWindow: NSPanel, NSWindowDelegate {
         panel.contentView = hostingView
         panel.setContentSize(NSSize(width: 400, height: 400))
         
-        // 3. FORCE POSITION & REDRAW
+        // 2. FORCE POSITION & REDRAW
         panel.setFrameOrigin(NSPoint(x: 500, y: 500))
         panel.display() // FORCE PIXEL DRAW
+        
+        // 3. FINAL ACTIVATION HEARTBEAT
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
         panel.orderFrontRegardless()
     }
