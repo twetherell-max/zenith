@@ -2,11 +2,11 @@ import AppKit
 import SwiftUI
 import Combine
 
-class PassthroughView: NSView {
+class ZenithHitTestView: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? {
         let view = super.hitTest(point)
-        // If the hit is strictly on this view (the background), return nil for passthrough.
-        // If it's on a subview (like a button in the HostingView), return that view.
+        // SILHOUETTE LOGIC: If the hit lands on the background (this view), return nil for passthrough.
+        // If it lands on a subview (like a button in the HostingView), return that view.
         return view === self ? nil : view
     }
 }
@@ -26,12 +26,12 @@ class ZenithHostingView<Content: View>: NSHostingView<Content> {
         
         // 2. THE BUTTONS (SMILE ARC)
         if !state.isExpanded && !state.isSettingsOpen {
-            return nil // SILHOUETTE PASSTHROUGH
+            return nil // GHOST MODE ACTIVE
         }
         
         for id in 1...3 {
             let xOffset = CGFloat(id - 2) * state.arcSpread
-            let yOffset = (abs(xOffset) * -0.2) + state.dropDepth // SMILE MATH ALIGNMENT
+            let yOffset = (abs(xOffset) * -0.2) + state.dropDepth // SMILE MATH: Upward lift
             
             let centerX = self.bounds.width / 2 + xOffset
             let centerY = self.bounds.height - yOffset
@@ -44,7 +44,7 @@ class ZenithHostingView<Content: View>: NSHostingView<Content> {
             }
         }
         
-        return nil // GHOST MODE ACTIVE
+        return nil // SILHOUETTE PASSTHROUGH
     }
 }
 
@@ -57,7 +57,6 @@ class ZenithWindow: NSWindow {
 
     init(notchFrame: CGRect, targetScreen: NSScreen?) {
         self.targetScreen = targetScreen
-        // Force strictly to the built-in display (Retina) for frame calculations
         let screen = NSScreen.screens.first ?? targetScreen ?? NSScreen.main ?? NSScreen.screens[0]
         let visibleFrame = screen.visibleFrame
         let windowWidth: CGFloat = 800
@@ -66,7 +65,6 @@ class ZenithWindow: NSWindow {
         let centerX = visibleFrame.origin.x + (visibleFrame.width - windowWidth) / 2
         let topY = visibleFrame.origin.y + visibleFrame.height
         
-        // Initial "Peeking" frame: 5px visible on screen
         let windowFrame = NSRect(x: centerX, y: topY - 5, width: windowWidth, height: windowHeight)
         
         super.init(
@@ -77,14 +75,14 @@ class ZenithWindow: NSWindow {
         )
         
         self.isOpaque = false
-        self.backgroundColor = .clear // TOTAL TRANSPARENCY RESTORED
-        self.hasShadow = false // REMOVE APPKIT BLACK BOX SHADOW
-        self.title = "ZenithWindow" // FOR IDENTIFICATION
+        self.backgroundColor = .clear 
+        self.hasShadow = false 
+        self.title = "ZenithWindow"
         self.alphaValue = 1.0
-        self.level = .statusBar // HIGHER THAN ALL WINDOWS, LOWER THAN TOOL TIPS
+        self.level = .statusBar 
         self.ignoresMouseEvents = false
+        self.isRestorable = false // SILENCE CACHE
         
-        // REACIVE FRAME SYNC: Observe global expansion state
         ZenithState.shared.$isExpanded
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.updateWindowFrame() }
@@ -95,11 +93,9 @@ class ZenithWindow: NSWindow {
             .sink { [weak self] _ in self?.updateWindowFrame() }
             .store(in: &cancellables)
 
-        // APPKIT FORCED RENDER FLUSHER
         ZenithState.shared.objectWillChange
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
-                // Force AppKit to repaint the entire hardware buffer surface manually instantly
                 self?.contentView?.needsDisplay = true
             }
             .store(in: &cancellables)
@@ -108,71 +104,38 @@ class ZenithWindow: NSWindow {
             isPulsing: Binding(get: { self.isPulsing }, set: { self.isPulsing = $0 })
         )
         let hostingView = ZenithHostingView(rootView: rootView)
-        hostingView.frame = NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight) // hostingView should fill its parent container
-        hostingView.autoresizingMask = [NSView.AutoresizingMask.width, NSView.AutoresizingMask.height] // FORCE RESIZE TO WINDOW
+        hostingView.frame = NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight)
+        hostingView.autoresizingMask = [.width, .height]
         hostingView.layer?.masksToBounds = false
         
-        let container = PassthroughView(frame: windowFrame)
+        let container = ZenithHitTestView(frame: windowFrame) // ENFORCE SILHOUETTE ENGINE
         container.addSubview(hostingView)
         self.contentView = container
         self.contentView?.wantsLayer = true
         self.contentView?.layer?.isGeometryFlipped = false
         
-        print(">>> ZENITH: NSHostingView bridge established. ContentView: \(String(describing: self.contentView))")
-        
         setupTrackingArea()
-        
-        // KVO LIVE STATE SYNC
-        UserDefaults.standard.addObserver(self, forKeyPath: "isSettingsOpen", options: [.new], context: nil)
-        
         self.orderFrontRegardless()
-    }
-    
-    deinit {
-        UserDefaults.standard.removeObserver(self, forKeyPath: "isSettingsOpen")
     }
 
     private func setupTrackingArea() {
         guard let contentView = self.contentView else { return }
-        
-        if let existing = trackingArea {
-            contentView.removeTrackingArea(existing)
-        }
-        
+        if let existing = trackingArea { contentView.removeTrackingArea(existing) }
         let trackingRect = contentView.bounds
-        
-        let options: NSTrackingArea.Options = [
-            .mouseEnteredAndExited,
-            .activeAlways,
-            .inVisibleRect
-        ]
-        
+        let options: NSTrackingArea.Options = [.mouseEnteredAndExited, .activeAlways, .inVisibleRect]
         let area = NSTrackingArea(rect: trackingRect, options: options, owner: self, userInfo: nil)
         contentView.addTrackingArea(area)
         self.trackingArea = area
     }
 
-    override func mouseEntered(with event: NSEvent) {
-        // Handled by ZenithDropletView.onHover -> ZenithState.isExpanded
-    }
-
-    override func mouseExited(with event: NSEvent) {
-        // Handled by ZenithDropletView.onHover -> ZenithState.isExpanded
-    }
-
     private func updateWindowFrame() {
-        // Force strictly to the built-in display (Retina)
         let screen = NSScreen.screens.first ?? self.screen ?? NSScreen.main ?? NSScreen.screens[0]
         let visibleFrame = screen.visibleFrame
         let windowWidth: CGFloat = 800
         let windowHeight: CGFloat = 200
-        
         let centerX = visibleFrame.origin.x + (visibleFrame.width - windowWidth) / 2
         let topY = visibleFrame.origin.y + visibleFrame.height
-        
         let isExpanded = ZenithState.shared.isExpanded || ZenithState.shared.isSettingsOpen
-        
-        // When hovering or Settings are open, slide the window down by 195px so it's fully on screen (200px down)
         let targetY = isExpanded ? topY - 200 : topY - 5
         let targetFrame = NSRect(x: centerX, y: targetY, width: windowWidth, height: windowHeight)
         
@@ -180,15 +143,6 @@ class ZenithWindow: NSWindow {
             context.duration = 0.4
             context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
             self.animator().setFrame(targetFrame, display: true)
-        }
-    }
-    
-    // LISTEN TO APPKIT/USERDEFAULTS CHANGES
-    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        if keyPath == "isSettingsOpen" {
-            DispatchQueue.main.async {
-                self.updateWindowFrame()
-            }
         }
     }
 

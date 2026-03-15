@@ -20,8 +20,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.disableRelaunchOnLogin()
         
         setupStatusItem()
-        // 1. PROCESS TERMINATION: Kill other running instances of Zenith
-
         // 1. ZOMBIE PURGE: Kill any existing windows by title to clear remnants
         NSApp.windows.forEach { window in
             if window.title == "ZenithWindow" || window.title == "Zenith Settings" {
