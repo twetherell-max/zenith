@@ -99,7 +99,6 @@ struct SettingsView: View {
                 .padding(.bottom, 20)
             }
             .padding()
-            .border(.red, width: 2) // DEBUG BORDER: Identify clipping
         }
         .frame(width: 300, height: 400)
     }

@@ -2,6 +2,48 @@ import AppKit
 import SwiftUI
 import Combine
 
+class ZenithHostingView<Content: View>: NSHostingView<Content> {
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        let state = ZenithState.shared
+        
+        // 1. THE NOTCH (CENTER TOP)
+        // Notch is roughly 150-200px wide, 35px deep.
+        let notchWidth: CGFloat = 200
+        let notchHeight: CGFloat = 40
+        let notchRect = NSRect(x: (self.bounds.width - notchWidth) / 2, y: self.bounds.height - notchHeight, width: notchWidth, height: notchHeight)
+        
+        if notchRect.contains(point) {
+            return super.hitTest(point)
+        }
+        
+        // 2. THE BUTTONS (SMILE CURVE)
+        // If not expanded, only the notch is interactive.
+        if !state.isExpanded && !state.isSettingsOpen {
+            return nil // PASS THROUGH
+        }
+        
+        // Button Logic: 3 buttons (id: 1, 2, 3)
+        // id-2 gives -1, 0, 1 for offset
+        for id in 1...3 {
+            let xOffset = CGFloat(id - 2) * state.arcSpread
+            let yOffset = (abs(xOffset) * -0.2) + state.dropDepth
+            
+            // Button Center in View Coordinates
+            let centerX = self.bounds.width / 2 + xOffset
+            let centerY = self.bounds.height - yOffset
+            
+            let buttonRadius: CGFloat = state.iconSize + 15 // Roughly the hover area
+            let buttonRect = NSRect(x: centerX - buttonRadius, y: centerY - buttonRadius, width: buttonRadius * 2, height: buttonRadius * 2)
+            
+            if buttonRect.contains(point) {
+                return super.hitTest(point)
+            }
+        }
+        
+        return nil // GHOST MODE: Pass click to windows below
+    }
+}
+
 class ZenithWindow: NSWindow {
     let targetScreen: NSScreen?
     private var cancellables = Set<AnyCancellable>()
@@ -35,7 +77,7 @@ class ZenithWindow: NSWindow {
         self.hasShadow = false // REMOVE APPKIT BLACK BOX SHADOW
         self.title = "ZenithWindow" // FOR IDENTIFICATION
         self.alphaValue = 1.0
-        self.level = NSWindow.Level(Int(CGWindowLevelForKey(.maximumWindow))) // ABSOLUTE FOREGROUND
+        self.level = .statusBar // HIGHER THAN ALL WINDOWS, LOWER THAN TOOL TIPS
         self.ignoresMouseEvents = false
         
         // REACIVE FRAME SYNC: Observe global expansion state
@@ -62,7 +104,7 @@ class ZenithWindow: NSWindow {
             isPulsing: Binding(get: { self.isPulsing }, set: { self.isPulsing = $0 })
         )
         
-        let hostingView = NSHostingView(rootView: rootView)
+        let hostingView = ZenithHostingView(rootView: rootView)
         hostingView.frame = NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight)
         hostingView.autoresizingMask = [NSView.AutoresizingMask.width, NSView.AutoresizingMask.height] // FORCE RESIZE TO WINDOW
         hostingView.layer?.masksToBounds = false
