@@ -25,7 +25,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Boss Logic
+        // FORCE SHARED INIT EARLY
         AppDelegate.shared = self
         
         // Accessory mode keeps it alive but out of the Dock
@@ -43,7 +43,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let window = ZenithWindow(notchFrame: notchFrame, targetScreen: builtInScreen)
             window.title = "ZenithWindow"
             
-            // Visibility
+            // Visibility Boss Commands
             window.makeKeyAndOrderFront(nil)
             window.orderFrontRegardless()
             
@@ -75,20 +75,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc func showSettingsWindow() {
+        // UNIFIED STATE SYNC
         ZenithState.shared.isSettingsOpen = true
         ZenithState.shared.isExpanded = true
         
         if settingsWindow == nil {
+            print(">>> CREATING SETTINGS WINDOW...")
             settingsWindow = ZenithSettingsWindow()
             settingsWindow?.isRestorable = false
             
             NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: settingsWindow, queue: .main) { [weak self] _ in
+                print(">>> SETTINGS CLOSING...")
                 ZenithState.shared.isSettingsOpen = false
                 ZenithState.shared.isExpanded = false
                 self?.settingsWindow = nil
             }
         }
         
+        // THE BOSS ACTIVATION
         NSApp.activate(ignoringOtherApps: true)
         self.settingsWindow?.makeKeyAndOrderFront(nil)
         self.settingsWindow?.orderFrontRegardless()
