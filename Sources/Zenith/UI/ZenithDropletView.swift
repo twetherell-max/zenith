@@ -4,10 +4,8 @@ struct ZenithDropletView: View {
     @Binding var isHovering: Bool
     @Binding var isPulsing: Bool
     
-    // ROOT GEOMETRY OBSERVERS (FORCES REDRAWS)
-    @AppStorage("arcSpread") private var arcSpread: Double = 100.0
-    @AppStorage("iconSize") private var iconSize: Double = 14.0
-    @AppStorage("dropDepth") private var dropDepth: Double = 50.0
+    // ROOT GEOMETRY MEMORY PIPELINE (Observes state instantly instead of polling disk)
+    @EnvironmentObject var state: ZenithState
     
     var body: some View {
         ZStack(alignment: .top) { // PIN TO TOP
@@ -15,9 +13,10 @@ struct ZenithDropletView: View {
             ZenithCrustView(isHovering: isHovering)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .id("zenith-main-view") // FORCE COMPLETE VIEW RECONSTRUCTION
-        .onChange(of: arcSpread) { _ in } // LIVE REDRAW TRIGGER
-        .onChange(of: dropDepth) { _ in }
+        // FORCE COMPLETE VIEW RECONSTRUCTION ON LIVE COMBINE UPDATES
+        .id("zenith-main-view") 
+        .onChange(of: state.arcSpread) { _ in } // LIVE REDRAW TRIGGER
+        .onChange(of: state.dropDepth) { _ in }
         .frame(width: 800, height: 400)
         .padding(.top, 40) // PUSH DOWN TO CLEAR PHYSICAL NOTCH
         .contentShape(Rectangle()) // MASSIVE HITBOX WALL

@@ -3,6 +3,9 @@ import CoreGraphics
 
 struct ZenithCrustView: View {
     let isHovering: Bool
+    
+    @EnvironmentObject var state: ZenithState
+    
     @State private var hoveredButton: Int? = nil // TRACK HOVER STATE
     
     // LIVE GEOMETRY & THEME BINDINGS
@@ -24,17 +27,16 @@ struct ZenithCrustView: View {
     
     // RADIUS ENGINE
     private var radius: Double {
-        arcSpread
+        state.arcSpread
     }
     
     // POLAR COORDINATE MATH (RADIANS)
     // Left: 135 degrees (135 * pi / 180)
     private var leftOffset: CGSize {
         let radians = 135.0 * .pi / 180.0
-        let targetDrop = dropDepth - (radius * sin(radians))
         return CGSize(
-            width: (radius * cos(radians)) * expansionAmount,
-            height: -100 + (expansionAmount * (targetDrop + 100))
+            width: (state.arcSpread * cos(radians)) * expansionAmount,
+            height: -100 + (expansionAmount * ((state.dropDepth - (state.arcSpread * sin(radians))) + 100))
         )
     }
     
@@ -42,17 +44,16 @@ struct ZenithCrustView: View {
     private var middleOffset: CGSize {
         return CGSize(
             width: 0,
-            height: -100 + (expansionAmount * (dropDepth + 100))
+            height: -100 + (expansionAmount * (state.dropDepth + 100))
         )
     }
     
     // Right: 45 degrees (45 * pi / 180)
     private var rightOffset: CGSize {
         let radians = 45.0 * .pi / 180.0
-        let targetDrop = dropDepth - (radius * sin(radians))
         return CGSize(
-            width: (radius * cos(radians)) * expansionAmount,
-            height: -100 + (expansionAmount * (targetDrop + 100))
+            width: (state.arcSpread * cos(radians)) * expansionAmount,
+            height: -100 + (expansionAmount * ((state.dropDepth - (state.arcSpread * sin(radians))) + 100))
         )
     }
     
@@ -63,18 +64,22 @@ struct ZenithCrustView: View {
             VStack {
                 ZStack { // POLAR COORDINATE ORIGIN (0,0)
                     // Button 1 (Left) - Open Downloads
-                    CrustButton(id: 1, icon: "command", tooltip: "Open Downloads", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: leftOffset, iconSize: iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
-                        NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: ("~/Downloads" as NSString).expandingTildeInPath)
+                    CrustButton(id: 1, icon: "folder", tooltip: "Downloads", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: leftOffset, iconSize: state.iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
+                        let downloadsURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
+                        NSWorkspace.shared.open(downloadsURL)
                     }
                     
-                    // Button 2 (Center) - Activity Monitor
-                    CrustButton(id: 2, icon: "cpu", tooltip: "Activity Monitor", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: middleOffset, iconSize: iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
-                        NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app"))
+                    // Button 2 (Center) - App Settings
+                    CrustButton(id: 2, icon: "gearshape.fill", tooltip: "Settings", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: middleOffset, iconSize: state.iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
+                        // Action handled in button for now, but can be augmented
+                        let _ = print("Settings opened")
                     }
                     
                     // Button 3 (Right) - Mission Control
-                    CrustButton(id: 3, icon: "flowchart", tooltip: "Mission Control", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: rightOffset, iconSize: iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
-                        NSWorkspace.shared.launchApplication("Mission Control")
+                    CrustButton(id: 3, icon: "flowchart", tooltip: "Mission Control", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: rightOffset, iconSize: state.iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
+                        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.exposelauncher") {
+                            NSWorkspace.shared.open(url)
+                        }
                     }
                 }
                 .frame(width: 400, height: 100)

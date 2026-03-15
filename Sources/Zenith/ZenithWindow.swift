@@ -2,13 +2,17 @@ import AppKit
 import SwiftUI
 import Combine
 
-class ZenithWindow: NSWindow, ObservableObject {
+class ZenithWindow: NSWindow {
+    let targetScreen: NSScreen?
+    private var isExpanded: Bool = false
+    private var cancellables = Set<AnyCancellable>()
     @Published var isHovering: Bool = false
     @Published var isPulsing: Bool = false
     
     private var trackingArea: NSTrackingArea?
 
     init(notchFrame: CGRect, targetScreen: NSScreen?) {
+        self.targetScreen = targetScreen
         // Force strictly to the built-in display (Retina) for frame calculations
         let screen = NSScreen.screens.first ?? targetScreen ?? NSScreen.main ?? NSScreen.screens[0]
         let visibleFrame = screen.visibleFrame
@@ -35,14 +39,24 @@ class ZenithWindow: NSWindow, ObservableObject {
         self.level = NSWindow.Level(Int(CGWindowLevelForKey(.maximumWindow))) // ABSOLUTE FOREGROUND
         self.ignoresMouseEvents = false
         
+        // APPKIT FORCED RENDER FLUSHER
+        ZenithState.shared.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                // Force AppKit to repaint the entire hardware buffer surface manually instantly
+                self?.contentView?.needsDisplay = true
+            }
+            .store(in: &cancellables)
+        
         let rootView = ZenithDropletView(
             isHovering: Binding(get: { self.isHovering }, set: { self.isHovering = $0 }),
             isPulsing: Binding(get: { self.isPulsing }, set: { self.isPulsing = $0 })
         )
+        .environmentObject(ZenithState.shared) // INJECT LIVE MEMORY PIPELINE
         
         let hostingView = NSHostingView(rootView: rootView)
         hostingView.frame = NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight)
-        hostingView.autoresizingMask = [.width, .height] // FORCE RESIZE TO WINDOW
+        hostingView.autoresizingMask = [NSView.AutoresizingMask.width, NSView.AutoresizingMask.height] // FORCE RESIZE TO WINDOW
         hostingView.layer?.masksToBounds = false
         
         self.contentView = hostingView
