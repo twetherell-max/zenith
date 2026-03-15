@@ -11,7 +11,9 @@ struct ZenithDropletView: View {
     private let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
     
     var body: some View {
-        ZStack(alignment: .top) { // PIN TO TOP
+        let _ = print("NOTCH DRAWING WITH SPREAD: \(state.arcSpread)")
+        
+        return ZStack(alignment: .top) { // PIN TO TOP
             // Radial Menu (The Crust) - Behind the droplet
             ZenithCrustView(isHovering: state.isExpanded || state.isSettingsOpen)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

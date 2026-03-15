@@ -21,11 +21,11 @@ struct ZenithCrustView: View {
             return CGPoint(x: 0, y: -100)
         }
         
-        // SMILE CURVE ENGINE: Buttons move UP as they spread out
-        let xPos = CGFloat(id - 2) * state.arcSpread
-        let yPos = (abs(xPos) * -0.3) + state.dropDepth
+        // SMILE CURVE ENGINE: Quadratic upward arc
+        let xOffset = CGFloat(id - 2) * state.arcSpread
+        let yPos = (pow(xOffset, 2) / -1000.0) + state.dropDepth
         
-        return CGPoint(x: xPos, y: yPos)
+        return CGPoint(x: xOffset, y: yPos)
     }
     
     var body: some View {
