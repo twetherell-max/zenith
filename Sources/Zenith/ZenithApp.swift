@@ -22,9 +22,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     var zenithWindow: ZenithWindow?
     var settingsWindow: NSWindow?
+    var statusItem: NSStatusItem?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.shared = self
+        
+        setupStatusItem()
         // 0. PROCESS TERMINATION: Kill other running instances of Zenith
         let runningApps = NSWorkspace.shared.runningApplications
         let currentApp = NSRunningApplication.current
@@ -91,6 +94,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         mainMenu.addItem(appMenuItem)
         NSApp.mainMenu = mainMenu
+    }
+    
+    private func setupStatusItem() {
+        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        if let button = statusItem?.button {
+            button.image = NSImage(systemSymbolName: "circle.hexagonpath", accessibilityDescription: nil)
+            button.action = #selector(openSettings)
+            button.target = self
+        }
+        
+        let menu = NSMenu()
+        menu.addItem(NSMenuItem(title: "Settings...", action: #selector(openSettings), keyEquivalent: ","))
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: "Quit Zenith", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        statusItem?.menu = menu
     }
     
     @objc func openSettings() {
