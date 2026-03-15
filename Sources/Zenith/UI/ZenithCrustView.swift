@@ -22,18 +22,13 @@ struct ZenithCrustView: View {
         arcSpread
     }
     
-    // DROP CUSHION ENGINE
-    private var baseDrop: Double {
-        isExpanded ? (dropDepth + 40) : -100
-    }
-    
     // POLAR COORDINATE MATH (RADIANS)
     // Left: 135 degrees (135 * pi / 180)
     private var leftOffset: CGSize {
         let radians = 135.0 * .pi / 180.0
         return CGSize(
             width: radius * cos(radians),
-            height: baseDrop - (radius * sin(radians)) // Y goes down, subtract sin to push outward up
+            height: isExpanded ? dropDepth - (radius * sin(radians)) : -100 // Y goes down, subtract sin to push outward up
         )
     }
     
@@ -41,7 +36,7 @@ struct ZenithCrustView: View {
     private var middleOffset: CGSize {
         return CGSize(
             width: 0,
-            height: baseDrop
+            height: isExpanded ? dropDepth : -100
         )
     }
     
@@ -50,7 +45,7 @@ struct ZenithCrustView: View {
         let radians = 45.0 * .pi / 180.0
         return CGSize(
             width: radius * cos(radians),
-            height: baseDrop - (radius * sin(radians))
+            height: isExpanded ? dropDepth - (radius * sin(radians)) : -100
         )
     }
     

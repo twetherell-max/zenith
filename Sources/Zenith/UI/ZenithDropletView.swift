@@ -17,7 +17,8 @@ struct ZenithDropletView: View {
         }
         .frame(width: 800, height: 400)
         .padding(.top, 40) // PUSH DOWN TO CLEAR PHYSICAL NOTCH
-        .background(Color.white.opacity(0.01)) // FIX HITBOX TRANSPARENCY BUG
+        .contentShape(Rectangle()) // MASSIVE HITBOX WALL
+        .background(Color.black.opacity(0.001)) // FIX HITBOX TRANSPARENCY BUG AND KEEP WINDOW ACTIVE
     }
     
     private func openSettingsWindow() {
