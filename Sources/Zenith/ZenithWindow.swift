@@ -2,11 +2,12 @@ import AppKit
 import SwiftUI
 import Combine
 
-class ZenithHitTestView: NSView {
+// THE SILHOUETTE ENGINE
+class ZenithHitView: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? {
         let view = super.hitTest(point)
-        // SILHOUETTE LOGIC: If the hit lands on the background (this view), return nil for passthrough.
-        // If it lands on a subview (like a button in the HostingView), return that view.
+        // If the hit lands strictly on this view (the background), return nil for passthrough.
+        // If it lands on a subview (like a button or the notch), return that view.
         return view === self ? nil : view
     }
 }
@@ -26,7 +27,7 @@ class ZenithHostingView<Content: View>: NSHostingView<Content> {
         
         // 2. THE BUTTONS (SMILE ARC)
         if !state.isExpanded && !state.isSettingsOpen {
-            return nil // GHOST MODE ACTIVE
+            return nil 
         }
         
         for id in 1...3 {
@@ -81,7 +82,7 @@ class ZenithWindow: NSWindow {
         self.alphaValue = 1.0
         self.level = .statusBar 
         self.ignoresMouseEvents = false
-        self.isRestorable = false // SILENCE CACHE
+        self.isRestorable = false 
         
         ZenithState.shared.$isExpanded
             .receive(on: RunLoop.main)
@@ -108,7 +109,8 @@ class ZenithWindow: NSWindow {
         hostingView.autoresizingMask = [.width, .height]
         hostingView.layer?.masksToBounds = false
         
-        let container = ZenithHitTestView(frame: windowFrame) // ENFORCE SILHOUETTE ENGINE
+        // ASSIGN THE SILHOUETTE VIEW
+        let container = ZenithHitView(frame: windowFrame) 
         container.addSubview(hostingView)
         self.contentView = container
         self.contentView?.wantsLayer = true
