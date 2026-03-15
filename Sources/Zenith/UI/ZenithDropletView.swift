@@ -14,13 +14,13 @@ struct ZenithDropletView: View {
             // Radial Menu (The Crust) - Behind the droplet
             ZenithCrustView(isHovering: isHovering)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .id("\(arcSpread)_\(dropDepth)_\(iconSize)") // RUTHLESS GEOMETRY INVALIDATION
             
             VStack(spacing: 0) {
                 // The Main Droplet Pill
                 ZenithPillView(isHovering: isHovering, isPulsing: isPulsing)
             }
         }
+        .id(arcSpread + dropDepth) // FORCE COMPLETE VIEW RECONSTRUCTION
         .frame(width: 800, height: 400)
         .padding(.top, 40) // PUSH DOWN TO CLEAR PHYSICAL NOTCH
         .contentShape(Rectangle()) // MASSIVE HITBOX WALL

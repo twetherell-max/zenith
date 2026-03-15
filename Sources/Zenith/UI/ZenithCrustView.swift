@@ -60,12 +60,6 @@ struct ZenithCrustView: View {
         let _ = print(">>> BUTTONS SHOULD BE VISIBLE NOW")
         
         ZStack(alignment: .top) { // ALIGN TO TOP
-            // THE DROPLET BRIDGE
-            Rectangle()
-                .fill(Color.black)
-                .frame(width: 150, height: 40)
-                .offset(y: -40) // REACH UP TO THE PHYSICAL NOTCH
-            
             VStack {
                 ZStack { // POLAR COORDINATE ORIGIN (0,0)
                     // Button 1 (Left) - Open Downloads
