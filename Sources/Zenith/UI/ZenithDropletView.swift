@@ -41,7 +41,7 @@ struct ZenithDropletView: View {
                 }
             }
         }
-        .frame(width: 800, height: 400)
+        .frame(width: 800, height: 200)
         .contentShape(Rectangle()) // MASSIVE HITBOX WALL
         .background(Color.black.opacity(0.001)) // FIX HITBOX TRANSPARENCY BUG AND KEEP WINDOW ACTIVE
         .onReceive(timer) { _ in state.objectWillChange.send() }

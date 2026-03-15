@@ -62,7 +62,7 @@ struct ZenithCrustView: View {
             .frame(width: 800, height: 250) // EXPANDED HEIGHT
             .background(Color.black.opacity(0.01)) // GHOST BACKGROUND TO KEEP WINDOW ACTIVE
         }
-        .frame(width: 800, height: 400)
+        .frame(width: 800, height: 200)
     }
 }
 

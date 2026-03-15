@@ -123,8 +123,8 @@ class ZenithWindow: NSWindow {
         
         let isExpanded = ZenithState.shared.isExpanded || ZenithState.shared.isSettingsOpen
         
-        // When hovering or Settings are open, slide the window down by 395px so it's fully on screen (400px down to accommodate massive hitbox)
-        let targetY = isExpanded ? topY - 400 : topY - 5
+        // When hovering or Settings are open, slide the window down by 195px so it's fully on screen (200px down)
+        let targetY = isExpanded ? topY - 200 : topY - 5
         let targetFrame = NSRect(x: centerX, y: targetY, width: windowWidth, height: windowHeight)
         
         NSAnimationContext.runAnimationGroup { context in
