@@ -59,8 +59,8 @@ struct ZenithCrustView: View {
                     
                     // Button 2 (Center) - App Settings
                     CrustButton(id: 2, icon: "gearshape.fill", tooltip: "Settings", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: .zero, iconSize: state.iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
-                        print("DEBUG: Settings Button Tapped")
-                        let _ = print("Settings opened")
+                        NSApp.activate(ignoringOtherApps: true)
+                        ZenithSettingsWindow.show()
                     }
                     .offset(x: getPosition(for: 2).x, y: getPosition(for: 2).y)
                     .zIndex(2)
