@@ -6,7 +6,7 @@ struct ZenithApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     var body: some Scene {
-        // NUKE DEFAULT SCENES: ONLY SETTINGS { EMPTYVIEW }
+        // KILL THE DEFAULT WINDOW: MUST USE EMPTY VIEW
         Settings {
             EmptyView()
         }
@@ -19,6 +19,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
     var zenithWindow: ZenithWindow?
     var settingsWindow: NSWindow?
+    
+    // Explicit access to state for injection
+    let state = ZenithState.shared
 
     override init() {
         super.init()
@@ -26,7 +29,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // THE SHARED LINK: ABSOLUTE FIRST LINE
+        // THE SHARED LINK - ABSOLUTE FIRST LINE
         AppDelegate.shared = self
         
         // Safety: ensure activation policy is correct
@@ -77,6 +80,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc func showSettingsWindow() {
+        print("DEBUG: Gear Clicked")
         print(">>> Attempting to open STYLED settings window...")
         
         // UNIFIED STATE SYNC
@@ -84,15 +88,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         ZenithState.shared.isExpanded = true
         
         if settingsWindow == nil {
-            print(">>> CREATING STYLED NSWindow + NSHostingView...")
+            print(">>> CREATING STYLED NSWindow + VIEW INJECTION...")
             
-            // EXPLICIT VIEW COMPOSITION
-            let settingsView = ZenithSettingsView(state: ZenithState.shared)
+            // EXPLICIT VIEW COMPOSITION WITH STATE INJECTION
+            let settingsView = ZenithSettingsView(state: self.state)
             let hostingView = NSHostingView(rootView: settingsView)
             
+            // GOOD WINDOW MASK
             let window = NSWindow(
                 contentRect: NSRect(x: 0, y: 0, width: 450, height: 600),
-                styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView],
+                styleMask: [.titled, .closable, .miniaturizable],
                 backing: .buffered,
                 defer: false
             )
@@ -101,8 +106,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.title = "Zenith Settings"
             window.isReleasedWhenClosed = false
             window.isRestorable = false
-            window.titleVisibility = .hidden
-            window.titlebarAppearsTransparent = true
             
             // BOSS POSITIONING & LEVEL
             window.center()
@@ -119,9 +122,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         // THE BOSS ACTIVATION
-        NSApp.activate(ignoringOtherApps: true)
         self.settingsWindow?.makeKeyAndOrderFront(nil)
         self.settingsWindow?.orderFrontRegardless()
+        NSApp.activate(ignoringOtherApps: true)
     }
     
     func applicationWillTerminate(_ notification: Notification) {
