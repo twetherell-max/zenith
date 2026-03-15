@@ -12,10 +12,14 @@ struct ZenithDropletView: View {
     
     private let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
     
+    private var effectivelyExpanded: Bool {
+        isHovering || state.isSettingsOpen
+    }
+    
     var body: some View {
         ZStack(alignment: .top) { // PIN TO TOP
             // Radial Menu (The Crust) - Behind the droplet
-            ZenithCrustView(isHovering: isHovering)
+            ZenithCrustView(isHovering: effectivelyExpanded)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             
             // DEBUG LABEL
@@ -24,21 +28,19 @@ struct ZenithDropletView: View {
                 .foregroundColor(.white.opacity(0.3))
                 .padding(.top, 2)
         }
+        .contentShape(Rectangle()) // STABILIZE HITBOX: Area doesn't shrink when buttons move
         // FORCE COMPLETE VIEW RECONSTRUCTION ON LIVE COMBINE UPDATES
         .id("zenith-main-view") 
         .onChange(of: state.arcSpread) { _ in } // LIVE REDRAW TRIGGER
         .onChange(of: state.dropDepth) { _ in }
         .onChange(of: state.isSettingsOpen) { isOpen in
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                if isOpen { isHovering = true }
+                // Expansion is now handled via effectivelyExpanded computed property
             }
         }
         .onHover { hovering in
-            // LOCK LOGIC: If settings are open, do NOT change expansion based on mouse
-            if !state.isSettingsOpen {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
-                    isHovering = hovering
-                }
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                isHovering = hovering
             }
         }
         .frame(width: 800, height: 400)

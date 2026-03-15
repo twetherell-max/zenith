@@ -87,6 +87,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     @objc func openSettings() {
         ZenithState.shared.isSettingsOpen = true
+        print("DEBUG: Settings is now true | \(ZenithState.shared.isSettingsOpen)")
         NSApp.activate(ignoringOtherApps: true)
         ZenithSettingsWindow.show()
     }
