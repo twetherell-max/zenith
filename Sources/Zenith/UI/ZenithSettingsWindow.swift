@@ -11,7 +11,7 @@ class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        
+        self.level = .floating // ENSURE VISIBILITY ABOVE TERMINAL
         self.title = "Zenith Settings"
         self.center()
         self.setFrameAutosaveName("ZenithSettingsWindow")

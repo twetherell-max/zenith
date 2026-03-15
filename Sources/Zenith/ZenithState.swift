@@ -4,22 +4,16 @@ import Combine
 class ZenithState: ObservableObject {
     static let shared = ZenithState()
     
-    @Published var arcSpread: Double {
-        didSet { UserDefaults.standard.set(arcSpread, forKey: "arcSpread") }
-    }
+    @Published var arcSpread: Double = 80.0
+    @Published var dropDepth: Double = 50.0
+    @Published var iconSize: Double = 14.0
     
-    @Published var dropDepth: Double {
-        didSet { UserDefaults.standard.set(dropDepth, forKey: "dropDepth") }
-    }
-    
-    @Published var iconSize: Double {
-        didSet { UserDefaults.standard.set(iconSize, forKey: "iconSize") }
-    }
+    private let cancellables = Set<AnyCancellable>()
     
     private init() {
         UserDefaults.standard.register(defaults: [
             "arcSpread": 80.0,
-            "dropDepth": 40.0,
+            "dropDepth": 50.0,
             "iconSize": 14.0
         ])
         
@@ -28,7 +22,7 @@ class ZenithState: ObservableObject {
         let storedIconSize = UserDefaults.standard.double(forKey: "iconSize")
         
         self.arcSpread = storedArcSpread == 0 ? 80.0 : storedArcSpread
-        self.dropDepth = storedDropDepth == 0 ? 40.0 : storedDropDepth
+        self.dropDepth = storedDropDepth == 0 ? 50.0 : storedDropDepth
         self.iconSize = storedIconSize == 0 ? 14.0 : storedIconSize
     }
     
@@ -38,7 +32,7 @@ class ZenithState: ObservableObject {
         let storedIconSize = UserDefaults.standard.double(forKey: "iconSize")
         
         self.arcSpread = storedArcSpread == 0 ? 80.0 : storedArcSpread
-        self.dropDepth = storedDropDepth == 0 ? 40.0 : storedDropDepth
+        self.dropDepth = storedDropDepth == 0 ? 50.0 : storedDropDepth
         self.iconSize = storedIconSize == 0 ? 14.0 : storedIconSize
     }
 }
