@@ -15,7 +15,7 @@ class ZenithWindow: NSWindow {
         let screen = NSScreen.screens.first ?? targetScreen ?? NSScreen.main ?? NSScreen.screens[0]
         let visibleFrame = screen.visibleFrame
         let windowWidth: CGFloat = 800
-        let windowHeight: CGFloat = 400
+        let windowHeight: CGFloat = 200
         
         let centerX = visibleFrame.origin.x + (visibleFrame.width - windowWidth) / 2
         let topY = visibleFrame.origin.y + visibleFrame.height
@@ -116,7 +116,7 @@ class ZenithWindow: NSWindow {
         let screen = NSScreen.screens.first ?? self.screen ?? NSScreen.main ?? NSScreen.screens[0]
         let visibleFrame = screen.visibleFrame
         let windowWidth: CGFloat = 800
-        let windowHeight: CGFloat = 400
+        let windowHeight: CGFloat = 200
         
         let centerX = visibleFrame.origin.x + (visibleFrame.width - windowWidth) / 2
         let topY = visibleFrame.origin.y + visibleFrame.height

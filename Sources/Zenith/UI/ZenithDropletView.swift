@@ -21,6 +21,7 @@ struct ZenithDropletView: View {
                 .foregroundColor(.white.opacity(0.3))
                 .padding(.top, 2)
         }
+        .contentShape(Rectangle()) // PIN POINT HOVER DETECTION
         .contentShape(Rectangle()) // STABILIZE HITBOX: Area doesn't shrink when buttons move
         // FORCE COMPLETE VIEW RECONSTRUCTION ON LIVE COMBINE UPDATES
         .id("zenith-main-view") 
