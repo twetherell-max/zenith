@@ -14,6 +14,7 @@ struct ZenithApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     static var shared: AppDelegate?
     var zenithWindow: ZenithWindow?
+    var settingsWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.shared = self
@@ -29,7 +30,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // 1. ZOMBIE PURGE: Kill any existing windows by title to clear remnants
         NSApp.windows.forEach { window in
-            if window.title == "ZenithWindow" {
+            if window.title == "ZenithWindow" || window.title == "Zenith Settings" {
                 print(">>> STARTUP PURGE: Closing zombie window...")
                 window.close()
             }
@@ -86,21 +87,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc func openSettings() {
+        // ENFORCE SINGLE BRAIN UNIFICATION
         ZenithState.shared.isSettingsOpen = true
         ZenithState.shared.isExpanded = true
-        print("DEBUG: Settings is now true | \(ZenithState.shared.isSettingsOpen)")
         
-        // Master Closure Observer: Reset state when the settings window is closed
-        NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: nil, queue: .main) { notification in
-            if let window = notification.object as? NSWindow, window.title == "Zenith Settings" {
-                print("DEBUG: Settings Window Detected Closure | Resetting state")
+        if settingsWindow == nil {
+            print(">>> CREATING UNIFIED SETTINGS WINDOW")
+            settingsWindow = ZenithSettingsWindow()
+            
+            // Register closure cleanup
+            NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: settingsWindow, queue: .main) { [weak self] _ in
+                print(">>> UNIFIED SETTINGS CLOSING | Cleaning flags")
                 ZenithState.shared.isSettingsOpen = false
                 ZenithState.shared.isExpanded = false
+                self?.settingsWindow = nil
             }
         }
         
+        print(">>> ACTIVATING UNIFIED SETTINGS")
+        NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
-        ZenithSettingsWindow.show()
+        settingsWindow?.makeKeyAndOrderFront(nil)
+        settingsWindow?.center()
     }
     
     func applicationWillTerminate(_ notification: Notification) {

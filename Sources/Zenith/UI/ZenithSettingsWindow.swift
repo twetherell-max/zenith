@@ -2,8 +2,6 @@ import AppKit
 import SwiftUI
 
 class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
-    static var shared: ZenithSettingsWindow?
-    
     init() {
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: 300, height: 400),
@@ -23,36 +21,6 @@ class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
         hostingView.frame = NSRect(x: 0, y: 0, width: 300, height: 400)
         self.contentView = hostingView
         self.delegate = self
-    }
-    
-    static func show() {
-        // ENSURE APP PROMOTION
-        NSApp.setActivationPolicy(.regular)
-        
-        if shared == nil {
-            shared = ZenithSettingsWindow()
-        }
-        
-        guard let window = shared else { return }
-        
-        // DIRECT VIEW HOSTING: Bypass controller complexity for stability
-        let settingsView = SettingsView()
-        let hostingView = NSHostingView(rootView: settingsView)
-        hostingView.frame = NSRect(x: 0, y: 0, width: 300, height: 400)
-        
-        window.contentView = hostingView
-        window.backgroundColor = .windowBackgroundColor
-        window.isOpaque = true
-        
-        window.center()
-        window.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
-    }
-    
-    func windowWillClose(_ notification: Notification) {
-        ZenithState.shared.isSettingsOpen = false
-        ZenithState.shared.isExpanded = false
-        ZenithSettingsWindow.shared = nil
     }
 }
 
