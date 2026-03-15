@@ -19,9 +19,9 @@ struct ZenithCrustView: View {
             return CGPoint(x: 0, y: -100)
         }
         
-        // SMILE CURVE ENGINE: Upward spread (abs * -0.2)
+        // SMILE CURVE ENGINE: Quadratic parabolic lift
         let xOffset = CGFloat(id - 2) * state.arcSpread
-        let yPos = (abs(xOffset) * -0.2) + state.dropDepth
+        let yPos = (pow(xOffset, 2) / -1000.0) + state.dropDepth
         
         return CGPoint(x: xOffset, y: yPos)
     }

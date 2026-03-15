@@ -58,7 +58,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let notchFrame = NotchManager.shared.notchFrame
             
             let window = ZenithWindow(notchFrame: notchFrame, targetScreen: builtInScreen)
-            window.title = "ZenithWindow" // SET TITLE FOR PURGE IDENTIFICATION
+            window.title = "ZenithWindow"
+            
+            // GHOST MODE: ABSOLUTE TRANSPARENCY
+            window.backgroundColor = .clear
+            window.isOpaque = false
+            window.hasShadow = false
+            window.ignoresMouseEvents = false
+            window.contentView?.layer?.isGeometryFlipped = false
+            
             self.zenithWindow = window
         }
         

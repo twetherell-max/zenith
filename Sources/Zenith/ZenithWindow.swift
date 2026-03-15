@@ -26,7 +26,7 @@ class ZenithHostingView<Content: View>: NSHostingView<Content> {
         // id-2 gives -1, 0, 1 for offset
         for id in 1...3 {
             let xOffset = CGFloat(id - 2) * state.arcSpread
-            let yOffset = (abs(xOffset) * -0.2) + state.dropDepth
+            let yOffset = (pow(xOffset, 2) / -1000.0) + state.dropDepth // QUADRATIC SMILE MATH
             
             // Button Center in View Coordinates
             let centerX = self.bounds.width / 2 + xOffset
@@ -110,6 +110,8 @@ class ZenithWindow: NSWindow {
         hostingView.layer?.masksToBounds = false
         
         self.contentView = hostingView
+        self.contentView?.wantsLayer = true
+        self.contentView?.layer?.isGeometryFlipped = false
         
         print(">>> ZENITH: NSHostingView bridge established. ContentView: \(String(describing: self.contentView))")
         
