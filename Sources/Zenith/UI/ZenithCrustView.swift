@@ -74,12 +74,14 @@ struct ZenithCrustView: View {
                         let downloadsURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
                         NSWorkspace.shared.open(downloadsURL)
                     }
+                    .zIndex(0)
                     
                     // Button 2 (Center) - App Settings
                     CrustButton(id: 2, icon: "gearshape.fill", tooltip: "Settings", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: middleOffset, iconSize: state.iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
                         // Action handled in button for now, but can be augmented
                         let _ = print("Settings opened")
                     }
+                    .zIndex(1)
                     
                     // Button 3 (Right) - Mission Control
                     CrustButton(id: 3, icon: "flowchart", tooltip: "Mission Control", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: rightOffset, iconSize: state.iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
@@ -87,6 +89,7 @@ struct ZenithCrustView: View {
                             NSWorkspace.shared.open(url)
                         }
                     }
+                    .zIndex(0)
                 }
                 .frame(width: 400, height: 100)
                 .zIndex(5) // FORCE FOREGROUND
@@ -117,7 +120,7 @@ struct CrustButton: View {
                 Circle()
                     .fill(Color.gray.opacity(0.2)) // SOLID FALLBACK
                     .background(Circle().fill(.thickMaterial)) // HEAVY GLASS
-                    .frame(width: iconSize * 2.5, height: iconSize * 2.5) // TIGHTER ORB
+                    .frame(width: iconSize * 2.2, height: iconSize * 2.2) // VISUAL SIZE
                     .shadow(color: hoveredButton == id ? .white : .black.opacity(0.8), radius: hoveredButton == id ? 15 : 10) // DYNAMIC GLOW
                     .overlay(
                         Circle()
@@ -139,7 +142,7 @@ struct CrustButton: View {
             }
             .environment(\.colorScheme, isDarkGlass ? .dark : .light) // LIVE MATERIAL THEME
         }
-        .frame(width: iconSize * 2.5, height: iconSize * 2.5) // TIGHTER HITBOX
+        .frame(width: iconSize * 1.5, height: iconSize * 1.5) // TIGHTER HITBOX
         .contentShape(Circle()) // STRICT CIRCULAR HITBOX
         .offset(offset) // UNIFIED ABSOLUTE MATH
         .animation(.spring(response: 0.35, dampingFraction: 0.7), value: isExpanded) // UNIFIED LAYOUT ANIMATION

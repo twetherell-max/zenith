@@ -27,6 +27,7 @@ class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
             shared = ZenithSettingsWindow()
         }
         shared?.makeKeyAndOrderFront(nil)
+        shared?.orderFrontRegardless() // FORCE ABOVE TERMINAL
         NSApp.activate(ignoringOtherApps: true)
     }
     

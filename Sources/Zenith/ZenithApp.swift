@@ -16,6 +16,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var zenithWindow: ZenithWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // 0. PROCESS TERMINATION: Kill other running instances of Zenith
+        let runningApps = NSWorkspace.shared.runningApplications
+        let currentApp = NSRunningApplication.current
+        for app in runningApps {
+            if app.bundleIdentifier == currentApp.bundleIdentifier && app != currentApp {
+                print(">>> STARTUP: Terminating existing Zenith process...")
+                app.terminate()
+            }
+        }
+
         // 1. ZOMBIE PURGE: Kill any existing windows by title to clear remnants
         NSApp.windows.forEach { window in
             if window.title == "ZenithWindow" {
