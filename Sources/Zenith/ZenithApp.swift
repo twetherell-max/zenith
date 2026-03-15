@@ -1,16 +1,7 @@
 import SwiftUI
 import AppKit
 
-struct ZenithApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-
-    var body: some Scene {
-        Settings { 
-            EmptyView() 
-        }
-    }
-}
-
+@main
 class AppDelegate: NSObject, NSApplicationDelegate {
     static var shared: AppDelegate!
     
@@ -25,16 +16,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.shared = self
         
+        // 0. RESTORATION PURGE: Kill macOS window state persistence
+        NSApp.disableRelaunchOnLogin()
+        
         setupStatusItem()
-        // 0. PROCESS TERMINATION: Kill other running instances of Zenith
-        let runningApps = NSWorkspace.shared.runningApplications
-        let currentApp = NSRunningApplication.current
-        for app in runningApps {
-            if app.bundleIdentifier == currentApp.bundleIdentifier && app != currentApp {
-                print(">>> STARTUP: Terminating existing Zenith process...")
-                app.terminate()
-            }
-        }
+        // 1. PROCESS TERMINATION: Kill other running instances of Zenith
 
         // 1. ZOMBIE PURGE: Kill any existing windows by title to clear remnants
         NSApp.windows.forEach { window in
@@ -62,6 +48,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.backgroundColor = .clear
             window.isOpaque = false
             window.hasShadow = false
+            window.isRestorable = false // SILENCE CACHE
             window.ignoresMouseEvents = false
             window.contentView?.wantsLayer = true
             window.contentView?.layer?.backgroundColor = NSColor.clear.cgColor
@@ -127,6 +114,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if settingsWindow == nil {
             print(">>> CREATING UNIFIED SETTINGS WINDOW")
             settingsWindow = ZenithSettingsWindow()
+            settingsWindow?.isRestorable = false // KILL GHOSTS
             
             NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: settingsWindow, queue: .main) { [weak self] _ in
                 print(">>> UNIFIED SETTINGS CLOSING | Cleaning flags")

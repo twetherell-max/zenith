@@ -41,6 +41,7 @@ struct ZenithCrustView: View {
                     .zIndex(1)
                     
                     CrustButton(id: 2, icon: "gearshape.fill", tooltip: "Settings", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: .zero, iconSize: state.iconSize, isDarkGlass: state.isDarkGlass, isSettingsOpen: state.isSettingsOpen) {
+                        NSApp.activate(ignoringOtherApps: true)
                         AppDelegate.shared.showSettingsWindow()
                     }
                     .padding(10) // EXPANDED HIT-REGION

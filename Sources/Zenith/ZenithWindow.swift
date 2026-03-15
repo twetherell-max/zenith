@@ -7,7 +7,6 @@ class ZenithHostingView<Content: View>: NSHostingView<Content> {
         let state = ZenithState.shared
         
         // 1. THE NOTCH (CENTER TOP)
-        // Correct for absolute window top coordinate system
         let notchWidth: CGFloat = 200
         let notchHeight: CGFloat = 40
         let notchRect = NSRect(x: (self.bounds.width - notchWidth) / 2, y: self.bounds.height - notchHeight, width: notchWidth, height: notchHeight)
@@ -18,25 +17,25 @@ class ZenithHostingView<Content: View>: NSHostingView<Content> {
         
         // 2. THE BUTTONS (SMILE ARC)
         if !state.isExpanded && !state.isSettingsOpen {
-            return nil // GHOST MODE
+            return nil // SILHOUETTE PASSTHROUGH
         }
         
         for id in 1...3 {
             let xOffset = CGFloat(id - 2) * state.arcSpread
-            let yOffset = (abs(xOffset) * -0.2) + state.dropDepth // SMILE MATH CALIBRATION
+            let yOffset = (abs(xOffset) * -0.2) + state.dropDepth // SMILE MATH ALIGNMENT
             
             let centerX = self.bounds.width / 2 + xOffset
             let centerY = self.bounds.height - yOffset
             
-            let buttonRadius: CGFloat = state.iconSize + 15
-            let buttonRect = NSRect(x: centerX - buttonRadius, y: centerY - buttonRadius, width: buttonRadius * 2, height: buttonRadius * 2)
+            let hWidth: CGFloat = state.iconSize + 15
+            let buttonRect = NSRect(x: centerX - hWidth, y: centerY - hWidth, width: hWidth * 2, height: hWidth * 2)
             
             if buttonRect.contains(point) {
                 return super.hitTest(point)
             }
         }
         
-        return nil // PASSTHROUGH TO DESKTOP/SETTINGS
+        return nil // GHOST MODE ACTIVE
     }
 }
 
