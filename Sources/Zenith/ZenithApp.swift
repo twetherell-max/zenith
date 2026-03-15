@@ -36,7 +36,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // 1. GLOBAL VISIBILITY: Show in Dock and App Switcher
         NSApp.setActivationPolicy(.regular)
         
-        // 2. SINGLETON CHECK: Only create window if it doesn't exist
+        // 2. MENU BAR SETUP
+        setupMenu()
+        
+        // 3. SINGLETON CHECK: Only create window if it doesn't exist
         if self.zenithWindow == nil {
             let builtInScreen = NotchManager.shared.findBuiltInScreen()
             let notchFrame = NotchManager.shared.notchFrame
@@ -57,6 +60,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
         }
+    }
+    
+    private func setupMenu() {
+        let mainMenu = NSMenu()
+        
+        let appMenu = NSMenu()
+        let appMenuItem = NSMenuItem()
+        appMenuItem.submenu = appMenu
+        
+        // SETTINGS (Cmd+,)
+        let settingsItem = NSMenuItem(title: "Settings...", action: #selector(openSettings), keyEquivalent: ",")
+        appMenu.addItem(settingsItem)
+        
+        appMenu.addItem(NSMenuItem.separator())
+        
+        // QUIT (Cmd+Q)
+        let quitItem = NSMenuItem(title: "Quit Zenith", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appMenu.addItem(quitItem)
+        
+        mainMenu.addItem(appMenuItem)
+        NSApp.mainMenu = mainMenu
+    }
+    
+    @objc func openSettings() {
+        ZenithSettingsWindow.show()
     }
     
     func applicationWillTerminate(_ notification: Notification) {

@@ -31,8 +31,9 @@ class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
         
         guard let window = shared else { return }
         
-        // RE-ATTACH VIEW (ENSURE FRESH STATE BRIDGE)
-        window.contentView = NSHostingView(rootView: SettingsView(state: ZenithState.shared))
+        // STABLE HOSTING: Use NSHostingController for better buffer management
+        let controller = NSHostingController(rootView: SettingsView(state: ZenithState.shared))
+        window.contentViewController = controller
         
         window.center()
         window.makeKeyAndOrderFront(nil)
@@ -50,6 +51,8 @@ struct SettingsView: View {
     @AppStorage("isDarkGlass") private var isDarkGlass: Bool = false
     
     var body: some View {
+        let _ = print(">>> SETTINGS VIEW LOADED WITH SPREAD: \(state.arcSpread)")
+        
         VStack(spacing: 20) {
             Text("Zenith Settings")
                 .font(.headline)
