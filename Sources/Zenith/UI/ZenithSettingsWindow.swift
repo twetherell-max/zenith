@@ -26,8 +26,7 @@ class ZenithSettingsWindow: NSPanel, NSWindowDelegate {
         self.title = "Zenith Settings"
         self.isReleasedWhenClosed = false
         
-        let settingsView = SettingsView()
-            .environmentObject(ZenithState.shared)
+        let settingsView = SettingsView(state: ZenithState.shared)
             .frame(width: 400, height: 400) // FORCE CONTENT SIZE
             
         self.contentView = NSHostingView(rootView: settingsView)
@@ -42,11 +41,11 @@ class ZenithSettingsWindow: NSPanel, NSWindowDelegate {
         
         guard let panel = shared else { return }
         
-        // 1. REPAIR CONTENT: Explicitly host the SwiftUI view
-        let settingsView = SettingsView()
-            .environmentObject(ZenithState.shared)
+        // 1. REPAIR CONTENT: Explicitly host the SwiftUI view with direct injection
+        let settingsView = SettingsView(state: ZenithState.shared)
         
         let hostingView = NSHostingView(rootView: settingsView)
+        hostingView.translatesAutoresizingMaskIntoConstraints = true
         hostingView.frame = NSRect(x: 0, y: 0, width: 400, height: 400)
         
         panel.contentView = hostingView
@@ -76,17 +75,21 @@ class ZenithSettingsWindow: NSPanel, NSWindowDelegate {
 }
 
 struct SettingsView: View {
-    @EnvironmentObject var state: ZenithState
+    @ObservedObject var state: ZenithState
     
     @AppStorage("isDarkGlass") private var isDarkGlass: Bool = false
     @AppStorage("isSettingsOpen") private var isSettingsOpen: Bool = false
     
     var body: some View {
         VStack {
+            Text("HELLO WORLD")
+                .font(.largeTitle)
+                .bold()
+                .padding(.top, 20)
+            
             Text("Settings Loaded")
                 .font(.caption)
                 .foregroundColor(.green)
-                .padding(.top, 10)
             
             Form {
                 Section(header: Text("Appearance").font(.headline)) {
