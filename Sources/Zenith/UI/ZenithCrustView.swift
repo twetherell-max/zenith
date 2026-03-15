@@ -8,42 +8,25 @@ struct ZenithCrustView: View {
     
     @State private var hoveredButton: Int? = nil // TRACK HOVER STATE
     
-    // LIVE GEOMETRY & THEME BINDINGS
-    @AppStorage("arcSpread") private var arcSpread: Double = 100.0
-    @AppStorage("iconSize") private var iconSize: Double = 14.0
-    @AppStorage("dropDepth") private var dropDepth: Double = 40.0
-    @AppStorage("isDarkGlass") private var isDarkGlass: Bool = false
-    @AppStorage("isSettingsOpen") private var isSettingsOpen: Bool = false
-    
     // VISIBILITY SYNC
     private var isExpanded: Bool {
         isHovering || isSettingsOpen
     }
+    
+    // REDUNDANT WRAPPERS REMOVED - DIRECT STATE BINDING ENFORCED
+    @AppStorage("isDarkGlass") private var isDarkGlass: Bool = false
+    @AppStorage("isSettingsOpen") private var isSettingsOpen: Bool = false
     
     // Expansion Multiplier for rigid physics
     private var expansionAmount: Double {
         isExpanded ? 1.0 : 0.0
     }
     
-    // THE CLUMP KILLER: Never allow zero-value geometry on first frames
-    private var currentSpread: Double {
-        state.arcSpread == 0 ? 80.0 : state.arcSpread
-    }
-    
-    private var currentDepth: Double {
-        state.dropDepth == 0 ? 40.0 : state.dropDepth
-    }
-    
-    // RADIUS ENGINE
-    private var radius: Double {
-        state.arcSpread
-    }
-    
     // Left: -45 degrees (-45 * pi / 180)
     private var leftOffset: CGSize {
         let radians = -45.0 * .pi / 180.0
-        let x = sin(radians) * currentSpread
-        let y = currentDepth - (currentSpread * 0.3)
+        let x = sin(radians) * state.arcSpread
+        let y = state.dropDepth - (state.arcSpread * 0.3)
         return CGSize(
             width: x * expansionAmount,
             height: -100 + (expansionAmount * (y + 100))
@@ -52,18 +35,17 @@ struct ZenithCrustView: View {
     
     // Center: 0 degrees
     private var middleOffset: CGSize {
-        let y = currentDepth
         return CGSize(
             width: 0,
-            height: -100 + (expansionAmount * (y + 100))
+            height: -100 + (expansionAmount * (state.dropDepth + 100))
         )
     }
     
     // Right: 45 degrees
     private var rightOffset: CGSize {
         let radians = 45.0 * .pi / 180.0
-        let x = sin(radians) * currentSpread
-        let y = currentDepth - (currentSpread * 0.3)
+        let x = sin(radians) * state.arcSpread
+        let y = state.dropDepth - (state.arcSpread * 0.3)
         return CGSize(
             width: x * expansionAmount,
             height: -100 + (expansionAmount * (y + 100))
@@ -71,7 +53,7 @@ struct ZenithCrustView: View {
     }
     
     var body: some View {
-        let _ = print(">>> BUTTONS SHOULD BE VISIBLE | SPREAD: \(currentSpread)")
+        let _ = print(">>> BUTTONS SHOULD BE VISIBLE | SPREAD: \(state.arcSpread)")
         
         ZStack(alignment: .top) { // ALIGN TO TOP
             VStack {
@@ -99,6 +81,7 @@ struct ZenithCrustView: View {
                     }
                     .zIndex(1)
                 }
+                .id(state.arcSpread) // THE MAGIC FIX: FORCE VIEW RECONSTRUCTION ON SPREAD CHANGE
                 .frame(width: 400, height: 100)
                 .zIndex(5) // FORCE FOREGROUND
             }
@@ -140,6 +123,7 @@ struct CrustButton: View {
                     Image(systemName: icon)
                         .font(.system(size: iconSize, weight: .semibold)) // DYNAMIC SIZE
                         .foregroundColor(hoveredButton == id ? .white : .white.opacity(0.8)) // ICON BRIGHTNESS
+                        .frame(width: icon == "gearshape.fill" ? 40 : nil, height: icon == "gearshape.fill" ? 40 : nil) // HITBOX PROTECTION
                     
                     if id == 2 && isSettingsOpen {
                         Text("OPEN")

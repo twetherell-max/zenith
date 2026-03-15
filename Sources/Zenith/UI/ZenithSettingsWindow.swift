@@ -6,12 +6,13 @@ class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
     
     init() {
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: 450),
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 600),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered,
             defer: false
         )
         self.level = .floating // ENSURE VISIBILITY ABOVE TERMINAL
+        self.center() // ENSURE VISIBILITY IN CENTER OF SCREEN
         self.title = "Zenith Settings"
         self.center()
         self.setFrameAutosaveName("ZenithSettingsWindow")
