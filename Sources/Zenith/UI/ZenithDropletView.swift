@@ -36,7 +36,7 @@ struct ZenithDropletView: View {
     
     private func openSettingsWindow() {
         print(">>> OPENING SETTINGS WINDOW")
-        // FORCE APP TO SHOW IN DOCK AND GAIN FOCUS
+        // FORCE NUCLEAR ACTIVATION POLICY
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
         

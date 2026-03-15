@@ -13,16 +13,25 @@ class ZenithSettingsWindow: NSPanel, NSWindowDelegate {
         )
         print(">>> SETTINGS PANEL LOADED | FRAME: \(self.frame)")
         
-        self.level = .floating // ENSURE VISIBILITY ABOVE TERMINAL
+        // NUCLEAR VISIBILITY: ABOVE EVERYTHING (NOTCH, DOCK, MENU BAR)
+        self.level = .screenSaver 
         self.isFloatingPanel = true
+        
+        // PREVENT TRANSPARENCY BUGS: FORCE OPAQUE WHITE
+        self.isOpaque = true
+        self.backgroundColor = .white
+        
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         self.becomesKeyOnlyIfNeeded = false
-        self.center() // ENSURE VISIBILITY IN CENTER OF SCREEN
         self.title = "Zenith Settings"
         self.isReleasedWhenClosed = false
+        
         let settingsView = SettingsView()
-            .environmentObject(ZenithState.shared) // INJECT LINK TO NOTCH
+            .environmentObject(ZenithState.shared)
+            .frame(width: 400, height: 400) // FORCE CONTENT SIZE
+            
         self.contentView = NSHostingView(rootView: settingsView)
+        self.contentView?.frame = NSRect(x: 0, y: 0, width: 400, height: 400)
         self.delegate = self
     }
     
@@ -31,13 +40,14 @@ class ZenithSettingsWindow: NSPanel, NSWindowDelegate {
             shared = ZenithSettingsWindow()
         }
         
-        // 1. ACTIVATE APP SESSION (Explicit focus request)
+        // FORCE NUCLEAR ACTIVATION
+        NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
         
-        // 2. MAKE KEY AND ORDER FRONT (The 'Key' Fix)
-        shared?.makeKeyAndOrderFront(nil)
+        // FORCE POSITION
+        shared?.setFrameOrigin(NSPoint(x: 500, y: 500))
         
-        // 3. FORCE ABOVE EVERYTHING
+        shared?.makeKeyAndOrderFront(nil)
         shared?.orderFrontRegardless()
     }
     
