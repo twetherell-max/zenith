@@ -17,9 +17,9 @@ class ZenithHostingView<Content: View>: NSHostingView<Content> {
         }
         
         // 2. THE BUTTONS (SMILE CURVE)
-        // If not expanded, only the notch is interactive.
+        // Only interactive if expanded.
         if !state.isExpanded && !state.isSettingsOpen {
-            return nil // PASS THROUGH
+            return nil // PASSTHROUGH
         }
         
         // Button Logic: 3 buttons (id: 1, 2, 3)
