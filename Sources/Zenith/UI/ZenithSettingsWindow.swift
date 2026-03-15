@@ -17,6 +17,7 @@ class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
         self.setFrameAutosaveName("ZenithSettingsWindow")
         self.isReleasedWhenClosed = false
         let settingsView = SettingsView()
+            .environmentObject(ZenithState.shared) // INJECT LINK TO NOTCH
         self.contentView = NSHostingView(rootView: settingsView)
         self.delegate = self
     }
@@ -42,9 +43,8 @@ class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
 }
 
 struct SettingsView: View {
-    @AppStorage("arcSpread") private var arcSpread: Double = 100.0
-    @AppStorage("iconSize") private var iconSize: Double = 14.0
-    @AppStorage("dropDepth") private var dropDepth: Double = 40.0
+    @EnvironmentObject var state: ZenithState
+    
     @AppStorage("isDarkGlass") private var isDarkGlass: Bool = false
     @AppStorage("isSettingsOpen") private var isSettingsOpen: Bool = false
     
@@ -63,20 +63,20 @@ struct SettingsView: View {
             
             Section(header: Text("Geometry").font(.headline)) {
                 VStack(alignment: .leading) {
-                    Text("Arc Spread: \(Int(arcSpread))px")
-                    Slider(value: $arcSpread, in: 50...150, step: 1.0)
+                    Text("Arc Spread: \(Int(state.arcSpread))px")
+                    Slider(value: $state.arcSpread, in: 20...150, step: 1.0)
                 }
                 .padding(.vertical, 8)
                 
                 VStack(alignment: .leading) {
-                    Text("Drop Depth: \(Int(dropDepth))px")
-                    Slider(value: $dropDepth, in: 20...100, step: 1.0)
+                    Text("Drop Depth: \(Int(state.dropDepth))px")
+                    Slider(value: $state.dropDepth, in: 10...100, step: 1.0)
                 }
                 .padding(.bottom, 8)
                 
                 VStack(alignment: .leading) {
-                    Text("Icon Size: \(Int(iconSize))pt")
-                    Slider(value: $iconSize, in: 10...25, step: 1.0)
+                    Text("Icon Size: \(Int(state.iconSize))pt")
+                    Slider(value: $state.iconSize, in: 10...25, step: 1.0)
                 }
                 .padding(.bottom, 8)
             }

@@ -31,29 +31,35 @@ struct ZenithCrustView: View {
     }
     
     // POLAR COORDINATE MATH (RADIANS)
-    // Left: 135 degrees (135 * pi / 180)
+    // Left: -45 degrees (-45 * pi / 180)
     private var leftOffset: CGSize {
-        let radians = 135.0 * .pi / 180.0
+        let radians = -45.0 * .pi / 180.0
+        let x = sin(radians) * state.arcSpread
+        let y = cos(radians) * state.arcSpread
         return CGSize(
-            width: (state.arcSpread * cos(radians)) * expansionAmount,
-            height: -100 + (expansionAmount * ((state.dropDepth - (state.arcSpread * sin(radians))) + 100))
+            width: x * expansionAmount,
+            height: -100 + (expansionAmount * ((y + state.dropDepth) + 100))
         )
     }
     
-    // Center: 90 degrees (90 * pi / 180)
+    // Center: 0 degrees
     private var middleOffset: CGSize {
+        let x = sin(0.0) * state.arcSpread
+        let y = cos(0.0) * state.arcSpread
         return CGSize(
-            width: 0,
-            height: -100 + (expansionAmount * (state.dropDepth + 100))
+            width: x * expansionAmount,
+            height: -100 + (expansionAmount * ((y + state.dropDepth) + 100))
         )
     }
     
-    // Right: 45 degrees (45 * pi / 180)
+    // Right: 45 degrees
     private var rightOffset: CGSize {
         let radians = 45.0 * .pi / 180.0
+        let x = sin(radians) * state.arcSpread
+        let y = cos(radians) * state.arcSpread
         return CGSize(
-            width: (state.arcSpread * cos(radians)) * expansionAmount,
-            height: -100 + (expansionAmount * ((state.dropDepth - (state.arcSpread * sin(radians))) + 100))
+            width: x * expansionAmount,
+            height: -100 + (expansionAmount * ((y + state.dropDepth) + 100))
         )
     }
     
@@ -111,7 +117,7 @@ struct CrustButton: View {
                 Circle()
                     .fill(Color.gray.opacity(0.2)) // SOLID FALLBACK
                     .background(Circle().fill(.thickMaterial)) // HEAVY GLASS
-                    .frame(width: iconSize * 3.0, height: iconSize * 3.0) // ELASTIC ORB DYNAMICS
+                    .frame(width: iconSize * 2.5, height: iconSize * 2.5) // TIGHTER ORB
                     .shadow(color: hoveredButton == id ? .white : .black.opacity(0.8), radius: hoveredButton == id ? 15 : 10) // DYNAMIC GLOW
                     .overlay(
                         Circle()
@@ -132,23 +138,9 @@ struct CrustButton: View {
                 }
             }
             .environment(\.colorScheme, isDarkGlass ? .dark : .light) // LIVE MATERIAL THEME
-            .contextMenu { // ADD MENUBAR EXACTLY ON THE BUTTON ORB
-                let _ = print(">>> Right-click detected on button \(id)")
-                Button("Settings...") {
-                    ZenithSettingsWindow.show()
-                }
-                Button("Check for Updates") {
-                    print("Check Updates")
-                }
-                Divider()
-                Button("Quit") {
-                    NSApplication.shared.terminate(nil)
-                }
-            }
         }
-        .frame(width: iconSize * 3.0, height: iconSize * 3.0) // ELASTIC EXPLICIT FRAME
-        .buttonStyle(PlainButtonStyle())
-        .contentShape(Circle())
+        .frame(width: iconSize * 2.5, height: iconSize * 2.5) // TIGHTER HITBOX
+        .contentShape(Circle()) // STRICT CIRCULAR HITBOX
         .offset(offset) // UNIFIED ABSOLUTE MATH
         .animation(.spring(response: 0.35, dampingFraction: 0.7), value: isExpanded) // UNIFIED LAYOUT ANIMATION
         .scaleEffect(hoveredButton == id ? 1.2 : 1.0) // JUICY SCALING

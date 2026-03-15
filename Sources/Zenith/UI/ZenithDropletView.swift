@@ -30,6 +30,9 @@ struct ZenithDropletView: View {
         .padding(.top, 40) // PUSH DOWN TO CLEAR PHYSICAL NOTCH
         .contentShape(Rectangle()) // MASSIVE HITBOX WALL
         .background(Color.black.opacity(0.001)) // FIX HITBOX TRANSPARENCY BUG AND KEEP WINDOW ACTIVE
+        .onAppear {
+            print(">>> DROPLET VIEW APPEARED: Refreshing positions...")
+        }
     }
     
     private func openSettingsWindow() {
