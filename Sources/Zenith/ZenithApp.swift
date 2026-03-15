@@ -15,21 +15,23 @@ struct ZenithApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     static var shared: AppDelegate!
     
+    // STRONG REFERENCE AT THE TOP
+    var statusItem: NSStatusItem?
+    
+    var zenithWindow: ZenithWindow?
+    var settingsWindow: NSWindow?
+
     override init() {
         super.init()
         AppDelegate.shared = self
     }
     
-    var zenithWindow: ZenithWindow?
-    var settingsWindow: NSWindow?
-    var statusItem: NSStatusItem?
-
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // THE HARD LINK - MUST BE FIRST
+        // THE HARD LINK - MUST BE THE ABSOLUTE FIRST LINE
         AppDelegate.shared = self
         
-        // Accessory mode keeps it alive but out of the Dock
-        NSApp.setActivationPolicy(.accessory)
+        // TEMPORARY REGULAR MODE FOR DIAGNOSTICS
+        NSApp.setActivationPolicy(.regular)
         
         // Kill ghosts
         NSApp.disableRelaunchOnLogin()
@@ -76,6 +78,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc func showSettingsWindow() {
+        print(">>> Attempting to open settings...")
+        
         // UNIFIED STATE SYNC
         ZenithState.shared.isSettingsOpen = true
         ZenithState.shared.isExpanded = true
