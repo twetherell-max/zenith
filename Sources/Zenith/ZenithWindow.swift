@@ -7,8 +7,8 @@ class ZenithHitView: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? {
         let hitView = super.hitTest(point)
         
-        // If the hit is the background view itself, return nil (click passes through)
-        // If the hit is a button or circle, return hitView (click stays in app)
+        // HIT TEST CHECK: return super.hitTest(point) if the point is inside a button, nil if only the background
+        // If it's hitting the view itself (the container), pass through.
         return hitView === self ? nil : hitView
     }
 }
@@ -78,7 +78,7 @@ class ZenithWindow: NSWindow {
         
         self.isOpaque = false
         self.backgroundColor = .clear 
-        self.hasShadow = false // NO SHADOW FOR CLEAN SILHOUETTE
+        self.hasShadow = false 
         self.title = "ZenithWindow"
         self.level = .statusBar 
         self.ignoresMouseEvents = false

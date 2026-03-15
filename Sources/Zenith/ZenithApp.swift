@@ -2,12 +2,21 @@ import SwiftUI
 import AppKit
 
 @main
+struct ZenithApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
+    var body: some Scene {
+        Settings {
+            EmptyView()
+        }
+    }
+}
+
 class AppDelegate: NSObject, NSApplicationDelegate {
     static var shared: AppDelegate!
     
-    // STRONG REFERENCE AT THE TOP
+    // STRONG PROPERTIES TO PREVENT DEALLOCATION
     var statusItem: NSStatusItem?
-    
     var zenithWindow: ZenithWindow?
     var settingsWindow: NSWindow?
 
@@ -20,7 +29,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // THE HARD LINK - MUST BE THE ABSOLUTE FIRST LINE
         AppDelegate.shared = self
         
-        // TEMPORARY REGULAR MODE FOR DIAGNOSTICS & DOCK VISIBILITY
+        // REGULAR MODE FOR DIAGNOSTIC VISIBILITY
         NSApp.setActivationPolicy(.regular)
         
         // Kill ghosts
@@ -55,7 +64,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem?.button {
-            button.image = NSImage(systemSymbolName: "circle.hexagonpath", accessibilityDescription: "Zenith")
+            // EXPLICIT ICON ENFORCEMENT
+            button.image = NSImage(systemSymbolName: "circle.fill", accessibilityDescription: "Zenith")
             button.action = #selector(showSettingsWindow)
             button.target = self
         }
@@ -77,7 +87,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if settingsWindow == nil {
             print(">>> CREATING STYLED NSWindow + NSHostingController...")
             
-            // EXPLICIT NSWindow CREATION
             let styledSettingsView = ZenithSettingsView()
             let hostingController = NSHostingController(rootView: styledSettingsView)
             
@@ -94,11 +103,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.isRestorable = false
             window.titleVisibility = .hidden
             window.titlebarAppearsTransparent = true
-            window.backgroundColor = .clear // Let SwiftUI handle glass
+            window.backgroundColor = .clear 
             
             // BOSS POSITIONING
             window.center()
-            window.level = .floating // ENSURE FRONT
+            window.level = .floating 
             
             self.settingsWindow = window
             
