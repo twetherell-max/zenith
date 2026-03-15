@@ -35,12 +35,17 @@ struct ZenithDropletView: View {
         .onChange(of: state.dropDepth) { _ in }
         .onChange(of: state.isSettingsOpen) { isOpen in
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                // Expansion is now handled via effectivelyExpanded computed property
+                if isOpen {
+                    self.isHovering = true
+                }
             }
         }
         .onHover { hovering in
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
-                isHovering = hovering
+            // GATEKEEPER LOGIC: If settings are open, do NOT change expansion based on mouse
+            if !state.isSettingsOpen {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                    self.isHovering = hovering
+                }
             }
         }
         .frame(width: 800, height: 400)
