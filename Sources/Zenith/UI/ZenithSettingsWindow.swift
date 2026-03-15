@@ -7,7 +7,7 @@ class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
     init() {
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 450),
-            styleMask: [.titled, .closable],
+            styleMask: [.titled, .closable, .resizable],
             backing: .buffered,
             defer: false
         )
@@ -26,9 +26,12 @@ class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
         if shared == nil {
             shared = ZenithSettingsWindow()
         }
+        
+        // ACTIVATE APP SESSION BEFORE FOCUSING WINDOW
+        NSApp.activate(ignoringOtherApps: true)
+        
         shared?.makeKeyAndOrderFront(nil)
         shared?.orderFrontRegardless() // FORCE ABOVE TERMINAL
-        NSApp.activate(ignoringOtherApps: true)
     }
     
     

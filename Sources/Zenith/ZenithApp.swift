@@ -34,8 +34,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        // Re-enable Background Mode (No Dock icon)
-        NSApp.setActivationPolicy(.accessory)
+        // 1. GLOBAL VISIBILITY: Show in Dock and App Switcher
+        NSApp.setActivationPolicy(.regular)
         
         // 2. SINGLETON CHECK: Only create window if it doesn't exist
         if self.zenithWindow == nil {

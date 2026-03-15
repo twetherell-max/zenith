@@ -25,17 +25,25 @@ struct ZenithCrustView: View {
         isExpanded ? 1.0 : 0.0
     }
     
+    // THE CLUMP KILLER: Never allow zero-value geometry on first frames
+    private var currentSpread: Double {
+        state.arcSpread == 0 ? 80.0 : state.arcSpread
+    }
+    
+    private var currentDepth: Double {
+        state.dropDepth == 0 ? 40.0 : state.dropDepth
+    }
+    
     // RADIUS ENGINE
     private var radius: Double {
         state.arcSpread
     }
     
-    // POLAR COORDINATE MATH (RADIANS)
     // Left: -45 degrees (-45 * pi / 180)
     private var leftOffset: CGSize {
         let radians = -45.0 * .pi / 180.0
-        let x = sin(radians) * state.arcSpread
-        let y = state.dropDepth - (state.arcSpread * 0.3)
+        let x = sin(radians) * currentSpread
+        let y = currentDepth - (currentSpread * 0.3)
         return CGSize(
             width: x * expansionAmount,
             height: -100 + (expansionAmount * (y + 100))
@@ -44,7 +52,7 @@ struct ZenithCrustView: View {
     
     // Center: 0 degrees
     private var middleOffset: CGSize {
-        let y = state.dropDepth
+        let y = currentDepth
         return CGSize(
             width: 0,
             height: -100 + (expansionAmount * (y + 100))
@@ -54,8 +62,8 @@ struct ZenithCrustView: View {
     // Right: 45 degrees
     private var rightOffset: CGSize {
         let radians = 45.0 * .pi / 180.0
-        let x = sin(radians) * state.arcSpread
-        let y = state.dropDepth - (state.arcSpread * 0.3)
+        let x = sin(radians) * currentSpread
+        let y = currentDepth - (currentSpread * 0.3)
         return CGSize(
             width: x * expansionAmount,
             height: -100 + (expansionAmount * (y + 100))
@@ -63,7 +71,7 @@ struct ZenithCrustView: View {
     }
     
     var body: some View {
-        let _ = print(">>> BUTTONS SHOULD BE VISIBLE NOW")
+        let _ = print(">>> BUTTONS SHOULD BE VISIBLE | SPREAD: \(currentSpread)")
         
         ZStack(alignment: .top) { // ALIGN TO TOP
             VStack {
