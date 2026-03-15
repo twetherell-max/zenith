@@ -6,6 +6,7 @@ struct ZenithApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     var body: some Scene {
+        // KILL THE DEFAULT WINDOW: MUST USE EMPTY VIEW
         Settings {
             EmptyView()
         }
@@ -15,7 +16,6 @@ struct ZenithApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     static var shared: AppDelegate!
     
-    // STRONG PROPERTIES TO PREVENT DEALLOCATION
     var statusItem: NSStatusItem?
     var zenithWindow: ZenithWindow?
     var settingsWindow: NSWindow?
@@ -26,10 +26,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // THE HARD LINK - MUST BE THE ABSOLUTE FIRST LINE
+        // THE HARD LINK - ABSOLUTE FIRST LINE
         AppDelegate.shared = self
         
-        // REGULAR MODE FOR DIAGNOSTIC VISIBILITY
+        // Safety: ensure activation policy is correct
         NSApp.setActivationPolicy(.regular)
         
         // Kill ghosts
@@ -64,7 +64,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem?.button {
-            // EXPLICIT ICON ENFORCEMENT
             button.image = NSImage(systemSymbolName: "circle.fill", accessibilityDescription: "Zenith")
             button.action = #selector(showSettingsWindow)
             button.target = self
@@ -78,15 +77,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc func showSettingsWindow() {
-        print(">>> Attempting to open STYLED settings...")
+        print(">>> Attempting to open STYLED settings window...")
         
         // UNIFIED STATE SYNC
         ZenithState.shared.isSettingsOpen = true
         ZenithState.shared.isExpanded = true
         
         if settingsWindow == nil {
-            print(">>> CREATING STYLED NSWindow + NSHostingController...")
+            print(">>> CREATING STYLED NSWindow...")
             
+            // EXPLICIT WINDOW CREATION - COMPOSING STYLED VIEW
             let styledSettingsView = ZenithSettingsView()
             let hostingController = NSHostingController(rootView: styledSettingsView)
             
@@ -105,7 +105,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.titlebarAppearsTransparent = true
             window.backgroundColor = .clear 
             
-            // BOSS POSITIONING
+            // BOSS POSITIONING & LEVEL
             window.center()
             window.level = .floating 
             
