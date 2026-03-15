@@ -19,7 +19,8 @@ class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
         // KILL GHOSTS: Explicitly disable restoration
         self.isRestorable = false
         
-        let settingsView = ZenithSettingsView()
+        // Pass the singleton state explicitly as requested
+        let settingsView = ZenithSettingsView(state: ZenithState.shared)
         let hostingView = NSHostingView(rootView: settingsView)
         hostingView.frame = NSRect(x: 0, y: 0, width: 300, height: 400)
         self.contentView = hostingView
@@ -28,7 +29,8 @@ class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
 }
 
 struct ZenithSettingsView: View {
-    @ObservedObject var state = ZenithState.shared
+    // ALLOW STATE INJECTION
+    @ObservedObject var state: ZenithState
     
     var body: some View {
         VStack(spacing: 0) {

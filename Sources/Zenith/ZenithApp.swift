@@ -6,7 +6,7 @@ struct ZenithApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     var body: some Scene {
-        // KILL THE DEFAULT WINDOW: MUST USE EMPTY VIEW
+        // NUKE DEFAULT SCENES: ONLY SETTINGS { EMPTYVIEW }
         Settings {
             EmptyView()
         }
@@ -26,7 +26,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // THE HARD LINK - ABSOLUTE FIRST LINE
+        // THE SHARED LINK: ABSOLUTE FIRST LINE
         AppDelegate.shared = self
         
         // Safety: ensure activation policy is correct
@@ -84,26 +84,25 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         ZenithState.shared.isExpanded = true
         
         if settingsWindow == nil {
-            print(">>> CREATING STYLED NSWindow...")
+            print(">>> CREATING STYLED NSWindow + NSHostingView...")
             
-            // EXPLICIT WINDOW CREATION - COMPOSING STYLED VIEW
-            let styledSettingsView = ZenithSettingsView()
-            let hostingController = NSHostingController(rootView: styledSettingsView)
+            // EXPLICIT VIEW COMPOSITION
+            let settingsView = ZenithSettingsView(state: ZenithState.shared)
+            let hostingView = NSHostingView(rootView: settingsView)
             
             let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 600, height: 450),
+                contentRect: NSRect(x: 0, y: 0, width: 450, height: 600),
                 styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView],
                 backing: .buffered,
                 defer: false
             )
             
-            window.contentViewController = hostingController
+            window.contentView = hostingView
             window.title = "Zenith Settings"
             window.isReleasedWhenClosed = false
             window.isRestorable = false
             window.titleVisibility = .hidden
             window.titlebarAppearsTransparent = true
-            window.backgroundColor = .clear 
             
             // BOSS POSITIONING & LEVEL
             window.center()
