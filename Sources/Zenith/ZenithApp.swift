@@ -2,16 +2,6 @@ import SwiftUI
 import AppKit
 
 @main
-struct ZenithApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    
-    var body: some Scene {
-        Settings {
-            EmptyView()
-        }
-    }
-}
-
 class AppDelegate: NSObject, NSApplicationDelegate {
     static var shared: AppDelegate!
     
@@ -30,7 +20,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // THE HARD LINK - MUST BE THE ABSOLUTE FIRST LINE
         AppDelegate.shared = self
         
-        // TEMPORARY REGULAR MODE FOR DIAGNOSTICS
+        // TEMPORARY REGULAR MODE FOR DIAGNOSTICS & DOCK VISIBILITY
         NSApp.setActivationPolicy(.regular)
         
         // Kill ghosts
@@ -78,20 +68,42 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc func showSettingsWindow() {
-        print(">>> Attempting to open settings...")
+        print(">>> Attempting to open STYLED settings...")
         
         // UNIFIED STATE SYNC
         ZenithState.shared.isSettingsOpen = true
         ZenithState.shared.isExpanded = true
         
         if settingsWindow == nil {
-            print(">>> CREATING SETTINGS WINDOW...")
-            // EXPLICIT CREATION
-            settingsWindow = ZenithSettingsWindow()
-            settingsWindow?.isRestorable = false
+            print(">>> CREATING STYLED NSWindow + NSHostingController...")
+            
+            // EXPLICIT NSWindow CREATION
+            let styledSettingsView = ZenithSettingsView()
+            let hostingController = NSHostingController(rootView: styledSettingsView)
+            
+            let window = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 600, height: 450),
+                styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView],
+                backing: .buffered,
+                defer: false
+            )
+            
+            window.contentViewController = hostingController
+            window.title = "Zenith Settings"
+            window.isReleasedWhenClosed = false
+            window.isRestorable = false
+            window.titleVisibility = .hidden
+            window.titlebarAppearsTransparent = true
+            window.backgroundColor = .clear // Let SwiftUI handle glass
+            
+            // BOSS POSITIONING
+            window.center()
+            window.level = .floating // ENSURE FRONT
+            
+            self.settingsWindow = window
             
             NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: settingsWindow, queue: .main) { [weak self] _ in
-                print(">>> SETTINGS CLOSING...")
+                print(">>> STYLED SETTINGS CLOSING...")
                 ZenithState.shared.isSettingsOpen = false
                 ZenithState.shared.isExpanded = false
                 self?.settingsWindow = nil
@@ -102,6 +114,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
         self.settingsWindow?.makeKeyAndOrderFront(nil)
         self.settingsWindow?.orderFrontRegardless()
-        settingsWindow?.center()
+    }
+    
+    func applicationWillTerminate(_ notification: Notification) {
+        ShortcutManager.shared.stopMonitoring()
     }
 }
