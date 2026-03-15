@@ -20,36 +20,19 @@ struct ZenithCrustView: View {
     // Expansion Multiplier for rigid physics
     private var expansionAmount: Double {
         isExpanded ? 1.0 : 0.0
-    }
-    
-    // Left: -45 degrees (-45 * pi / 180)
-    private var leftOffset: CGSize {
-        let radians = -45.0 * .pi / 180.0
-        let x = sin(radians) * state.arcSpread
+    }    // VERTICAL U-SHAPE MATH ONLY (X is handled by HStack spacing)
+    private var leftYOffset: Double {
         let y = state.dropDepth - (state.arcSpread * 0.3)
-        return CGSize(
-            width: x * expansionAmount,
-            height: -100 + (expansionAmount * (y + 100))
-        )
+        return -100 + (expansionAmount * (y + 100))
     }
     
-    // Center: 0 degrees
-    private var middleOffset: CGSize {
-        return CGSize(
-            width: 0,
-            height: -100 + (expansionAmount * (state.dropDepth + 100))
-        )
+    private var middleYOffset: Double {
+        return -100 + (expansionAmount * (state.dropDepth + 100))
     }
     
-    // Right: 45 degrees
-    private var rightOffset: CGSize {
-        let radians = 45.0 * .pi / 180.0
-        let x = sin(radians) * state.arcSpread
+    private var rightYOffset: Double {
         let y = state.dropDepth - (state.arcSpread * 0.3)
-        return CGSize(
-            width: x * expansionAmount,
-            height: -100 + (expansionAmount * (y + 100))
-        )
+        return -100 + (expansionAmount * (y + 100))
     }
     
     var body: some View {
@@ -57,35 +40,37 @@ struct ZenithCrustView: View {
         
         ZStack(alignment: .top) { // ALIGN TO TOP
             VStack {
-                ZStack { // POLAR COORDINATE ORIGIN (0,0)
+                HStack(spacing: state.arcSpread * expansionAmount) {
                     // Button 1 (Left) - Open Downloads
-                    CrustButton(id: 1, icon: "folder", tooltip: "Downloads", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: leftOffset, iconSize: state.iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
+                    CrustButton(id: 1, icon: "folder", tooltip: "Downloads", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: .zero, iconSize: state.iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
                         let downloadsURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first!
                         NSWorkspace.shared.open(downloadsURL)
                     }
+                    .offset(y: leftYOffset)
                     .zIndex(1)
                     
                     // Button 2 (Center) - App Settings
-                    CrustButton(id: 2, icon: "gearshape.fill", tooltip: "Settings", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: middleOffset, iconSize: state.iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
+                    CrustButton(id: 2, icon: "gearshape.fill", tooltip: "Settings", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: .zero, iconSize: state.iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
                         print("DEBUG: Settings Button Tapped")
-                        // Action handled in button for now, but can be augmented
                         let _ = print("Settings opened")
                     }
+                    .offset(y: middleYOffset)
                     .zIndex(2)
                     
                     // Button 3 (Right) - Mission Control
-                    CrustButton(id: 3, icon: "flowchart", tooltip: "Mission Control", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: rightOffset, iconSize: state.iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
+                    CrustButton(id: 3, icon: "flowchart", tooltip: "Mission Control", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: .zero, iconSize: state.iconSize, isDarkGlass: isDarkGlass, isSettingsOpen: isSettingsOpen) {
                         if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.exposelauncher") {
                             NSWorkspace.shared.open(url)
                         }
                     }
+                    .offset(y: rightYOffset)
                     .zIndex(1)
                 }
-                .id(state.arcSpread) // THE MAGIC FIX: FORCE VIEW RECONSTRUCTION ON SPREAD CHANGE
-                .frame(width: 400, height: 100)
+                .id(UUID()) // THE MAGIC FIX: FORCE TOTAL RECONSTRUCTION
+                .frame(width: 600, height: 100)
                 .zIndex(5) // FORCE FOREGROUND
             }
-            .frame(width: 400, height: 250) // EXPANDED HEIGHT
+            .frame(width: 800, height: 250) // EXPANDED HEIGHT
             .padding(.top, 50)
             .background(Color.black.opacity(0.01)) // GHOST BACKGROUND TO KEEP WINDOW ACTIVE
         }
@@ -131,6 +116,8 @@ struct CrustButton: View {
                             .foregroundColor(.white)
                     }
                 }
+                .frame(width: icon == "gearshape.fill" ? 60 : nil, height: icon == "gearshape.fill" ? 60 : nil) // MASSIVE GEAR HITBOX
+                .contentShape(Rectangle()) // FORCE RECTANGULAR HIT-TEST AREA FOR GEAR
             }
             .environment(\.colorScheme, isDarkGlass ? .dark : .light) // LIVE MATERIAL THEME
         }

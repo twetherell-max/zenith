@@ -1,17 +1,19 @@
 import AppKit
 import SwiftUI
 
-class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
+class ZenithSettingsWindow: NSPanel, NSWindowDelegate {
     static var shared: ZenithSettingsWindow?
     
     init() {
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 600),
-            styleMask: [.titled, .closable, .resizable],
+            styleMask: [.titled, .closable, .resizable, .fullSizeContentView, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
         self.level = .floating // ENSURE VISIBILITY ABOVE TERMINAL
+        self.isFloatingPanel = true
+        self.becomesKeyOnlyIfNeeded = false
         self.center() // ENSURE VISIBILITY IN CENTER OF SCREEN
         self.title = "Zenith Settings"
         self.center()
