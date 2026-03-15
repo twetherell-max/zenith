@@ -27,8 +27,6 @@ class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
 struct SettingsView: View {
     @ObservedObject var state = ZenithState.shared
     
-    @AppStorage("isDarkGlass") private var isDarkGlass: Bool = false
-    
     var body: some View {
         let _ = print("Spread value: \(state.arcSpread)")
         
@@ -49,37 +47,38 @@ struct SettingsView: View {
             VStack(spacing: 20) {
                 Form {
                     Section {
-                        Toggle("High Contrast (Dark Glass)", isOn: $isDarkGlass)
+                        Toggle("High Contrast (Dark Glass)", isOn: $state.isDarkGlass)
+                            .contentShape(Rectangle())
+                            .zIndex(100)
                     }
                 
                     Section(header: Text("Geometry").font(.caption).foregroundColor(.secondary)) {
                         VStack(alignment: .leading) {
                             Text("Arc Spread: \(Int(state.arcSpread))px")
                             Slider(value: $state.arcSpread, in: 20...150, step: 1.0)
+                                .contentShape(Rectangle())
+                                .zIndex(100)
                                 .onChange(of: state.arcSpread) { val in print("New Spread: \(val)") }
                         }
                         
                         VStack(alignment: .leading) {
                             Text("Drop Depth: \(Int(state.dropDepth))px")
                             Slider(value: $state.dropDepth, in: 0...100, step: 1.0)
+                                .contentShape(Rectangle())
+                                .zIndex(100)
                                 .onChange(of: state.dropDepth) { val in print("New Depth: \(val)") }
                         }
                         
                         VStack(alignment: .leading) {
                             Text("Icon Size: \(Int(state.iconSize))pt")
                             Slider(value: $state.iconSize, in: 10...25, step: 1.0)
+                                .contentShape(Rectangle())
+                                .zIndex(100)
                                 .onChange(of: state.iconSize) { val in print("New Size: \(val)") }
                         }
                     }
                 }
                 .formStyle(.grouped)
-                // MASTER MONITOR: Double-wire the data flow output to terminal
-                .onChange(of: state.arcSpread) { _ in
-                    print("GLOBAL SPREAD UPDATED: \(state.arcSpread)")
-                }
-                .onChange(of: state.arcSpread) { newValue in
-                    print(">>> LIVE ARC SPREAD: \(newValue)")
-                }
                 
                 Button("Close") {
                     NSApp.keyWindow?.close()
@@ -88,6 +87,7 @@ struct SettingsView: View {
                 .padding(.bottom, 20)
             }
             .padding()
+            .border(.red, width: 2) // DEBUG BORDER: Identify clipping
         }
         .frame(width: 300, height: 400)
     }

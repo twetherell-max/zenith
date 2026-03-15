@@ -17,6 +17,10 @@ class ZenithState: ObservableObject {
         didSet { UserDefaults.standard.set(iconSize, forKey: "iconSize") }
     }
     
+    @Published var isDarkGlass: Bool {
+        didSet { UserDefaults.standard.set(isDarkGlass, forKey: "isDarkGlass") }
+    }
+    
     @Published var isSettingsOpen: Bool = false
     @Published var isExpanded: Bool = false
     
@@ -29,5 +33,6 @@ class ZenithState: ObservableObject {
         self.arcSpread = UserDefaults.standard.double(forKey: "arcSpread") == 0 ? 80.0 : UserDefaults.standard.double(forKey: "arcSpread")
         self.dropDepth = UserDefaults.standard.double(forKey: "dropDepth") == 0 ? 50.0 : UserDefaults.standard.double(forKey: "dropDepth")
         self.iconSize = UserDefaults.standard.double(forKey: "iconSize") == 0 ? 14.0 : UserDefaults.standard.double(forKey: "iconSize")
+        self.isDarkGlass = UserDefaults.standard.bool(forKey: "isDarkGlass")
     }
 }
