@@ -4,9 +4,7 @@ import Combine
 
 class ZenithWindow: NSWindow {
     let targetScreen: NSScreen?
-    private var isExpanded: Bool = false
     private var cancellables = Set<AnyCancellable>()
-    @Published var isHovering: Bool = false
     @Published var isPulsing: Bool = false
     
     private var trackingArea: NSTrackingArea?
@@ -40,6 +38,17 @@ class ZenithWindow: NSWindow {
         self.level = NSWindow.Level(Int(CGWindowLevelForKey(.maximumWindow))) // ABSOLUTE FOREGROUND
         self.ignoresMouseEvents = false
         
+        // REACIVE FRAME SYNC: Observe global expansion state
+        ZenithState.shared.$isExpanded
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.updateWindowFrame() }
+            .store(in: &cancellables)
+            
+        ZenithState.shared.$isSettingsOpen
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.updateWindowFrame() }
+            .store(in: &cancellables)
+
         // APPKIT FORCED RENDER FLUSHER
         ZenithState.shared.objectWillChange
             .receive(on: RunLoop.main)
@@ -50,7 +59,6 @@ class ZenithWindow: NSWindow {
             .store(in: &cancellables)
         
         let rootView = ZenithDropletView(
-            isHovering: Binding(get: { self.isHovering }, set: { self.isHovering = $0 }),
             isPulsing: Binding(get: { self.isPulsing }, set: { self.isPulsing = $0 })
         )
         .environmentObject(ZenithState.shared) // INJECT LIVE MEMORY PIPELINE
@@ -97,17 +105,11 @@ class ZenithWindow: NSWindow {
     }
 
     override func mouseEntered(with event: NSEvent) {
-        // withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
-            self.isHovering = true
-        // }
-        updateWindowFrame()
+        // Handled by ZenithDropletView.onHover -> ZenithState.isExpanded
     }
 
     override func mouseExited(with event: NSEvent) {
-        // withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
-            self.isHovering = false
-        // }
-        updateWindowFrame()
+        // Handled by ZenithDropletView.onHover -> ZenithState.isExpanded
     }
 
     private func updateWindowFrame() {
@@ -120,8 +122,7 @@ class ZenithWindow: NSWindow {
         let centerX = visibleFrame.origin.x + (visibleFrame.width - windowWidth) / 2
         let topY = visibleFrame.origin.y + visibleFrame.height
         
-        let isSettingsOpen = UserDefaults.standard.bool(forKey: "isSettingsOpen")
-        let isExpanded = isHovering || isSettingsOpen
+        let isExpanded = ZenithState.shared.isExpanded || ZenithState.shared.isSettingsOpen
         
         // When hovering or Settings are open, slide the window down by 395px so it's fully on screen (400px down to accommodate massive hitbox)
         let targetY = isExpanded ? topY - 400 : topY - 5

@@ -87,6 +87,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     @objc func openSettings() {
         ZenithState.shared.isSettingsOpen = true
+        ZenithState.shared.isExpanded = true
         print("DEBUG: Settings is now true | \(ZenithState.shared.isSettingsOpen)")
         
         // Master Closure Observer: Reset state when the settings window is closed
@@ -94,6 +95,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             if let window = notification.object as? NSWindow, window.title == "Zenith Settings" {
                 print("DEBUG: Settings Window Detected Closure | Resetting state")
                 ZenithState.shared.isSettingsOpen = false
+                ZenithState.shared.isExpanded = false
             }
         }
         

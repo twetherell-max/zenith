@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct ZenithDropletView: View {
-    @Binding var isHovering: Bool
     @Binding var isPulsing: Bool
     
     // ROOT GEOMETRY MEMORY PIPELINE (Observes state instantly instead of polling disk)
@@ -12,14 +11,10 @@ struct ZenithDropletView: View {
     
     private let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
     
-    private var effectivelyExpanded: Bool {
-        isHovering || state.isSettingsOpen
-    }
-    
     var body: some View {
         ZStack(alignment: .top) { // PIN TO TOP
             // Radial Menu (The Crust) - Behind the droplet
-            ZenithCrustView(isHovering: effectivelyExpanded)
+            ZenithCrustView(isHovering: state.isExpanded || state.isSettingsOpen)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             
             // DEBUG LABEL
@@ -36,7 +31,7 @@ struct ZenithDropletView: View {
         .onChange(of: state.isSettingsOpen) { isOpen in
             withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                 if isOpen {
-                    self.isHovering = true
+                    state.isExpanded = true
                 }
             }
         }
@@ -44,7 +39,7 @@ struct ZenithDropletView: View {
             // GATEKEEPER LOGIC: If settings are open, do NOT change expansion based on mouse
             if !state.isSettingsOpen {
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
-                    self.isHovering = hovering
+                    state.isExpanded = hovering
                 }
             }
         }

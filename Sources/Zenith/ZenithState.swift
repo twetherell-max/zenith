@@ -38,6 +38,7 @@ class ZenithState: ObservableObject {
     }
     
     @Published var isSettingsOpen: Bool = false
+    @Published var isExpanded: Bool = false
     
     // DEBUG ID: If you see two different numbers, there are two windows.
     private let debugID = Int.random(in: 1...100)
