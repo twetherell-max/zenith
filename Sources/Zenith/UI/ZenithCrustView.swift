@@ -41,7 +41,7 @@ struct ZenithCrustView: View {
                     .zIndex(1)
                     
                     CrustButton(id: 2, icon: "gearshape.fill", tooltip: "Settings", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: .zero, iconSize: state.iconSize, isDarkGlass: state.isDarkGlass, isSettingsOpen: state.isSettingsOpen) {
-                        AppDelegate.shared.openSettingsWindow()
+                        AppDelegate.shared.showSettingsWindow()
                     }
                     .padding(10) // EXPANDED HIT-REGION
                     .contentShape(Rectangle()) // BRAIN-DEAD RELIABLE HITBOX

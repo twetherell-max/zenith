@@ -91,7 +91,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         appMenuItem.submenu = appMenu
         
         // SETTINGS (Cmd+,)
-        let settingsItem = NSMenuItem(title: "Settings...", action: #selector(openSettingsWindow), keyEquivalent: ",")
+        let settingsItem = NSMenuItem(title: "Settings...", action: #selector(showSettingsWindow), keyEquivalent: ",")
         appMenu.addItem(settingsItem)
         
         appMenu.addItem(NSMenuItem.separator())
@@ -108,18 +108,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem?.button {
             button.image = NSImage(systemSymbolName: "circle.hexagonpath", accessibilityDescription: nil)
-            button.action = #selector(openSettingsWindow)
+            button.action = #selector(showSettingsWindow)
             button.target = self
         }
         
         let menu = NSMenu()
-        menu.addItem(NSMenuItem(title: "Settings...", action: #selector(openSettingsWindow), keyEquivalent: ","))
+        menu.addItem(NSMenuItem(title: "Settings...", action: #selector(showSettingsWindow), keyEquivalent: ","))
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit Zenith", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         statusItem?.menu = menu
     }
     
-    @objc func openSettingsWindow() {
+    @objc func showSettingsWindow() {
         // ENFORCE SINGLE BRAIN UNIFICATION
         ZenithState.shared.isSettingsOpen = true
         ZenithState.shared.isExpanded = true
@@ -138,7 +138,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         print(">>> ACTIVATING UNIFIED SETTINGS")
         NSApp.activate(ignoringOtherApps: true)
-        settingsWindow?.makeKeyAndOrderFront(nil)
+        self.settingsWindow?.makeKeyAndOrderFront(nil)
+        self.settingsWindow?.orderFrontRegardless()
         settingsWindow?.center()
     }
     
