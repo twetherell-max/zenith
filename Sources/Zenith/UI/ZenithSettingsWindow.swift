@@ -17,8 +17,9 @@ class ZenithSettingsWindow: NSPanel, NSWindowDelegate {
         self.level = .screenSaver 
         self.isFloatingPanel = true
         
-        // BACK TO SYSTEM COLORS: FIXES 'BLACK VOID' RENDERING BUG
+        // PHYSICAL HARDENING: DISABLE TRANSPARENCY & FORCE SHADOW
         self.isOpaque = true
+        self.hasShadow = true
         self.backgroundColor = .windowBackgroundColor
         
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
@@ -27,7 +28,7 @@ class ZenithSettingsWindow: NSPanel, NSWindowDelegate {
         self.isReleasedWhenClosed = false
         
         let settingsView = SettingsView(state: ZenithState.shared)
-            .frame(width: 400, height: 400) // FORCE CONTENT SIZE
+            .frame(width: 400, height: 400)
             
         self.contentView = NSHostingView(rootView: settingsView)
         self.contentView?.frame = NSRect(x: 0, y: 0, width: 400, height: 400)
@@ -35,28 +36,29 @@ class ZenithSettingsWindow: NSPanel, NSWindowDelegate {
     }
     
     static func show() {
+        // 1. ELEVATE TO REGULAR APP IMMEDIATELY (REQUIRED FOR STABLE RENDERING)
+        NSApp.setActivationPolicy(.regular)
+        
         if shared == nil {
             shared = ZenithSettingsWindow()
         }
         
         guard let panel = shared else { return }
         
-        // 1. REPAIR CONTENT: Explicitly host the SwiftUI view with direct injection
+        // 2. REPAIR CONTENT: Manual Subview Injection
         let settingsView = SettingsView(state: ZenithState.shared)
-        
         let hostingView = NSHostingView(rootView: settingsView)
-        hostingView.translatesAutoresizingMaskIntoConstraints = true
-        hostingView.frame = NSRect(x: 0, y: 0, width: 400, height: 400)
         
-        panel.contentView = hostingView
+        // BYPASS CONTENTVIEW MAGIC: MANUALLY FORCE SIZE AND POSITION
+        hostingView.setFrameSize(NSSize(width: 400, height: 400))
+        panel.contentView?.addSubview(hostingView)
         panel.setContentSize(NSSize(width: 400, height: 400))
         
-        // 2. FORCE POSITION & REDRAW
+        // 3. FORCE POSITION & REDRAW
         panel.setFrameOrigin(NSPoint(x: 500, y: 500))
-        panel.display() // FORCE PIXEL DRAW
+        panel.display() 
         
-        // 3. FINAL ACTIVATION HEARTBEAT
-        NSApp.setActivationPolicy(.regular)
+        // 4. FINAL ACTIVATION HEARTBEAT
         NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
         panel.orderFrontRegardless()
@@ -82,6 +84,13 @@ struct SettingsView: View {
     
     var body: some View {
         VStack {
+            // PHYSICAL VISUAL ANCHOR (IF THIS IS GONE, SWIFTUI IS DEAD)
+            Color.red
+                .frame(width: 100, height: 100)
+                .cornerRadius(12)
+                .overlay(Text("ANCHOR").foregroundColor(.white).bold())
+                .padding(.top, 20)
+            
             Text("HELLO WORLD")
                 .font(.largeTitle)
                 .bold()
