@@ -32,7 +32,7 @@ class ZenithWindow: NSWindow, ObservableObject {
         self.backgroundColor = .clear // TOTAL TRANSPARENCY RESTORED
         self.hasShadow = false // REMOVE APPKIT BLACK BOX SHADOW
         self.alphaValue = 1.0
-        self.level = .statusBar
+        self.level = NSWindow.Level(Int(CGWindowLevelForKey(.maximumWindow))) // ABSOLUTE FOREGROUND
         self.ignoresMouseEvents = false
         
         let rootView = ZenithDropletView(
