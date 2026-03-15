@@ -2,6 +2,16 @@ import SwiftUI
 import AppKit
 
 @main
+struct ZenithApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
+    var body: some Scene {
+        Settings {
+            EmptyView()
+        }
+    }
+}
+
 class AppDelegate: NSObject, NSApplicationDelegate {
     static var shared: AppDelegate!
     
@@ -15,18 +25,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // FORCE EARLY INIT
+        // Boss Logic
         AppDelegate.shared = self
         
-        // KILL GHOSTS
+        // Accessory mode keeps it alive but out of the Dock
+        NSApp.setActivationPolicy(.accessory)
+        
+        // Kill ghosts
         NSApp.disableRelaunchOnLogin()
         
         setupStatusItem()
 
-        // GLOBAL VISIBILITY
-        NSApp.setActivationPolicy(.regular)
-        
-        // STARTUP REIFICATION
         if self.zenithWindow == nil {
             let builtInScreen = NotchManager.shared.findBuiltInScreen()
             let notchFrame = NotchManager.shared.notchFrame
@@ -34,14 +43,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let window = ZenithWindow(notchFrame: notchFrame, targetScreen: builtInScreen)
             window.title = "ZenithWindow"
             
-            // GHOST MODE SYSTEM
-            window.backgroundColor = .clear
-            window.isOpaque = false
-            window.hasShadow = false
-            window.isRestorable = false 
-            window.ignoresMouseEvents = false
-            
-            // FORCE VISIBILITY COMMANDS
+            // Visibility
             window.makeKeyAndOrderFront(nil)
             window.orderFrontRegardless()
             
@@ -49,31 +51,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         ShortcutManager.shared.startMonitoring { [weak self] type in
-            switch type {
-            case .toggle:
-                print("Shortcut: Toggle")
-            case .pulse:
+            if type == .pulse {
                 DispatchQueue.main.async {
                     self?.zenithWindow?.pulse()
                 }
             }
         }
-        
-        setupMenu()
-    }
-    
-    private func setupMenu() {
-        let mainMenu = NSMenu()
-        let appMenu = NSMenu()
-        let appMenuItem = NSMenuItem()
-        appMenuItem.submenu = appMenu
-        
-        appMenu.addItem(NSMenuItem(title: "Settings...", action: #selector(showSettingsWindow), keyEquivalent: ","))
-        appMenu.addItem(NSMenuItem.separator())
-        appMenu.addItem(NSMenuItem(title: "Quit Zenith", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
-        
-        mainMenu.addItem(appMenuItem)
-        NSApp.mainMenu = mainMenu
     }
     
     private func setupStatusItem() {
@@ -83,6 +66,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             button.action = #selector(showSettingsWindow)
             button.target = self
         }
+        
+        let menu = NSMenu()
+        menu.addItem(NSMenuItem(title: "Settings...", action: #selector(showSettingsWindow), keyEquivalent: ","))
+        menu.addItem(NSMenuItem.separator())
+        menu.addItem(NSMenuItem(title: "Quit Zenith", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        statusItem?.menu = menu
     }
     
     @objc func showSettingsWindow() {
@@ -104,9 +93,5 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.settingsWindow?.makeKeyAndOrderFront(nil)
         self.settingsWindow?.orderFrontRegardless()
         settingsWindow?.center()
-    }
-    
-    func applicationWillTerminate(_ notification: Notification) {
-        ShortcutManager.shared.stopMonitoring()
     }
 }

@@ -2,23 +2,13 @@ import AppKit
 import SwiftUI
 import Combine
 
-// THE SILHOUETTE ENGINE: Hard Physical Reification
+// THE SILHOUETTE ENGINE
 class ZenithHitView: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? {
         let hitView = super.hitTest(point)
         
-        // 1. NOTCH PROTECTION: The visible physical notch area
-        let notchWidth: CGFloat = 200
-        let notchHeight: CGFloat = 40
-        let notchRect = NSRect(x: (self.bounds.width - notchWidth) / 2, y: self.bounds.height - notchHeight, width: notchWidth, height: notchHeight)
-        
-        if notchRect.contains(point) {
-            return hitView ?? self
-        }
-        
-        // 2. THE SILHOUETTE RULE: 'view == self ? nil : view'
-        // If it's the background air, it's clickable for the desktop.
-        // If it's a button, it's clickable for Zenith.
+        // If the hit is the background view itself, return nil (click passes through)
+        // If the hit is a button or circle, return hitView (click stays in app)
         return hitView === self ? nil : hitView
     }
 }
@@ -27,7 +17,7 @@ class ZenithHostingView<Content: View>: NSHostingView<Content> {
     override func hitTest(_ point: NSPoint) -> NSView? {
         let state = ZenithState.shared
         
-        // Protect the notch
+        // 1. THE NOTCH (CENTER TOP)
         let notchWidth: CGFloat = 200
         let notchHeight: CGFloat = 40
         let notchRect = NSRect(x: (self.bounds.width - notchWidth) / 2, y: self.bounds.height - notchHeight, width: notchWidth, height: notchHeight)
@@ -36,7 +26,7 @@ class ZenithHostingView<Content: View>: NSHostingView<Content> {
             return super.hitTest(point)
         }
         
-        // Protect buttons
+        // 2. THE BUTTONS
         if !state.isExpanded && !state.isSettingsOpen {
             return nil 
         }
@@ -77,7 +67,6 @@ class ZenithWindow: NSWindow {
         let centerX = visibleFrame.origin.x + (visibleFrame.width - windowWidth) / 2
         let topY = visibleFrame.origin.y + visibleFrame.height
         
-        // Offset down slightly to ensure we overlap the notch
         let windowFrame = NSRect(x: centerX, y: topY - 5, width: windowWidth, height: windowHeight)
         
         super.init(
@@ -112,6 +101,7 @@ class ZenithWindow: NSWindow {
         hostingView.frame = NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight)
         hostingView.autoresizingMask = [.width, .height]
         
+        // SET THE HIT VIEW AS CONTENT VIEW
         let container = ZenithHitView(frame: NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight))
         container.addSubview(hostingView)
         self.contentView = container

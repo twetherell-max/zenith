@@ -18,6 +18,7 @@ struct ZenithCrustView: View {
         }
         
         let xOffset = CGFloat(id - 2) * state.arcSpread
+        // THE BOSS SMILE MATH
         let yPos = (abs(xOffset) * -0.2) + state.dropDepth 
         
         return CGPoint(x: xOffset, y: yPos)
@@ -35,6 +36,7 @@ struct ZenithCrustView: View {
                     .zIndex(1)
                     
                     CrustButton(id: 2, icon: "gearshape.fill", tooltip: "Settings", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: .zero, iconSize: state.iconSize, isDarkGlass: state.isDarkGlass, isSettingsOpen: state.isSettingsOpen) {
+                        // THE BOSS GEAR ACTION
                         AppDelegate.shared.showSettingsWindow()
                     }
                     .padding(10) 
