@@ -35,20 +35,19 @@ struct ZenithCrustView: View {
     private var leftOffset: CGSize {
         let radians = -45.0 * .pi / 180.0
         let x = sin(radians) * state.arcSpread
-        let y = cos(radians) * state.arcSpread
+        let y = state.dropDepth - (state.arcSpread * 0.3)
         return CGSize(
             width: x * expansionAmount,
-            height: -100 + (expansionAmount * ((y + state.dropDepth) + 100))
+            height: -100 + (expansionAmount * (y + 100))
         )
     }
     
     // Center: 0 degrees
     private var middleOffset: CGSize {
-        let x = sin(0.0) * state.arcSpread
-        let y = cos(0.0) * state.arcSpread
+        let y = state.dropDepth
         return CGSize(
-            width: x * expansionAmount,
-            height: -100 + (expansionAmount * ((y + state.dropDepth) + 100))
+            width: 0,
+            height: -100 + (expansionAmount * (y + 100))
         )
     }
     
@@ -56,10 +55,10 @@ struct ZenithCrustView: View {
     private var rightOffset: CGSize {
         let radians = 45.0 * .pi / 180.0
         let x = sin(radians) * state.arcSpread
-        let y = cos(radians) * state.arcSpread
+        let y = state.dropDepth - (state.arcSpread * 0.3)
         return CGSize(
             width: x * expansionAmount,
-            height: -100 + (expansionAmount * ((y + state.dropDepth) + 100))
+            height: -100 + (expansionAmount * (y + 100))
         )
     }
     

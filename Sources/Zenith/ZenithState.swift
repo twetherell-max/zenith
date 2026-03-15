@@ -17,6 +17,12 @@ class ZenithState: ObservableObject {
     }
     
     private init() {
+        UserDefaults.standard.register(defaults: [
+            "arcSpread": 80.0,
+            "dropDepth": 40.0,
+            "iconSize": 14.0
+        ])
+        
         let storedArcSpread = UserDefaults.standard.double(forKey: "arcSpread")
         let storedDropDepth = UserDefaults.standard.double(forKey: "dropDepth")
         let storedIconSize = UserDefaults.standard.double(forKey: "iconSize")

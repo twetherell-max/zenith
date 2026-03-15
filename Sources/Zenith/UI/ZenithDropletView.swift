@@ -37,6 +37,7 @@ struct ZenithDropletView: View {
     
     private func openSettingsWindow() {
         print(">>> OPENING SETTINGS WINDOW")
+        NSApp.activate(ignoringOtherApps: true)
         ZenithSettingsWindow.show()
     }
 }
