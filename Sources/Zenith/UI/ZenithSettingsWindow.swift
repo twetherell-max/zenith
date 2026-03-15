@@ -62,7 +62,9 @@ struct SettingsView: View {
     @AppStorage("isDarkGlass") private var isDarkGlass: Bool = false
     
     var body: some View {
-        VStack(spacing: 0) {
+        let _ = print("Spread value: \(state.arcSpread)")
+        
+        return VStack(spacing: 0) {
             // BLUE VISUAL ANCHOR (IF THIS IS GONE, SWIFTUI IS DEAD)
             Color.blue
                 .frame(height: 20)

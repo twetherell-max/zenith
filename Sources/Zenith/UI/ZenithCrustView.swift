@@ -21,21 +21,11 @@ struct ZenithCrustView: View {
             return CGPoint(x: 0, y: -100)
         }
         
-        // DIRECT STATE POSITONING: No fallbacks, no shadows
-        switch id {
-        case 1: // Left
-            let x = -state.arcSpread
-            let y = state.dropDepth + (pow(state.arcSpread / 100, 2) * 20)
-            return CGPoint(x: x, y: y)
-        case 2: // Center
-            return CGPoint(x: 0, y: state.dropDepth)
-        case 3: // Right
-            let x = state.arcSpread
-            let y = state.dropDepth + (pow(state.arcSpread / 100, 2) * 20)
-            return CGPoint(x: x, y: y)
-        default:
-            return .zero
-        }
+        // SMILE CURVE ENGINE: Buttons move UP as they spread out
+        let xPos = CGFloat(id - 2) * state.arcSpread
+        let yPos = abs(xPos) * -0.2 + state.dropDepth
+        
+        return CGPoint(x: xPos, y: yPos)
     }
     
     var body: some View {
