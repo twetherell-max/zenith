@@ -5,10 +5,10 @@ import Combine
 // THE SILHOUETTE ENGINE
 class ZenithHitView: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? {
-        let view = super.hitTest(point)
+        let hitView = super.hitTest(point)
         // SILHOUETTE LOGIC: If the hit lands strictly on this view (the background), return nil for passthrough.
-        // If it lands on a subview (like a button or the notch), return that view.
-        return view === self ? nil : view
+        // If it lands on a subview (like a button or the notch), return hitView.
+        return hitView === self ? nil : hitView
     }
 }
 

@@ -21,8 +21,7 @@ struct ZenithDropletView: View {
                 .foregroundColor(.white.opacity(0.3))
                 .padding(.top, 2)
         }
-        .contentShape(Rectangle()) // PIN POINT HOVER DETECTION
-        .contentShape(Rectangle()) // STABILIZE HITBOX: Area doesn't shrink when buttons move
+        .contentShape(Rectangle()) 
         // FORCE COMPLETE VIEW RECONSTRUCTION ON LIVE COMBINE UPDATES
         .id("zenith-main-view") 
         .onChange(of: state.arcSpread) { _ in } // LIVE REDRAW TRIGGER
@@ -46,15 +45,5 @@ struct ZenithDropletView: View {
         .contentShape(Rectangle()) // MASSIVE HITBOX WALL
         .background(Color.black.opacity(0.001)) // FIX HITBOX TRANSPARENCY BUG AND KEEP WINDOW ACTIVE
         .onReceive(timer) { _ in state.objectWillChange.send() }
-    }
-    
-    private func openSettingsWindow() {
-        // FORCE DOCK ICON TO ALLOW WINDOWS TO REACH FRONT
-        NSApp.setActivationPolicy(.regular)
-        
-        print(">>> OPENING SETTINGS WINDOW")
-        NSApp.activate(ignoringOtherApps: true)
-        
-        AppDelegate.shared.showSettingsWindow()
     }
 }
