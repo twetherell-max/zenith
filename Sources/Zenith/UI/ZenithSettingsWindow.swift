@@ -95,6 +95,10 @@ struct SettingsView: View {
                     }
                 }
                 .formStyle(.grouped)
+                // MASTER MONITOR: Double-wire the data flow output to terminal
+                .onChange(of: state.arcSpread) { newValue in
+                    print(">>> LIVE ARC SPREAD: \(newValue)")
+                }
                 
                 Button("Close") {
                     NSApp.keyWindow?.close()

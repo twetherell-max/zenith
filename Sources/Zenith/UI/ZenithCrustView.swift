@@ -16,26 +16,22 @@ struct ZenithCrustView: View {
     }
     
     // REDUNDANT WRAPPERS REMOVED - DIRECT STATE BINDING ENFORCED
-    // PARABOLIC POSITION ENGINE
     private func getPosition(for id: Int) -> CGPoint {
         if !isExpanded {
             return CGPoint(x: 0, y: -100)
         }
         
-        // 4. ANTI-CLUMP FALLBACKS: Force non-zero values inline
-        let effectiveSpread = state.arcSpread == 0 ? 80.0 : state.arcSpread
-        let effectiveDepth = state.dropDepth == 0 ? 40.0 : state.dropDepth
-        
+        // DIRECT STATE POSITONING: No fallbacks, no shadows
         switch id {
         case 1: // Left
-            let x = -effectiveSpread
-            let y = effectiveDepth + (pow(effectiveSpread / 100, 2) * 20)
+            let x = -state.arcSpread
+            let y = state.dropDepth + (pow(state.arcSpread / 100, 2) * 20)
             return CGPoint(x: x, y: y)
         case 2: // Center
-            return CGPoint(x: 0, y: effectiveDepth)
+            return CGPoint(x: 0, y: state.dropDepth)
         case 3: // Right
-            let x = effectiveSpread
-            let y = effectiveDepth + (pow(effectiveSpread / 100, 2) * 20)
+            let x = state.arcSpread
+            let y = state.dropDepth + (pow(state.arcSpread / 100, 2) * 20)
             return CGPoint(x: x, y: y)
         default:
             return .zero
@@ -43,7 +39,7 @@ struct ZenithCrustView: View {
     }
     
     var body: some View {
-        let _ = print(">>> BUTTONS SHOULD BE VISIBLE | SPREAD: \(state.arcSpread)")
+        let _ = print(">>> CRUST RENDER | SPREAD: \(state.arcSpread) | DEPTH: \(state.dropDepth)")
         
         ZStack(alignment: .top) { // ALIGN TO TOP
             VStack {
