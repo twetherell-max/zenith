@@ -56,13 +56,12 @@ struct SettingsView: View {
                         VStack(alignment: .leading) {
                             Text("Arc Spread: \(Int(state.arcSpread))px")
                             Slider(value: $state.arcSpread, in: 20...150, step: 1.0)
-                                .id(state.arcSpread)
                                 .onChange(of: state.arcSpread) { val in print("New Spread: \(val)") }
                         }
                         
                         VStack(alignment: .leading) {
                             Text("Drop Depth: \(Int(state.dropDepth))px")
-                            Slider(value: $state.dropDepth, in: 10...100, step: 1.0)
+                            Slider(value: $state.dropDepth, in: 0...100, step: 1.0)
                                 .onChange(of: state.dropDepth) { val in print("New Depth: \(val)") }
                         }
                         
