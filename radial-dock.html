@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>Radial Notch Dock</title>
+    <!-- Tailwind CDN (JIT) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              inter: ['Inter', 'system-ui', 'sans-serif'],
+            },
+          },
+        },
+      };
+    </script>
+    <!-- Inter font -->
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Mesh gradient background */
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'SF Pro Text',
+          sans-serif;
+        background:
+          radial-gradient(circle at 0% 0%, #ff8a5c 0, rgba(255, 138, 92, 0) 40%),
+          radial-gradient(circle at 100% 10%, #ff4b9f 0, rgba(255, 75, 159, 0) 45%),
+          radial-gradient(circle at 0% 100%, #5f2cff 0, rgba(95, 44, 255, 0) 45%),
+          radial-gradient(circle at 120% 100%, #ffb347 0, rgba(255, 179, 71, 0) 40%),
+          radial-gradient(circle at 50% 30%, #6b3cff 0, rgba(107, 60, 255, 0) 55%),
+          #12001f;
+        background-attachment: fixed;
+      }
+
+      .mesh-inner {
+        background:
+          radial-gradient(circle at 10% 0%, #ffb36b 0, rgba(255, 179, 107, 0) 45%),
+          radial-gradient(circle at 90% 0%, #ff4b9f 0, rgba(255, 75, 159, 0) 50%),
+          radial-gradient(circle at 0% 90%, #5f2cff 0, rgba(95, 44, 255, 0) 45%),
+          radial-gradient(circle at 100% 100%, #ff7b54 0, rgba(255, 123, 84, 0) 45%),
+          linear-gradient(135deg, #1c0330, #200b3a 40%, #360726 80%);
+      }
+
+      .radial-dock-svg {
+        filter: drop-shadow(0 0 22px rgba(255, 255, 255, 0.95))
+          drop-shadow(0 0 60px rgba(255, 255, 255, 0.9));
+      }
+
+      .radial-dock-container {
+        position: absolute;
+        left: 50%;
+        top: 22px; /* sit fully under the notch */
+        transform: translateX(-50%);
+        width: 440px;
+        height: 170px;
+        pointer-events: auto;
+        transition: transform 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
+        z-index: 30;
+      }
+
+      .radial-dock-container:hover {
+        transform: translateX(-50%) translateY(60px);
+      }
+
+      .radial-dock-hit {
+        position: absolute;
+        top: -16px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 180px;
+        height: 70px;
+        border-radius: 0 0 26px 26px;
+        background: transparent;
+      }
+
+      /* This shell clips the glass + rings so backdrop-filter doesn't form a rectangle */
+      .radial-dock-shell {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        transform: translateX(-50%);
+        width: 440px;
+        height: 150px; /* only show the arc band */
+        overflow: hidden;
+        border-radius: 0 0 9999px 9999px;
+        pointer-events: none;
+      }
+
+      .radial-dock-glass {
+        position: absolute;
+        left: 50%;
+        top: -220px; /* center of circle sits slightly above top edge */
+        transform: translateX(-50%);
+        width: 440px;
+        height: 440px;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        box-shadow:
+          0 0 28px rgba(255, 255, 255, 0.32),
+          0 0 70px rgba(255, 255, 255, 0.18);
+      }
+
+      .radial-dock-glass::before,
+      .radial-dock-glass::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 9999px;
+        pointer-events: none;
+      }
+
+      /* Outer crisp line */
+      .radial-dock-glass::before {
+        inset: 0;
+        border: 2px solid rgba(255, 255, 255, 0.78);
+        box-shadow:
+          0 0 18px rgba(255, 255, 255, 0.65),
+          0 0 50px rgba(255, 255, 255, 0.35);
+      }
+
+      /* Inner crisp line */
+      .radial-dock-glass::after {
+        inset: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.7);
+        box-shadow: 0 0 26px rgba(255, 255, 255, 0.55);
+      }
+
+      .radial-notch-mask {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 40px;
+        border-radius: 0 0 18px 18px;
+        background: #050608;
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.85);
+        pointer-events: none;
+      }
+
+      .radial-icons {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        transform: translateX(-50%);
+        width: 440px;
+        height: 170px;
+        pointer-events: none;
+      }
+
+      .radial-icon {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 38px;
+        height: 38px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow:
+          0 10px 24px rgba(0, 0, 0, 0.28),
+          0 0 0 1px rgba(255, 255, 255, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        pointer-events: auto;
+        transition:
+          transform 180ms cubic-bezier(0.22, 0.61, 0.36, 1),
+          box-shadow 180ms cubic-bezier(0.22, 0.61, 0.36, 1);
+      }
+
+      .radial-icon:hover {
+        box-shadow:
+          0 14px 34px rgba(0, 0, 0, 0.34),
+          0 0 30px rgba(255, 255, 255, 0.35);
+      }
+
+      /* Slight "dock pop" on hover: scale + outward */
+      .radial-icon[data-hovering='1'] {
+        transform: var(--t) translateY(-10px) scale(1.25);
+      }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <div class="mesh-inner relative w-full min-h-screen overflow-hidden">
+        <!-- Top bar -->
+        <div
+          class="absolute top-0 inset-x-0 h-9 flex items-center text-[12px] text-white/90 font-medium font-inter px-4"
+        >
+          <!-- Left segment -->
+          <div class="flex items-center gap-3">
+            <div
+              class="w-4 h-4 rounded-full bg-white flex items-center justify-center text-[10px] text-black font-semibold"
+            >
+              
+            </div>
+            <span class="text-white/90">Finder</span>
+            <span class="text-white/70">File</span>
+            <span class="text-white/70">Edit</span>
+          </div>
+
+          <!-- Spacer to make room for radial dock -->
+          <div class="flex-1" />
+
+          <!-- Right segment -->
+          <div class="flex items-center gap-3">
+            <span class="text-white/75">􀙇</span>
+            <span class="text-white/75">􀛨</span>
+            <span class="text-white/75">84%</span>
+            <span class="text-white/75">11:29 AM</span>
+          </div>
+        </div>
+
+        <!-- Radial dock -->
+        <div class="radial-dock-container">
+          <div class="radial-dock-hit" aria-hidden="true"></div>
+          <div class="radial-dock-shell" aria-hidden="true">
+            <div class="radial-dock-glass"></div>
+          </div>
+          <div class="radial-notch-mask" aria-hidden="true"></div>
+          <div id="radial-icons" class="radial-icons"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const ICONS = [
+        { id: 'finder', label: 'Finder', emoji: '🗂️' },
+        { id: 'messages', label: 'Messages', emoji: '💬' },
+        { id: 'mail', label: 'Mail', emoji: '✉️' },
+        { id: 'safari', label: 'Safari', emoji: '🌐' },
+        { id: 'music', label: 'Music', emoji: '🎵' },
+        { id: 'photos', label: 'Photos', emoji: '📸' },
+        { id: 'xcode', label: 'Xcode', emoji: '💻' },
+        { id: 'settings', label: 'Settings', emoji: '⚙️' },
+      ];
+
+      const iconsRoot = document.getElementById('radial-icons');
+
+      // Layout icons along the arc (top half of a circle).
+      // Angles are in degrees where 270 is straight up. We sweep around the top.
+      const radius = 130; // slightly tighter to the notch
+      const centerX = 220; // half of 440
+      const centerY = 70; // controls how low the arc sits inside the dock
+      const startDeg = 200; // around the top arc
+      const endDeg = -20;
+
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const toRad = (deg) => (deg * Math.PI) / 180;
+
+      ICONS.forEach((icon, i) => {
+        const t = ICONS.length === 1 ? 0.5 : i / (ICONS.length - 1);
+        const deg = lerp(startDeg, endDeg, t);
+        const rad = toRad(deg);
+
+        const x = centerX + radius * Math.cos(rad);
+        const y = centerY + radius * Math.sin(rad);
+
+        const el = document.createElement('button');
+        el.type = 'button';
+        el.className = 'radial-icon';
+        el.title = icon.label;
+        el.setAttribute('aria-label', icon.label);
+        el.textContent = icon.emoji;
+
+        // Keep the icon upright while its position follows the arc.
+        // We store the base transform in a CSS variable so hover can append.
+        const baseTransform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+        el.style.setProperty('--t', baseTransform);
+        el.style.transform = baseTransform;
+
+        el.addEventListener('mouseenter', () => el.setAttribute('data-hovering', '1'));
+        el.addEventListener('mouseleave', () => el.removeAttribute('data-hovering'));
+
+        iconsRoot.appendChild(el);
+      });
+    </script>
+  </body>
+</html>
+

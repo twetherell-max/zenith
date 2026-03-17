@@ -30,17 +30,59 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupStatusItem()
 
         if self.zenithWindow == nil {
-            let builtInScreen = NotchManager.shared.findBuiltInScreen()
+            print(">>> Creating Zenith Window...")
+            
+            let screen = NotchManager.shared.findBuiltInScreen() ?? NSScreen.main ?? NSScreen.screens[0]
+            let screenWidth = screen.frame.width
+            let safeTop = screen.safeAreaInsets.top
             let notchFrame = NotchManager.shared.notchFrame
             
-            let window = ZenithWindow(notchFrame: notchFrame, targetScreen: builtInScreen)
-            window.title = "ZenithWindow"
+            print(">>> Screen: \(screenWidth), safeTop: \(safeTop)")
+            print(">>> Notch: \(notchFrame)")
             
-            // Visibility Boss Commands
-            window.makeKeyAndOrderFront(nil)
+            // Use notch frame directly to position window
+            let windowHeight: CGFloat = 100
+            
+            // Position window so its TOP aligns with notch
+            let windowY = notchFrame.minY
+            
+            print(">>> Window Y: \(windowY)")
+            
+            let windowFrame = NSRect(x: 0, y: windowY, width: screenWidth, height: windowHeight)
+            
+            let window = NSWindow(
+                contentRect: windowFrame,
+                styleMask: NSWindow.StyleMask.borderless,
+                backing: NSWindow.BackingStoreType.buffered,
+                defer: false
+            )
+            
+            window.backgroundColor = NSColor.clear
+            window.isOpaque = false
+            window.ignoresMouseEvents = false
+            window.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.floatingWindow)))
+            window.collectionBehavior = NSWindow.CollectionBehavior([.canJoinAllSpaces, .fullScreenAuxiliary, .stationary])
+            window.hasShadow = false
+            window.isRestorable = false
+            window.isReleasedWhenClosed = false
+            
+            print(">>> Window frame: \(window.frame)")
+            
+            // Add arc view - ensure it's added properly
+            let arcView = ZenithArcView()
+            let hostingView = NSHostingView(rootView: arcView)
+            hostingView.frame = NSRect(x: 0, y: 0, width: screenWidth, height: windowHeight)
+            hostingView.autoresizingMask = [.width]
+            
+            // Replace the content view with our hosting view directly
+            window.contentView = hostingView
+            
             window.orderFrontRegardless()
+            window.makeKeyAndOrderFront(nil as Any?)
             
-            self.zenithWindow = window
+            print(">>> Window created and ordered front")
+            
+            self.zenithWindow = window as? ZenithWindow
         }
         
         ShortcutManager.shared.startMonitoring { [weak self] type in
@@ -78,9 +120,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if settingsWindow == nil {
             print(">>> CREATING STYLED NSWindow + VIEW INJECTION...")
             
-            // EXPLICIT VIEW COMPOSITION WITH STATE INJECTION
-            // Ensure ZenithSettingsView accepts ZenithState
-            let settingsView = ZenithSettingsView(state: self.state)
+            let settingsView = ZenithSettingsView()
             let hostingView = NSHostingView(rootView: settingsView)
             
             // GOOD WINDOW MASK

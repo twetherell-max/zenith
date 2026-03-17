@@ -15,12 +15,9 @@ class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
         self.backgroundColor = .windowBackgroundColor
         self.isOpaque = true
         self.hasShadow = true
-        
-        // KILL GHOSTS: Explicitly disable restoration
         self.isRestorable = false
         
-        // Pass the singleton state explicitly as requested
-        let settingsView = ZenithSettingsView(state: ZenithState.shared)
+        let settingsView = ZenithSettingsView()
         let hostingView = NSHostingView(rootView: settingsView)
         hostingView.frame = NSRect(x: 0, y: 0, width: 300, height: 400)
         self.contentView = hostingView
@@ -29,12 +26,10 @@ class ZenithSettingsWindow: NSWindow, NSWindowDelegate {
 }
 
 struct ZenithSettingsView: View {
-    // ALLOW STATE INJECTION
-    @ObservedObject var state: ZenithState
-    
     var body: some View {
+        let state = ZenithState.shared
+        
         VStack(spacing: 0) {
-            // PRODUCTION HEADER
             VStack(spacing: 4) {
                 HStack {
                     Text("ZENITH").font(.system(size: 10, weight: .black))
@@ -49,42 +44,64 @@ struct ZenithSettingsView: View {
             }
             .background(Color(NSColor.windowBackgroundColor))
             
-            VStack(spacing: 20) {
-                Form {
-                    Section {
-                        Toggle("High Contrast (Dark Glass)", isOn: $state.isDarkGlass)
-                            .contentShape(Rectangle())
+            VStack(alignment: .leading, spacing: 16) {
+                Toggle("High Contrast (Dark Glass)", isOn: Binding(
+                    get: { state.isDarkGlass },
+                    set: { newValue in
+                        state.isDarkGlass = newValue
                     }
+                ))
+                .padding(.horizontal)
                 
-                    Section(header: Text("Geometry").font(.caption).foregroundColor(.secondary)) {
-                        VStack(alignment: .leading, spacing: 12) {
-                            VStack(alignment: .leading) {
-                                Text("Arc Spread: \(Int(state.arcSpread))px")
-                                Slider(value: $state.arcSpread, in: 20...150, step: 1.0)
-                                    .onChange(of: state.arcSpread) { oldValue, newValue in
-                                        print("New Spread: \(newValue)")
-                                    }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Arc Spread: \(Int(state.arcSpread))")
+                        .font(.caption)
+                    Slider(
+                        value: Binding(
+                            get: { state.arcSpread },
+                            set: { newValue in
+                                state.arcSpread = newValue
                             }
-                            
-                            VStack(alignment: .leading) {
-                                Text("Drop Depth: \(Int(state.dropDepth))px")
-                                Slider(value: $state.dropDepth, in: 0...100, step: 1.0)
-                                    .onChange(of: state.dropDepth) { oldValue, newValue in
-                                        print("New Depth: \(newValue)")
-                                    }
-                            }
-                            
-                            VStack(alignment: .leading) {
-                                Text("Icon Size: \(Int(state.iconSize))pt")
-                                Slider(value: $state.iconSize, in: 10...25, step: 1.0)
-                                    .onChange(of: state.iconSize) { oldValue, newValue in
-                                        print("New Size: \(newValue)")
-                                    }
-                            }
-                        }
-                    }
+                        ),
+                        in: 20...150,
+                        step: 1
+                    )
                 }
-                .formStyle(.grouped)
+                .padding(.horizontal)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Drop Depth: \(Int(state.dropDepth))")
+                        .font(.caption)
+                    Slider(
+                        value: Binding(
+                            get: { state.dropDepth },
+                            set: { newValue in
+                                state.dropDepth = newValue
+                            }
+                        ),
+                        in: 0...100,
+                        step: 1
+                    )
+                }
+                .padding(.horizontal)
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Icon Size: \(Int(state.iconSize))")
+                        .font(.caption)
+                    Slider(
+                        value: Binding(
+                            get: { state.iconSize },
+                            set: { newValue in
+                                state.iconSize = newValue
+                            }
+                        ),
+                        in: 10...25,
+                        step: 1
+                    )
+                }
+                .padding(.horizontal)
+                
+                Spacer()
                 
                 Button("Close") {
                     NSApp.keyWindow?.close()
@@ -92,7 +109,7 @@ struct ZenithSettingsView: View {
                 .keyboardShortcut(.defaultAction)
                 .padding(.bottom, 20)
             }
-            .padding()
+            .padding(.top, 16)
         }
         .frame(width: 300, height: 400)
     }

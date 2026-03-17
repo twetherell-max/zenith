@@ -18,36 +18,51 @@ class ZenithHostingView<Content: View>: NSHostingView<Content> {
     override func hitTest(_ point: NSPoint) -> NSView? {
         let state = ZenithState.shared
         
-        // 1. THE NOTCH (CENTER TOP)
+        let localPoint = convert(point, from: superview)
+        let centerX = self.bounds.width / 2
+        let topY = self.bounds.height
+        
         let notchWidth: CGFloat = 200
         let notchHeight: CGFloat = 40
-        let notchRect = NSRect(x: (self.bounds.width - notchWidth) / 2, y: self.bounds.height - notchHeight, width: notchWidth, height: notchHeight)
+        let notchRect = NSRect(x: centerX - notchWidth/2, y: topY - notchHeight, width: notchWidth, height: notchHeight)
         
-        if notchRect.contains(point) {
+        if notchRect.contains(localPoint) {
             return super.hitTest(point)
         }
         
-        // 2. THE BUTTONS
-        if !state.isExpanded && !state.isSettingsOpen {
-            return nil 
+        if !state.isExpanded && !state.isSettingsOpen && state.currentLevel == 1 {
+            return nil
         }
         
-        for id in 1...3 {
-            let xOffset = CGFloat(id - 2) * state.arcSpread
-            let yOffset = (abs(xOffset) * -0.2) + state.dropDepth 
+        let radius = self.calculateRadius(for: state.currentLevel)
+        let segments = state.visibleSegments
+        let segmentSize: CGFloat = 50
+        let gap: CGFloat = 8
+        
+        for (index, _) in segments.enumerated() {
+            let yOffset = radius + 20 + CGFloat(index) * (segmentSize + gap)
+            let segmentRect = NSRect(
+                x: centerX - segmentSize/2,
+                y: topY - yOffset - segmentSize/2,
+                width: segmentSize,
+                height: segmentSize
+            )
             
-            let centerX = self.bounds.width / 2 + xOffset
-            let centerY = self.bounds.height - yOffset
-            
-            let hWidth: CGFloat = (state.iconSize + 15) 
-            let buttonRect = NSRect(x: centerX - hWidth, y: centerY - hWidth, width: hWidth * 2, height: hWidth * 2)
-            
-            if buttonRect.contains(point) {
+            if segmentRect.contains(localPoint) {
                 return super.hitTest(point)
             }
         }
         
-        return nil 
+        return nil
+    }
+    
+    private func calculateRadius(for level: Int) -> CGFloat {
+        switch level {
+        case 1: return 60
+        case 2: return 100
+        case 3: return 140
+        default: return 60
+        }
     }
 }
 

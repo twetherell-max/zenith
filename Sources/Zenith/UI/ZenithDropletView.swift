@@ -42,6 +42,7 @@ struct ZenithDropletView: View {
                 .zIndex(2)
                 
                 CrustButtonInternal(id: 3, icon: "moon.stars.fill", tooltip: "Toggle Dark Glass", isExpanded: isExpanded, hoveredButton: $hoveredButton, offset: .zero, iconSize: state.iconSize) {
+                    print("Right Button Clicked")
                     state.isDarkGlass.toggle()
                 }
                 .offset(x: getPosition(for: 3).x, y: getPosition(for: 3).y)
@@ -57,7 +58,7 @@ struct ZenithDropletView: View {
         }
         .onHover { hovering in
             if !state.isSettingsOpen {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                withAnimation(.spring(response: 0.8, dampingFraction: 0.6)) {
                     state.isExpanded = hovering
                 }
             }
@@ -101,7 +102,7 @@ struct CrustButtonInternal: View {
         .frame(width: iconSize * 1.5, height: iconSize * 1.5) 
         .contentShape(Circle()) 
         .offset(offset) 
-        .animation(.spring(response: 0.35, dampingFraction: 0.7), value: isExpanded) 
+        .animation(.spring(response: 0.8, dampingFraction: 0.6), value: isExpanded) 
         .scaleEffect(hoveredButton == id ? 1.2 : 1.0) 
         .onHover { isHovered in
             hoveredButton = isHovered ? id : nil
