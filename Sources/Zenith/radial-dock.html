@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
+.container { position: relative; width: 100%; height: 100%; }
+#notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 140px; height: 50px; cursor: pointer; }
+.dock-root { position: absolute; left: 50%; top: 0; transform: translateX(-50%); width: 400px; height: 400px; opacity: 0; pointer-events: none; transition: all 0.3s ease; }
+#notch:hover ~ .dock-root, .dock-root:hover { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(50px); }
+.dock-icon { position: absolute; width: 50px; height: 50px; border-radius: 14px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; transition: transform 0.15s ease, background 0.15s ease; }
+.dock-icon:hover { transform: translateY(-10px) scale(1.15); background: rgba(255,255,255,0.3); }
+</style>
+</head>
+<body>
+<div class="container">
+  <div id="notch"></div>
+  <div class="dock-root" id="dockRoot">
+    <div id="dock-icons"></div>
+  </div>
+</div>
+<script>
+const ICONS = ["🧭", "📁", "⚙️", "🎵", "📄"];
+const CENTER_X = 200, CENTER_Y = 50, RADIUS = 110;
+
+function updateIcons(data) {
+  if (!data || !data.length) return;
+  const layer = document.getElementById("dock-icons");
+  layer.innerHTML = "";
+  data.forEach((item, i) => {
+    const t = (i + 0.5) / data.length;
+    const angle = Math.PI - t * Math.PI;
+    const x = CENTER_X + RADIUS * Math.cos(angle);
+    const y = CENTER_Y + RADIUS * Math.sin(angle);
+    const btn = document.createElement("button");
+    btn.className = "dock-icon";
+    btn.textContent = item.icon || "❓";
+    btn.style.left = x + "px";
+    btn.style.top = y + "px";
+    btn.style.transform = "translate(-50%, -50%)";
+    btn.onclick = () => {
+      if (window.webkit && window.webkit.messageHandlers.radialDock) {
+        window.webkit.messageHandlers.radialDock.postMessage({type: "iconClick", id: item.id, action: item.action});
+      }
+    };
+    layer.appendChild(btn);
+  });
+}
+
+updateIcons(ICONS.map((icon,i) => ({icon:icon, id:i})));
+</script>
+</body>
+</html>

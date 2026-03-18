@@ -9,7 +9,10 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "Zenith",
-            dependencies: []
+            dependencies: [],
+            resources: [
+                .process("radial-dock.html")
+            ]
         ),
     ]
 )

@@ -35,11 +35,11 @@
         position: absolute;
         left: 50%;
         top: 0;
-        transform: translateX(-50%);
+        transform: translateX(-50%) translateY(var(--dock-drop-y, 36px));
         width: 340px;
         height: 140px;
-        opacity: 0;
-        pointer-events: none;
+        opacity: 1;
+        pointer-events: auto;
         transition:
           transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1),
           opacity 160ms ease;
@@ -148,8 +148,120 @@
       const CENTER_Y = -10; // circle center y (px, relative to top of dock-root)
       const DOCK_DROP_Y = 36; // how far the dock drops on hover (px)
 
-      // NOTE: Change the icon list here. The code automatically spaces icons in the visible arc.
-      const ICONS = ["🧭", "🗂️", "💬", "✉️", "🌐", "🎵", "⚙️"];
+      // Default icons (will be replaced by Swift)
+      let ICONS = ["🧭", "🗂️", "💬", "✉️", "🌐", "🎵", "⚙️"];
+      let iconData = []; // Store full icon data from Swift
+      const debugLayer = document.createElement('div');
+      debugLayer.style.position = 'absolute';
+      debugLayer.style.left = '10px';
+      debugLayer.style.top = '10px';
+      debugLayer.style.color = '#fff';
+      debugLayer.style.fontSize = '12px';
+      debugLayer.style.zIndex = '999';
+      debugLayer.textContent = 'radial-dock loaded';
+      document.body.appendChild(debugLayer);
+
+      // --- Swift Communication Bridge ---
+      function setupMessageHandler() {
+        if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.radialDock) {
+          window.swiftConnected = true;
+        }
+      }
+      setupMessageHandler();
+
+      // Called from Swift to update icons
+      window.updateIcons = function(data) {
+        if (!data || !Array.isArray(data)) return;
+        
+        iconData = data;
+        ICONS = data.map(d => d.icon || "❓");
+        
+        // Redraw icons
+        const iconLayer = document.getElementById("dock-icons");
+        iconLayer.innerHTML = "";
+        
+        ICONS.forEach((emoji, index) => {
+          const item = iconData[index] || {};
+          const t = ICONS.length === 1 ? 0.5 : (index + 0.5) / ICONS.length;
+          const spreadT = lerp(0.5, 1.0, ICON_SPREAD_FACTOR);
+          const centerDeg = VISIBLE_START_DEG + (VISIBLE_END_DEG - VISIBLE_START_DEG) * (t * spreadT + (1 - spreadT) / 2);
+          
+          const iconRad = toRad(centerDeg);
+          const iconX = CENTER_X + R_ICON * Math.cos(iconRad);
+          const iconY = CENTER_Y + R_ICON * Math.sin(iconRad);
+          
+          const el = document.createElement("button");
+          el.type = "button";
+          el.className = "dock-icon";
+          el.textContent = emoji;
+          el.dataset.id = item.id || "";
+          el.dataset.action = item.action || "";
+          el.dataset.actionType = item.actionType || "";
+          el.style.left = `${iconX}px`;
+          el.style.top = `${iconY}px`;
+          el.style.transform = "translate(-50%, -50%)";
+          
+          el.addEventListener("click", () => {
+            if (window.swiftConnected) {
+              window.webkit.messageHandlers.radialDock.postMessage({
+                type: "iconClick",
+                id: item.id,
+                action: item.action,
+                actionType: item.actionType
+              });
+            }
+          });
+          
+          el.addEventListener("mouseenter", () => {
+            if (window.swiftConnected) {
+              window.webkit.messageHandlers.radialDock.postMessage({
+                type: "iconHover",
+                id: item.id
+              });
+            }
+          });
+          
+          iconLayer.appendChild(el);
+        });
+      };
+
+      // Called from Swift to set hover state
+      window.setHoveredIcon = function(id) {
+        const buttons = document.querySelectorAll(".dock-icon");
+        buttons.forEach(btn => {
+          if (btn.dataset.id === id) {
+            btn.style.transform = "translate(-50%, -50%) translateY(-6px) scale(1.08)";
+            btn.style.background = "rgba(255, 255, 255, 0.3)";
+          } else {
+            btn.style.transform = "translate(-50%, -50%)";
+            btn.style.background = "rgba(255, 255, 255, 0.15)";
+          }
+        });
+      };
+
+      // Called from Swift to clear hover
+      window.clearHover = function() {
+        const buttons = document.querySelectorAll(".dock-icon");
+        buttons.forEach(btn => {
+          btn.style.transform = "translate(-50%, -50%)";
+          btn.style.background = "rgba(255, 255, 255, 0.15)";
+        });
+      };
+
+      // Called from Swift to expand/collapse dock
+      window.setExpanded = function(expanded) {
+        const dockRoot = document.querySelector(".dock-root");
+        const notch = document.querySelector(".notch");
+        if (expanded) {
+          dockRoot.style.opacity = "1";
+          dockRoot.style.pointerEvents = "auto";
+          dockRoot.style.transform = "translateX(-50%) translateY(var(--dock-drop-y, 36px))";
+        } else {
+          dockRoot.style.opacity = "0";
+          dockRoot.style.pointerEvents = "none";
+          dockRoot.style.transform = "translateX(-50%)";
+        }
+      };
 
       const crustSvg = document.getElementById("dock-crust");
       const iconLayer = document.getElementById("dock-icons");
@@ -160,6 +272,18 @@
 
       const toRad = (deg) => (deg * Math.PI) / 180;
       const lerp = (a, b, t) => a + (b - a) * t;
+
+      // Initial fallback icons to ensure UI is visible
+      updateIcons([
+        { id: '1', icon: '🧭', action: 'nav', actionType: 'open' },
+        { id: '2', icon: '🗂️', action: 'files', actionType: 'open' },
+        { id: '3', icon: '💬', action: 'chat', actionType: 'open' },
+        { id: '4', icon: '✉️', action: 'mail', actionType: 'open' },
+        { id: '5', icon: '🌐', action: 'web', actionType: 'open' },
+        { id: '6', icon: '🎵', action: 'music', actionType: 'open' },
+        { id: '7', icon: '⚙️', action: 'settings', actionType: 'open' }
+      ]);
+      setExpanded(true);
 
       // --- Draw one smooth, continuous ring (outer + inner arcs) ---
       (function drawRing() {
@@ -197,28 +321,10 @@
         crustSvg.appendChild(ring);
       })();
 
-      // --- Place icons: each owns a logical sector of the ring ---
-      ICONS.forEach((emoji, index) => {
-        const t =
-          ICONS.length === 1 ? 0.5 : (index + 0.5) / ICONS.length; // normalized [0,1]
-        // Use icon spread factor to make icons closer/further along the arc.
-        const spreadT = lerp(0.5, 1.0, ICON_SPREAD_FACTOR);
-        const centerDeg =
-          VISIBLE_START_DEG + (VISIBLE_END_DEG - VISIBLE_START_DEG) * (t * spreadT + (1 - spreadT) / 2);
-
-        const iconRad = toRad(centerDeg);
-        const iconX = CENTER_X + R_ICON * Math.cos(iconRad);
-        const iconY = CENTER_Y + R_ICON * Math.sin(iconRad);
-
-        const el = document.createElement("button");
-        el.type = "button";
-        el.className = "dock-icon";
-        el.textContent = emoji;
-        el.style.left = `${iconX}px`;
-        el.style.top = `${iconY}px`;
-        el.style.transform = "translate(-50%, -50%)";
-        iconLayer.appendChild(el);
-      });
+      // Initial icon render (will be replaced by Swift)
+      if (ICONS.length > 0 && iconData.length === 0) {
+        window.updateIcons(ICONS.map(icon => ({ icon: icon, id: "", action: "", actionType: "" })));
+      }
     </script>
   </body>
 </html>

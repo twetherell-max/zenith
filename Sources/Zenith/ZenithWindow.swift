@@ -23,7 +23,7 @@ class ZenithHostingView<Content: View>: NSHostingView<Content> {
         let topY = self.bounds.height
         
         let notchWidth: CGFloat = 200
-        let notchHeight: CGFloat = 40
+        let notchHeight: CGFloat = 120
         let notchRect = NSRect(x: centerX - notchWidth/2, y: topY - notchHeight, width: notchWidth, height: notchHeight)
         
         if notchRect.contains(localPoint) {
@@ -34,35 +34,7 @@ class ZenithHostingView<Content: View>: NSHostingView<Content> {
             return nil
         }
         
-        let radius = self.calculateRadius(for: state.currentLevel)
-        let segments = state.visibleSegments
-        let segmentSize: CGFloat = 50
-        let gap: CGFloat = 8
-        
-        for (index, _) in segments.enumerated() {
-            let yOffset = radius + 20 + CGFloat(index) * (segmentSize + gap)
-            let segmentRect = NSRect(
-                x: centerX - segmentSize/2,
-                y: topY - yOffset - segmentSize/2,
-                width: segmentSize,
-                height: segmentSize
-            )
-            
-            if segmentRect.contains(localPoint) {
-                return super.hitTest(point)
-            }
-        }
-        
-        return nil
-    }
-    
-    private func calculateRadius(for level: Int) -> CGFloat {
-        switch level {
-        case 1: return 60
-        case 2: return 100
-        case 3: return 140
-        default: return 60
-        }
+        return super.hitTest(point)
     }
 }
 
@@ -78,7 +50,7 @@ class ZenithWindow: NSWindow {
         let screen = NSScreen.screens.first ?? targetScreen ?? NSScreen.main ?? NSScreen.screens[0]
         let visibleFrame = screen.visibleFrame
         let windowWidth: CGFloat = 800
-        let windowHeight: CGFloat = 200
+        let windowHeight: CGFloat = 250
         
         let centerX = visibleFrame.origin.x + (visibleFrame.width - windowWidth) / 2
         let topY = visibleFrame.origin.y + visibleFrame.height
@@ -110,9 +82,7 @@ class ZenithWindow: NSWindow {
             .sink { [weak self] _ in self?.updateWindowFrame() }
             .store(in: &cancellables)
 
-        let rootView = ZenithDropletView(
-            isPulsing: Binding(get: { self.isPulsing }, set: { self.isPulsing = $0 })
-        )
+        let rootView = RadialDockView()
         let hostingView = ZenithHostingView(rootView: rootView)
         hostingView.frame = NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight)
         hostingView.autoresizingMask = [.width, .height]
@@ -139,11 +109,11 @@ class ZenithWindow: NSWindow {
         let screen = NSScreen.screens.first ?? self.screen ?? NSScreen.main ?? NSScreen.screens[0]
         let visibleFrame = screen.visibleFrame
         let windowWidth: CGFloat = 800
-        let windowHeight: CGFloat = 200
+        let windowHeight: CGFloat = 250
         let centerX = visibleFrame.origin.x + (visibleFrame.width - windowWidth) / 2
         let topY = visibleFrame.origin.y + visibleFrame.height
         let isExpanded = ZenithState.shared.isExpanded || ZenithState.shared.isSettingsOpen
-        let targetY = isExpanded ? topY - 200 : topY - 5
+        let targetY = isExpanded ? topY - 220 : topY - 5
         let targetFrame = NSRect(x: centerX, y: targetY, width: windowWidth, height: windowHeight)
         
         NSAnimationContext.runAnimationGroup { context in

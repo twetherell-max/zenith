@@ -1,5 +1,20 @@
 import AppKit
 import SwiftUI
+import WebKit
+
+class RadialDockCoordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        guard message.name == "radialDock",
+              let body = message.body as? [String: Any],
+              let type = body["type"] as? String else { return }
+        
+        if type == "iconClick", let idString = body["id"] as? String, let uuid = UUID(uuidString: idString) {
+            if let segment = ZenithState.shared.findSegment(by: uuid) {
+                ZenithState.shared.executeAction(for: segment)
+            }
+        }
+    }
+}
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     static var shared: AppDelegate!
@@ -41,10 +56,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             print(">>> Notch: \(notchFrame)")
             
             // Use notch frame directly to position window
-            let windowHeight: CGFloat = 100
+            let windowHeight: CGFloat = 1000
             
-            // Position window so its TOP aligns with notch
-            let windowY = notchFrame.minY
+            // Position window at top of visible screen
+            let windowY = screen.visibleFrame.origin.y + screen.visibleFrame.height - windowHeight
             
             print(">>> Window Y: \(windowY)")
             
@@ -67,15 +82,35 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.isReleasedWhenClosed = false
             
             print(">>> Window frame: \(window.frame)")
+            print(">>> Screen: \(screen.frame)")
             
-            // Add arc view - ensure it's added properly
-            let arcView = ZenithArcView()
-            let hostingView = NSHostingView(rootView: arcView)
-            hostingView.frame = NSRect(x: 0, y: 0, width: screenWidth, height: windowHeight)
-            hostingView.autoresizingMask = [.width]
+            // Create WebView container
+            let containerView = NSView(frame: NSRect(x: 0, y: 0, width: screenWidth, height: windowHeight))
+            containerView.wantsLayer = true
             
-            // Replace the content view with our hosting view directly
-            window.contentView = hostingView
+            // Create WKWebView directly
+            let config = WKWebViewConfiguration()
+            let userContentController = WKUserContentController()
+            let coordinator = RadialDockCoordinator()
+            userContentController.add(coordinator, name: "radialDock")
+            config.userContentController = userContentController
+            
+            let webView = WKWebView(frame: NSRect(x: 0, y: 0, width: screenWidth, height: windowHeight), configuration: config)
+            webView.navigationDelegate = coordinator
+            webView.setValue(false, forKey: "drawsBackground")
+            webView.autoresizingMask = [.width, .height]
+            
+            // Load HTML from bundle
+            if let htmlPath = Bundle.main.path(forResource: "radial-dock", ofType: "html"),
+               let htmlURL = URL(fileURLWithPath: htmlPath) as URL? {
+                print(">>> Loading HTML from: \(htmlPath)")
+                webView.loadFileURL(htmlURL, allowingReadAccessTo: htmlURL.deletingLastPathComponent())
+            } else {
+                print(">>> HTML file not found")
+            }
+            
+            containerView.addSubview(webView)
+            window.contentView = containerView
             
             window.orderFrontRegardless()
             window.makeKeyAndOrderFront(nil as Any?)
