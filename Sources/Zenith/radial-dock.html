@@ -10,56 +10,47 @@
         min-height: 100vh;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
           sans-serif;
-        background:
-          radial-gradient(circle at 0% 0%, #ff9b5f 0, rgba(255,155,95,0) 38%),
-          radial-gradient(circle at 100% 0%, #ff4da3 0, rgba(255,77,163,0) 42%),
-          radial-gradient(circle at 0% 100%, #5a2cff 0, rgba(90,44,255,0) 42%),
-          radial-gradient(circle at 100% 100%, #ff7b4a 0, rgba(255,123,74,0) 42%),
-          #12001f;
+        background: transparent;
       }
 
-
-      .notch {
-        position: absolute;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 120px;
-        height: 32px;
-        border-radius: 0 0 16px 16px;
-        background: #050608;
-        z-index: 20;
-      }
 
       .dock-root {
         position: absolute;
         left: 50%;
-        top: 0;
-        transform: translateX(-50%) translateY(var(--dock-drop-y, 36px));
+        top: 8px;
+        transform: translateX(-50%) translateY(-42px);
         width: 340px;
-        height: 140px;
+        height: 220px;
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          transform 180ms cubic-bezier(0.2, 0.8, 0.35, 1),
+          opacity 180ms ease;
+      }
+      .dock-root.show {
         opacity: 1;
         pointer-events: auto;
-        transition:
-          transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1),
-          opacity 160ms ease;
+        transform: translateX(-50%) translateY(0);
       }
 
-      .notch:hover + .dock-root,
-      .dock-root:hover {
-        opacity: 1;
+      .dock-trigger {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        transform: translateX(-50%);
+        width: 220px;
+        height: 28px;
         pointer-events: auto;
-        transform: translateX(-50%) translateY(var(--dock-drop-y, 36px));
       }
 
 
       .dock-shell {
         position: absolute;
         left: 50%;
-        top: 60px;
+        top: 20px;
         transform: translateX(-50%);
         width: 340px;
-        height: 100px;
+        height: 180px;
         overflow: hidden;
         border-radius: 0 0 999px 999px;
         pointer-events: none;
@@ -68,32 +59,29 @@
       .dock-glass {
         position: absolute;
         left: 50%;
-        top: -175px;
+        top: -172px;
         transform: translateX(-50%);
-        width: 340px;
-        height: 340px;
+        width: 320px;
+        height: 320px;
         border-radius: 999px;
-        background: none;
+        background: transparent;
       }
 
-      .dock-notch-mask {
-        position: absolute;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 120px;
-        height: 38px;
-        border-radius: 0 0 18px 18px;
-        background: #050608;
-        pointer-events: none;
-        z-index: 25;
-      }
 
       .dock-crust,
       .dock-icons {
         position: absolute;
         inset: 0;
         pointer-events: none;
+      }
+      .dock-root.show {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateX(-50%) translateY(0);
+      }
+      .dock-trigger:hover .dock-icons,
+      .dock-root:hover .dock-icons {
+        pointer-events: auto;
       }
 
       .dock-icon {
@@ -120,46 +108,37 @@
     </style>
   </head>
   <body>
-    <div class="notch"></div>
+    <div class="dock-trigger">
+      <div class="dock-root">
+        <div class="dock-shell">
+          <div class="dock-glass"></div>
+        </div>
+        <div class="dock-notch-mask"></div>
 
-    <div class="dock-root">
-      <div class="dock-shell">
-        <div class="dock-glass"></div>
+        <!-- Pie-crust segments -->
+        <svg id="dock-crust" class="dock-crust" viewBox="0 0 340 140"></svg>
+
+        <!-- Icons -->
+        <div id="dock-icons" class="dock-icons"></div>
       </div>
-      <div class="dock-notch-mask"></div>
-
-      <!-- Pie-crust segments -->
-      <svg id="dock-crust" class="dock-crust" viewBox="0 0 340 140"></svg>
-
-      <!-- Icons -->
-      <div id="dock-icons" class="dock-icons"></div>
     </div>
 
     <script>
       // --- Configuration knobs (tuning hooks) ---
       // Adjust these values to customize spacing and shape.
-      const VISIBLE_START_DEG = 205; // left edge of visible arc
-      const VISIBLE_END_DEG = -25; // right edge of visible arc
-      const R_INNER = 96; // inner ring radius (px) - change this to resize the ring
-      const R_OUTER = 112; // outer ring radius (px) - change this to resize the ring
-      const R_ICON = R_OUTER; // icon radius (px) - distance from center for icon placement
+      const VISIBLE_START_DEG = 210; // left edge of visible arc
+      const VISIBLE_END_DEG = -30; // right edge of visible arc
+      const R_INNER = 88; // inner ring radius (px) - change this to resize the ring
+      const R_OUTER = 116; // outer ring radius (px) - change this to resize the ring
+      const R_ICON = 108; // icon radius (px) - distance from center for icon placement
       const ICON_SPREAD_FACTOR = 1.0; // 0.5 = tighter icon cluster, 1.0 default spacing, 1.2 wider spacing
       const CENTER_X = 170; // circle center x (px, container coords)
-      const CENTER_Y = -10; // circle center y (px, relative to top of dock-root)
-      const DOCK_DROP_Y = 36; // how far the dock drops on hover (px)
+      const CENTER_Y = 14; // circle center y (px, relative to top of dock-root)
+      const DOCK_DROP_Y = 28; // how far the dock drops on hover (px)
 
       // Default icons (will be replaced by Swift)
       let ICONS = ["🧭", "🗂️", "💬", "✉️", "🌐", "🎵", "⚙️"];
       let iconData = []; // Store full icon data from Swift
-      const debugLayer = document.createElement('div');
-      debugLayer.style.position = 'absolute';
-      debugLayer.style.left = '10px';
-      debugLayer.style.top = '10px';
-      debugLayer.style.color = '#fff';
-      debugLayer.style.fontSize = '12px';
-      debugLayer.style.zIndex = '999';
-      debugLayer.textContent = 'radial-dock loaded';
-      document.body.appendChild(debugLayer);
 
       // --- Swift Communication Bridge ---
       function setupMessageHandler() {
@@ -251,15 +230,11 @@
       // Called from Swift to expand/collapse dock
       window.setExpanded = function(expanded) {
         const dockRoot = document.querySelector(".dock-root");
-        const notch = document.querySelector(".notch");
+        if (!dockRoot) return;
         if (expanded) {
-          dockRoot.style.opacity = "1";
-          dockRoot.style.pointerEvents = "auto";
-          dockRoot.style.transform = "translateX(-50%) translateY(var(--dock-drop-y, 36px))";
+          dockRoot.classList.add("show");
         } else {
-          dockRoot.style.opacity = "0";
-          dockRoot.style.pointerEvents = "none";
-          dockRoot.style.transform = "translateX(-50%)";
+          dockRoot.classList.remove("show");
         }
       };
 
@@ -269,6 +244,36 @@
 
       // Apply drop distance to CSS variable for hover animation
       dockRoot.style.setProperty("--dock-drop-y", `${DOCK_DROP_Y}px`);
+
+      function setupHoverMotion() {
+        const trigger = document.querySelector('.dock-trigger');
+        const dockRoot = document.querySelector('.dock-root');
+        if (!trigger || !dockRoot) return;
+
+        let closeTimer = null;
+        const openDock = () => {
+          if (closeTimer) {
+            clearTimeout(closeTimer);
+            closeTimer = null;
+          }
+          dockRoot.classList.add('show');
+        };
+        const closeDock = () => {
+          if (closeTimer) {
+            clearTimeout(closeTimer);
+          }
+          closeTimer = setTimeout(() => {
+            if (!trigger.matches(':hover') && !dockRoot.matches(':hover')) {
+              dockRoot.classList.remove('show');
+            }
+          }, 120);
+        };
+
+        trigger.addEventListener('mouseenter', openDock);
+        trigger.addEventListener('mouseleave', closeDock);
+        dockRoot.addEventListener('mouseenter', openDock);
+        dockRoot.addEventListener('mouseleave', closeDock);
+      }
 
       const toRad = (deg) => (deg * Math.PI) / 180;
       const lerp = (a, b, t) => a + (b - a) * t;
@@ -283,7 +288,8 @@
         { id: '6', icon: '🎵', action: 'music', actionType: 'open' },
         { id: '7', icon: '⚙️', action: 'settings', actionType: 'open' }
       ]);
-      setExpanded(true);
+      setExpanded(false);
+      setupHoverMotion();
 
       // --- Draw one smooth, continuous ring (outer + inner arcs) ---
       (function drawRing() {
@@ -313,11 +319,9 @@
           "path"
         );
         ring.setAttribute("d", d);
-        ring.setAttribute("fill", "rgba(255,255,255,0.08)");
-        ring.setAttribute("stroke", "rgba(255,255,255,0.15)");
+        ring.setAttribute("fill", "rgba(255,255,255,0.1)");
+        ring.setAttribute("stroke", "rgba(255,255,255,0.2)");
         ring.setAttribute("stroke-width", "1");
-        // optional: remove drop-shadow for minimal style
-        ring.removeAttribute("style");
         crustSvg.appendChild(ring);
       })();
 

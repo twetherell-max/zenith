@@ -54,16 +54,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             
             print(">>> Screen: \(screenWidth), safeTop: \(safeTop)")
             print(">>> Notch: \(notchFrame)")
+            print(">>> Visible frame: \(screen.visibleFrame)")
             
-            // Use notch frame directly to position window
-            let windowHeight: CGFloat = 1000
-            
-            // Position window at top of visible screen
-            let windowY = screen.visibleFrame.origin.y + screen.visibleFrame.height - windowHeight
-            
-            print(">>> Window Y: \(windowY)")
-            
-            let windowFrame = NSRect(x: 0, y: windowY, width: screenWidth, height: windowHeight)
+            // Use a compact top-floating window so it sits high under menu bar
+            let windowHeight: CGFloat = 260
+            let windowWidth: CGFloat = 420
+
+            // Position at the highest top (under menu bar)
+            let topMargin: CGFloat = 8
+            let windowY = screen.frame.height - windowHeight - topMargin
+            let windowX = (screen.frame.width - windowWidth) / 2
+
+            print(">>> Window X: \(windowX), Y: \(windowY)")
+
+            let windowFrame = NSRect(x: windowX, y: windowY, width: windowWidth, height: windowHeight)
             
             let window = NSWindow(
                 contentRect: windowFrame,
@@ -85,7 +89,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             print(">>> Screen: \(screen.frame)")
             
             // Create WebView container
-            let containerView = NSView(frame: NSRect(x: 0, y: 0, width: screenWidth, height: windowHeight))
+            let containerView = NSView(frame: NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight))
             containerView.wantsLayer = true
             
             // Create WKWebView directly
@@ -95,7 +99,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             userContentController.add(coordinator, name: "radialDock")
             config.userContentController = userContentController
             
-            let webView = WKWebView(frame: NSRect(x: 0, y: 0, width: screenWidth, height: windowHeight), configuration: config)
+            let webView = WKWebView(frame: NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight), configuration: config)
             webView.navigationDelegate = coordinator
             webView.setValue(false, forKey: "drawsBackground")
             webView.autoresizingMask = [.width, .height]
