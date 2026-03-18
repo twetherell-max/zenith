@@ -17,8 +17,8 @@
       .dock-root {
         position: absolute;
         left: 50%;
-        top: 8px;
-        transform: translateX(-50%) translateY(-42px);
+        top: 10px;
+        transform: translateX(-50%) translateY(-40px);
         width: 340px;
         height: 220px;
         opacity: 0;
@@ -39,8 +39,21 @@
         top: 0;
         transform: translateX(-50%);
         width: 220px;
-        height: 28px;
+        height: 34px;
         pointer-events: auto;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .dock-trigger::before {
+        content: "";
+        width: 72px;
+        height: 6px;
+        border-radius: 99px;
+        background: rgba(255,255,255,.22);
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.15);
+        margin-top: 6px;
       }
 
 
@@ -54,6 +67,9 @@
         overflow: hidden;
         border-radius: 0 0 999px 999px;
         pointer-events: none;
+        background: rgba(12, 16, 28, 0.55);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.1);
       }
 
       .dock-glass {
