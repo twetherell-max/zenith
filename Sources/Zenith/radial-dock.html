@@ -33,6 +33,13 @@
         transform: translateX(-50%) translateY(0);
       }
 
+      .dock-trigger:hover ~ .dock-root,
+      .dock-root:hover {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateX(-50%) translateY(0);
+      }
+
       .dock-trigger {
         position: absolute;
         left: 50%;
@@ -51,8 +58,8 @@
         width: 72px;
         height: 6px;
         border-radius: 99px;
-        background: rgba(255,255,255,.22);
-        box-shadow: 0 0 0 1px rgba(255,255,255,0.15);
+        background: rgba(255,255,255,.35);
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.2);
         margin-top: 6px;
       }
 
@@ -67,9 +74,8 @@
         overflow: hidden;
         border-radius: 0 0 999px 999px;
         pointer-events: none;
-        background: rgba(12, 16, 28, 0.55);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.1);
+        background: transparent;
+        border: none;
       }
 
       .dock-glass {
@@ -149,7 +155,7 @@
       const R_ICON = 108; // icon radius (px) - distance from center for icon placement
       const ICON_SPREAD_FACTOR = 1.0; // 0.5 = tighter icon cluster, 1.0 default spacing, 1.2 wider spacing
       const CENTER_X = 170; // circle center x (px, container coords)
-      const CENTER_Y = 14; // circle center y (px, relative to top of dock-root)
+      const CENTER_Y = 40; // circle center y (px, relative to top of dock-root)
       const DOCK_DROP_Y = 28; // how far the dock drops on hover (px)
 
       // Default icons (will be replaced by Swift)
@@ -262,33 +268,24 @@
       dockRoot.style.setProperty("--dock-drop-y", `${DOCK_DROP_Y}px`);
 
       function setupHoverMotion() {
-        const trigger = document.querySelector('.dock-trigger');
-        const dockRoot = document.querySelector('.dock-root');
-        if (!trigger || !dockRoot) return;
-
+        // Simple approach: track mouse position globally
+        let isHovering = false;
         let closeTimer = null;
-        const openDock = () => {
-          if (closeTimer) {
-            clearTimeout(closeTimer);
-            closeTimer = null;
+        
+        document.addEventListener('mousemove', (e) => {
+          // Check if mouse is in the notch/dock area (top of window)
+          const inNotchArea = e.clientY < 100 && e.clientX > window.innerWidth/2 - 150 && e.clientX < window.innerWidth/2 + 150;
+          
+          if (inNotchArea && !isHovering) {
+            isHovering = true;
+            console.log('Mouse in notch area, showing dock');
+            dockRoot.classList.add('show');
+          } else if (!inNotchArea && isHovering) {
+            isHovering = false;
+            console.log('Mouse left notch area, hiding dock');
+            dockRoot.classList.remove('show');
           }
-          dockRoot.classList.add('show');
-        };
-        const closeDock = () => {
-          if (closeTimer) {
-            clearTimeout(closeTimer);
-          }
-          closeTimer = setTimeout(() => {
-            if (!trigger.matches(':hover') && !dockRoot.matches(':hover')) {
-              dockRoot.classList.remove('show');
-            }
-          }, 120);
-        };
-
-        trigger.addEventListener('mouseenter', openDock);
-        trigger.addEventListener('mouseleave', closeDock);
-        dockRoot.addEventListener('mouseenter', openDock);
-        dockRoot.addEventListener('mouseleave', closeDock);
+        });
       }
 
       const toRad = (deg) => (deg * Math.PI) / 180;
@@ -306,6 +303,9 @@
       ]);
       setExpanded(false);
       setupHoverMotion();
+      
+      // Auto-show on load for testing
+      // setExpanded(true);
 
       // --- Draw one smooth, continuous ring (outer + inner arcs) ---
       (function drawRing() {
