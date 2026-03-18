@@ -9,11 +9,11 @@ struct ZenithArcView: View {
         GeometryReader { geometry in
             let centerX = geometry.size.width / 2
             let notchY: CGFloat = 22
-            
+
             ZStack {
                 // Invisible hover trigger
                 Rectangle()
-                    .fill(Color.black.opacity(0.001))
+                    .fill(Color.clear)
                     .contentShape(Rectangle())
                     .onHover { hovering in
                         isHovering = hovering
@@ -21,36 +21,25 @@ struct ZenithArcView: View {
                             state.isExpanded = true
                         }
                     }
-                
-                // Main orbital interface
-                if state.isExpanded || isHovering {
-                    // Back button
-                    if state.currentLevel > 1 {
-                        BackButton()
-                            .position(x: centerX - 100, y: notchY - 35)
-                    }
-                    
-                    // Gravity-well with connector lines and tiles
-                    ZStack {
-                        // Enhanced gravity-well glow from camera center
-                        GravityWellGlow(centerX: centerX, notchY: notchY)
-                        
-                        // Glass tiles with gravity-well arc from camera edges
-                        GravityWellTiles(
-                            segments: state.visibleSegments,
-                            centerX: centerX,
-                            notchY: notchY
-                        )
-                    }
+
+                // Always show radial dock visuals
+                ZStack {
+                    GravityWellGlow(centerX: centerX, notchY: notchY)
+                    GravityWellTiles(
+                        segments: state.visibleSegments,
+                        centerX: centerX,
+                        notchY: notchY
+                    )
+                }
+
+                // Back button on deeper levels
+                if state.currentLevel > 1 {
+                    BackButton()
+                        .position(x: centerX - 100, y: notchY - 35)
                 }
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
             .animation(.spring(response: 0.35, dampingFraction: 0.8), value: state.isExpanded)
-            .onChange(of: isHovering) { _, newValue in
-                if !newValue && state.currentLevel == 1 {
-                    state.isExpanded = false
-                }
-            }
         }
     }
 }

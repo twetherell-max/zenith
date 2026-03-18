@@ -100,13 +100,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             webView.setValue(false, forKey: "drawsBackground")
             webView.autoresizingMask = [.width, .height]
             
-            // Load HTML from bundle
-            if let htmlPath = Bundle.main.path(forResource: "radial-dock", ofType: "html"),
-               let htmlURL = URL(fileURLWithPath: htmlPath) as URL? {
-                print(">>> Loading HTML from: \(htmlPath)")
+            // Load HTML from bundle (try main bundle first, then module bundle)
+            if let htmlURL = Bundle.main.url(forResource: "radial-dock", withExtension: "html") {
+                print(">>> Loading HTML from main bundle: \(htmlURL.path)")
+                webView.loadFileURL(htmlURL, allowingReadAccessTo: htmlURL.deletingLastPathComponent())
+            } else if let htmlURL = Bundle.module.url(forResource: "radial-dock", withExtension: "html") {
+                print(">>> Loading HTML from module bundle: \(htmlURL.path)")
                 webView.loadFileURL(htmlURL, allowingReadAccessTo: htmlURL.deletingLastPathComponent())
             } else {
                 print(">>> HTML file not found")
+                if let resourceURL = Bundle.main.resourceURL {
+                    print(">>> Main resource URL: \(resourceURL.path)")
+                }
+                print(">>> Bundle identifier: \(Bundle.main.bundleIdentifier ?? "nil")")
             }
             
             containerView.addSubview(webView)
