@@ -2,7 +2,43 @@ import AppKit
 import SwiftUI
 import WebKit
 
+class RadialDockContainerView: NSView {
+    weak var webView: WKWebView?
+    
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        for area in trackingAreas {
+            removeTrackingArea(area)
+        }
+        let area = NSTrackingArea(
+            rect: bounds,
+            options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(area)
+    }
+    
+    override func mouseEntered(with event: NSEvent) {
+        webView?.evaluateJavaScript("setExpanded(true)") { _, _ in }
+    }
+    
+    override func mouseExited(with event: NSEvent) {
+        webView?.evaluateJavaScript("setExpanded(false)") { _, _ in }
+    }
+}
+
 class RadialDockCoordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
+    weak var webView: WKWebView?
+    
+    override init() {
+        super.init()
+    }
+    
+    func setWebView(_ webView: WKWebView) {
+        self.webView = webView
+    }
+    
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         guard message.name == "radialDock",
               let body = message.body as? [String: Any],
@@ -103,12 +139,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             webView.navigationDelegate = coordinator
             webView.setValue(false, forKey: "drawsBackground")
             webView.autoresizingMask = [.width, .height]
+            coordinator.webView = webView
+            
+            // Add tracking area for mouse movement
+            let trackingArea = NSTrackingArea(
+                rect: containerView.bounds,
+                options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+                owner: containerView,
+                userInfo: nil
+            )
+            containerView.addTrackingArea(trackingArea)
             
             // Load HTML from bundle (try main bundle first, then module bundle)
             if let htmlURL = Bundle.main.url(forResource: "radial-dock", withExtension: "html") {
                 print(">>> Loading HTML from main bundle: \(htmlURL.path)")
                 webView.loadFileURL(htmlURL, allowingReadAccessTo: htmlURL.deletingLastPathComponent())
-            } else if let htmlURL = Bundle.module.url(forResource: "radial-dock", withExtension: "html") {
+            } else if let htmlURL = Bundle(for: type(of: self)).url(forResource: "radial-dock", withExtension: "html") {
                 print(">>> Loading HTML from module bundle: \(htmlURL.path)")
                 webView.loadFileURL(htmlURL, allowingReadAccessTo: htmlURL.deletingLastPathComponent())
             } else {
