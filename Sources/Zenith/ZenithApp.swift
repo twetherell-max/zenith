@@ -6,10 +6,9 @@ struct ZenithApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     var body: some Scene {
-        // KILL THE DEFAULT WINDOW: MUST USE EMPTY VIEW
         Settings {
-            EmptyView()
+            ZenithSettingsView()
+                .frame(minWidth: 450, minHeight: 600)
         }
     }
 }
-// AppDelegate moved to AppDelegate.swift
