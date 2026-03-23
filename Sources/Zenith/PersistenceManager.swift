@@ -5,6 +5,7 @@ class PersistenceManager {
     
     private let fileManager = FileManager.default
     private let appSupportDirectory: URL
+    private let schemaVersion = 1
     
     private var customSegmentsFile: URL {
         appSupportDirectory.appendingPathComponent("custom_segments.json")
@@ -27,6 +28,14 @@ class PersistenceManager {
         }
     }
     
+    private func backupCorruptedFile(at url: URL) {
+        let timestamp = Int(Date().timeIntervalSince1970)
+        let backupURL = url.deletingPathExtension()
+            .appendingPathExtension("backup.\(timestamp).json")
+        try? fileManager.moveItem(at: url, to: backupURL)
+        print("Backed up corrupted file to: \(backupURL.lastPathComponent)")
+    }
+    
     func saveCustomSegments(_ segments: [ArcSegment]) {
         do {
             let encoder = JSONEncoder()
@@ -47,6 +56,7 @@ class PersistenceManager {
             return try decoder.decode([ArcSegment].self, from: data)
         } catch {
             print("Failed to load custom segments: \(error)")
+            backupCorruptedFile(at: customSegmentsFile)
             return nil
         }
     }
@@ -70,18 +80,28 @@ class PersistenceManager {
         do {
             let data = try Data(contentsOf: userSettingsFile)
             let decoder = JSONDecoder()
-            return try decoder.decode(UserSettings.self, from: data)
+            var settings = try decoder.decode(UserSettings.self, from: data)
+            
+            settings = migrateSettingsIfNeeded(settings)
+            
+            return settings
         } catch {
             print("Failed to load user settings: \(error)")
+            backupCorruptedFile(at: userSettingsFile)
             return UserSettings()
         }
     }
     
+    private func migrateSettingsIfNeeded(_ settings: UserSettings) -> UserSettings {
+        return settings
+    }
+    
     func exportConfiguration() -> URL? {
         let export = ConfigurationExport(
-            version: 1,
+            version: schemaVersion,
             settings: loadUserSettings(),
             customSegments: loadCustomSegments() ?? ArcSegment.defaultRoot,
+            dockButtons: loadDockButtons() ?? DockButton.defaultButtons,
             exportDate: Date()
         )
         
@@ -110,6 +130,10 @@ class PersistenceManager {
             
             saveUserSettings(config.settings)
             saveCustomSegments(config.customSegments)
+            
+            if let buttons = config.dockButtons {
+                saveDockButtons(buttons)
+            }
             
             return true
         } catch {
@@ -144,12 +168,16 @@ class PersistenceManager {
             return try decoder.decode([DockButton].self, from: data)
         } catch {
             print("Failed to load dock buttons: \(error)")
+            backupCorruptedFile(at: dockButtonsFile)
             return nil
         }
     }
 }
 
 struct UserSettings: Codable {
+    // Core Layout
+    var barHeight: Double = 12.0
+    var barOpacity: Double = 1.0
     var arcSpread: Double = 80.0
     var dropDepth: Double = 30.0
     var iconSize: Double = 14.0
@@ -164,6 +192,45 @@ struct UserSettings: Codable {
     var borderWidth: Double = 1.0
     var notchWidth: Double = 150.0
     var dockStyle: DockButton.DockStyle = .normal
+    
+    // Focus Features
+    var zenModeEnabled: Bool = false
+    var focusDimmingEnabled: Bool = false
+    
+    // Animation
+    var springStiffness: Double = 300.0
+    var springDamping: Double = 20.0
+    var useSpringAnimations: Bool = true
+    var washLaunchEnabled: Bool = true
+    var washLaunchScale: Double = 1.2
+    
+    // AI & Notifications
+    var aiEnabled: Bool = false
+    var notificationPulseEnabled: Bool = false
+    var showNotificationPreview: Bool = true
+    
+    // Interaction
+    var hoverBreachEnabled: Bool = true
+    var hoverBreachDelay: Double = 0.2
+    var scrollToSelectEnabled: Bool = false
+    var scrollSensitivity: Double = 1.0
+    var miniArcEnabled: Bool = true
+    
+    // Sound
+    var soundscapesEnabled: Bool = false
+    var expansionSound: Bool = true
+    var selectionSound: Bool = true
+    var soundVolume: Double = 0.5
+    
+    // Haptics
+    var hapticProfilesEnabled: Bool = false
+    var lightHapticWeight: Double = 0.5
+    var heavyHapticWeight: Double = 1.0
+    
+    // Advanced
+    var forgeEnabled: Bool = false
+    var forgeScriptsPath: String = ""
+    var shortcutsIntegrationEnabled: Bool = false
 }
 
 enum ButtonShape: String, Codable, CaseIterable {
@@ -210,5 +277,6 @@ struct ConfigurationExport: Codable {
     let version: Int
     let settings: UserSettings
     let customSegments: [ArcSegment]
+    let dockButtons: [DockButton]?
     let exportDate: Date
 }

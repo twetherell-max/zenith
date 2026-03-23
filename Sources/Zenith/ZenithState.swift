@@ -68,8 +68,136 @@ class ZenithState: ObservableObject {
         didSet { saveSettings() }
     }
     
+    @Published var useWhiteOutline: Bool = true {
+        didSet { saveSettings() }
+    }
+    
+    @Published var barHeight: Double = 8 {
+        didSet { saveSettings() }
+    }
+    
+    @Published var barOpacity: Double = 0.35 {
+        didSet { saveSettings() }
+    }
+    
     @Published var isSettingsOpen: Bool = false
     @Published var isExpanded: Bool = false
+    
+    @Published var musicDisplayMode: DockButton.MusicDisplayMode = .icon {
+        didSet { saveSettings() }
+    }
+    
+    @Published var dockLayout: DockButton.DockLayout = .radial {
+        didSet { saveSettings() }
+    }
+    
+    @Published var zenModeEnabled: Bool = false {
+        didSet { saveSettings() }
+    }
+    
+    @Published var zenModeHidden: Bool = false
+    
+    @Published var focusDimmingEnabled: Bool = false {
+        didSet { saveSettings() }
+    }
+    
+    @Published var springStiffness: Double = 300.0 {
+        didSet { saveSettings() }
+    }
+    
+    @Published var springDamping: Double = 20.0 {
+        didSet { saveSettings() }
+    }
+    
+    @Published var useSpringAnimations: Bool = true {
+        didSet { saveSettings() }
+    }
+    
+    @Published var aiEnabled: Bool = false {
+        didSet { saveSettings() }
+    }
+    
+    @Published var notificationPulseEnabled: Bool = false {
+        didSet { saveSettings() }
+    }
+    
+    @Published var showNotificationPreview: Bool = true {
+        didSet { saveSettings() }
+    }
+    
+    // Hover Breach
+    @Published var hoverBreachEnabled: Bool = true {
+        didSet { saveSettings() }
+    }
+    
+    @Published var hoverBreachDelay: Double = 0.2 {
+        didSet { saveSettings() }
+    }
+    
+    // Soundscapes
+    @Published var soundscapesEnabled: Bool = false {
+        didSet { saveSettings() }
+    }
+    
+    @Published var expansionSound: Bool = true {
+        didSet { saveSettings() }
+    }
+    
+    @Published var selectionSound: Bool = true {
+        didSet { saveSettings() }
+    }
+    
+    @Published var soundVolume: Double = 0.5 {
+        didSet { saveSettings() }
+    }
+    
+    // Scroll-to-Select
+    @Published var scrollToSelectEnabled: Bool = false {
+        didSet { saveSettings() }
+    }
+    
+    @Published var scrollSensitivity: Double = 1.0 {
+        didSet { saveSettings() }
+    }
+    
+    // Right-Click Mini Arc
+    @Published var miniArcEnabled: Bool = true {
+        didSet { saveSettings() }
+    }
+    
+    // The Wash Launch
+    @Published var washLaunchEnabled: Bool = true {
+        didSet { saveSettings() }
+    }
+    
+    @Published var washLaunchScale: Double = 1.2 {
+        didSet { saveSettings() }
+    }
+    
+    // Haptic Profiles
+    @Published var hapticProfilesEnabled: Bool = false {
+        didSet { saveSettings() }
+    }
+    
+    @Published var lightHapticWeight: Double = 0.5 {
+        didSet { saveSettings() }
+    }
+    
+    @Published var heavyHapticWeight: Double = 1.0 {
+        didSet { saveSettings() }
+    }
+    
+    // Zenith Forge
+    @Published var forgeEnabled: Bool = false {
+        didSet { saveSettings() }
+    }
+    
+    @Published var forgeScriptsPath: String = ""
+    
+    // Deep Shortcuts
+    @Published var shortcutsIntegrationEnabled: Bool = false {
+        didSet { saveSettings() }
+    }
     
     // Arc Level System
     @Published var currentLevel: Int = 1
@@ -198,6 +326,8 @@ class ZenithState: ObservableObject {
     private init() {
         let settings = persistence.loadUserSettings()
         
+        self.barHeight = settings.barHeight
+        self.barOpacity = settings.barOpacity
         self.arcSpread = settings.arcSpread
         self.dropDepth = settings.dropDepth
         self.iconSize = settings.iconSize
@@ -213,6 +343,31 @@ class ZenithState: ObservableObject {
         self.notchWidth = settings.notchWidth
         self.dockButtons = persistence.loadDockButtons() ?? DockButton.defaultButtons
         self.dockStyle = settings.dockStyle
+        self.zenModeEnabled = settings.zenModeEnabled
+        self.focusDimmingEnabled = settings.focusDimmingEnabled
+        self.springStiffness = settings.springStiffness
+        self.springDamping = settings.springDamping
+        self.useSpringAnimations = settings.useSpringAnimations
+        self.aiEnabled = settings.aiEnabled
+        self.notificationPulseEnabled = settings.notificationPulseEnabled
+        self.showNotificationPreview = settings.showNotificationPreview
+        self.hoverBreachEnabled = settings.hoverBreachEnabled
+        self.hoverBreachDelay = settings.hoverBreachDelay
+        self.soundscapesEnabled = settings.soundscapesEnabled
+        self.expansionSound = settings.expansionSound
+        self.selectionSound = settings.selectionSound
+        self.soundVolume = settings.soundVolume
+        self.scrollToSelectEnabled = settings.scrollToSelectEnabled
+        self.scrollSensitivity = settings.scrollSensitivity
+        self.miniArcEnabled = settings.miniArcEnabled
+        self.washLaunchEnabled = settings.washLaunchEnabled
+        self.washLaunchScale = settings.washLaunchScale
+        self.hapticProfilesEnabled = settings.hapticProfilesEnabled
+        self.lightHapticWeight = settings.lightHapticWeight
+        self.heavyHapticWeight = settings.heavyHapticWeight
+        self.forgeEnabled = settings.forgeEnabled
+        self.forgeScriptsPath = settings.forgeScriptsPath
+        self.shortcutsIntegrationEnabled = settings.shortcutsIntegrationEnabled
         
         if let customSegments = persistence.loadCustomSegments() {
             self.arcSegments = customSegments
@@ -224,6 +379,8 @@ class ZenithState: ObservableObject {
     
     private func saveSettings() {
         let settings = UserSettings(
+            barHeight: barHeight,
+            barOpacity: barOpacity,
             arcSpread: arcSpread,
             dropDepth: dropDepth,
             iconSize: iconSize,
@@ -237,7 +394,32 @@ class ZenithState: ObservableObject {
             hoverLift: hoverLift,
             borderWidth: borderWidth,
             notchWidth: notchWidth,
-            dockStyle: dockStyle
+            dockStyle: dockStyle,
+            zenModeEnabled: zenModeEnabled,
+            focusDimmingEnabled: focusDimmingEnabled,
+            springStiffness: springStiffness,
+            springDamping: springDamping,
+            useSpringAnimations: useSpringAnimations,
+            washLaunchEnabled: washLaunchEnabled,
+            washLaunchScale: washLaunchScale,
+            aiEnabled: aiEnabled,
+            notificationPulseEnabled: notificationPulseEnabled,
+            showNotificationPreview: showNotificationPreview,
+            hoverBreachEnabled: hoverBreachEnabled,
+            hoverBreachDelay: hoverBreachDelay,
+            scrollToSelectEnabled: scrollToSelectEnabled,
+            scrollSensitivity: scrollSensitivity,
+            miniArcEnabled: miniArcEnabled,
+            soundscapesEnabled: soundscapesEnabled,
+            expansionSound: expansionSound,
+            selectionSound: selectionSound,
+            soundVolume: soundVolume,
+            hapticProfilesEnabled: hapticProfilesEnabled,
+            lightHapticWeight: lightHapticWeight,
+            heavyHapticWeight: heavyHapticWeight,
+            forgeEnabled: forgeEnabled,
+            forgeScriptsPath: forgeScriptsPath,
+            shortcutsIntegrationEnabled: shortcutsIntegrationEnabled
         )
         persistence.saveUserSettings(settings)
     }
@@ -262,6 +444,8 @@ class ZenithState: ObservableObject {
         let success = persistence.importConfiguration(from: url)
         if success {
             let settings = persistence.loadUserSettings()
+            barHeight = settings.barHeight
+            barOpacity = settings.barOpacity
             arcSpread = settings.arcSpread
             dropDepth = settings.dropDepth
             iconSize = settings.iconSize
@@ -276,10 +460,39 @@ class ZenithState: ObservableObject {
             borderWidth = settings.borderWidth
             notchWidth = settings.notchWidth
             dockStyle = settings.dockStyle
+            zenModeEnabled = settings.zenModeEnabled
+            focusDimmingEnabled = settings.focusDimmingEnabled
+            springStiffness = settings.springStiffness
+            springDamping = settings.springDamping
+            useSpringAnimations = settings.useSpringAnimations
+            washLaunchEnabled = settings.washLaunchEnabled
+            washLaunchScale = settings.washLaunchScale
+            aiEnabled = settings.aiEnabled
+            notificationPulseEnabled = settings.notificationPulseEnabled
+            showNotificationPreview = settings.showNotificationPreview
+            hoverBreachEnabled = settings.hoverBreachEnabled
+            hoverBreachDelay = settings.hoverBreachDelay
+            scrollToSelectEnabled = settings.scrollToSelectEnabled
+            scrollSensitivity = settings.scrollSensitivity
+            miniArcEnabled = settings.miniArcEnabled
+            soundscapesEnabled = settings.soundscapesEnabled
+            expansionSound = settings.expansionSound
+            selectionSound = settings.selectionSound
+            soundVolume = settings.soundVolume
+            hapticProfilesEnabled = settings.hapticProfilesEnabled
+            lightHapticWeight = settings.lightHapticWeight
+            heavyHapticWeight = settings.heavyHapticWeight
+            forgeEnabled = settings.forgeEnabled
+            forgeScriptsPath = settings.forgeScriptsPath
+            shortcutsIntegrationEnabled = settings.shortcutsIntegrationEnabled
             
             if let customSegments = persistence.loadCustomSegments() {
                 arcSegments = customSegments
                 hasCustomSegments = true
+            }
+            
+            if let buttons = persistence.loadDockButtons() {
+                dockButtons = buttons
             }
         }
         return success
@@ -308,42 +521,79 @@ class ZenithState: ObservableObject {
     func executeButtonAction(for button: DockButton) {
         switch button.actionType {
         case .settings:
-            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+            AppDelegate.shared.openSettings()
+            
         case .app:
             if !button.actionValue.isEmpty {
-                NSWorkspace.shared.open(URL(string: "zenith://open-app/\(button.actionValue)")!)
+                openApplication(bundleId: button.actionValue)
             }
+            
         case .url:
             if !button.actionValue.isEmpty, let url = URL(string: button.actionValue) {
                 NSWorkspace.shared.open(url)
             }
+            
         case .folder:
             if !button.actionValue.isEmpty {
                 NSWorkspace.shared.open(URL(fileURLWithPath: button.actionValue))
             }
+            
         case .script:
             if !button.actionValue.isEmpty {
-                var error: NSDictionary?
-                if let script = NSAppleScript(source: button.actionValue) {
-                    script.executeAndReturnError(&error)
-                }
+                runAppleScript(button.actionValue)
             }
+            
+        case .music:
+            executeMusicAction(button.actionValue, service: button.musicService)
+            
+        case .note:
+            AppDelegate.shared.openQuickNote()
+            
         case .icon:
             break
-        case .music:
-            executeMusicAction(button.actionValue)
+            
+        case .clipboard:
+            handleClipboard()
         }
     }
     
-    func executeMusicAction(_ action: String) {
+    private func openApplication(bundleId: String) {
+        if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) {
+            NSWorkspace.shared.openApplication(at: appURL, configuration: NSWorkspace.OpenConfiguration())
+        } else {
+            print("Could not find app with bundle ID: \(bundleId)")
+        }
+    }
+    
+    func runAppleScript(_ script: String) {
+        var error: NSDictionary?
+        if let appleScript = NSAppleScript(source: script) {
+            appleScript.executeAndReturnError(&error)
+            if let error = error {
+                print("AppleScript error: \(error)")
+            }
+        }
+    }
+    
+    func handleClipboard() {
+        let pasteboard = NSPasteboard.general
+        if let clipboardString = pasteboard.string(forType: .string) {
+            pasteboard.clearContents()
+            pasteboard.setString(clipboardString, forType: .string)
+        }
+    }
+    
+    func executeMusicAction(_ action: String, service: DockButton.MusicService = .appleMusic) {
+        let appName = service.appName
+        
         let script: String
         switch action {
         case "playPause":
-            script = "tell application \"Music\" to playpause"
+            script = "tell application \"\(appName)\" to playpause"
         case "next":
-            script = "tell application \"Music\" to next track"
+            script = "tell application \"\(appName)\" to next track"
         case "previous":
-            script = "tell application \"Music\" to previous track"
+            script = "tell application \"\(appName)\" to previous track"
         case "volumeUp":
             script = "set volume output volume ((output volume of (get volume settings)) + 10)"
         case "volumeDown":
@@ -351,11 +601,8 @@ class ZenithState: ObservableObject {
         case "mute":
             script = "set volume with output muted"
         default:
-            script = "tell application \"Music\" to playpause"
+            script = "tell application \"\(appName)\" to playpause"
         }
-        var error: NSDictionary?
-        if let appleScript = NSAppleScript(source: script) {
-            appleScript.executeAndReturnError(&error)
-        }
+        runAppleScript(script)
     }
 }

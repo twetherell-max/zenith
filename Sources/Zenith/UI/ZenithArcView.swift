@@ -146,14 +146,7 @@ struct GravityWellTile: View {
     
     // Calculate position - stems from camera edges
     private var position: CGPoint {
-        // Start from camera edges and arc downward
         let cameraWidth: CGFloat = 20 // Width of camera housing
-        let startOffset = cameraWidth / 2 + 8 // Start just outside camera
-        
-        // Left to right across camera
-        let startX = centerX - startOffset
-        let endX = centerX + startOffset
-        let arcWidth = endX - startX
         let arcDepth: CGFloat = 50 // How far down the arc goes
         
         let t = CGFloat(index) / CGFloat(max(totalCount - 1, 1))
@@ -162,7 +155,6 @@ struct GravityWellTile: View {
         let x = centerX + (t - 0.5) * 80
         
         // Vertical position - arc downward from camera
-        // Use cosine for smooth downward arc
         let baseY = notchY + 30 + cameraWidth / 2
         let arcY = baseY + arcDepth * sin(t * .pi)
         

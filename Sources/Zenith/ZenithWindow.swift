@@ -71,6 +71,7 @@ class ZenithWindow: NSWindow {
         self.level = .statusBar 
         self.ignoresMouseEvents = false
         self.isRestorable = false 
+        self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle] 
         
         ZenithState.shared.$isExpanded
             .receive(on: RunLoop.main)

@@ -11,8 +11,7 @@ let package = Package(
             name: "Zenith",
             dependencies: [],
             resources: [
-                .process("radial-dock.html"),
-                .process("test.html")
+                .process("radial-dock.html")
             ]
         ),
     ]

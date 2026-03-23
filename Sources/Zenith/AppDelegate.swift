@@ -1,10 +1,25 @@
 import AppKit
 import SwiftUI
 import WebKit
+import Combine
+
+extension Notification.Name {
+    static let zenithPulseRequested = Notification.Name("zenithPulseRequested")
+}
 
 class RadialDockContainerView: NSView {
     weak var webView: WKWebView?
     var mouseTimer: Timer?
+    private var isExpanded = false
+    private var lastHapticTime: Date = .distantPast
+    var isSettingsOpen = false
+    
+    override var acceptsFirstResponder: Bool { false }
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { false }
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        // Pass all events to the webView - it handles click detection via JavaScript
+        return webView
+    }
     
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
@@ -21,39 +36,441 @@ class RadialDockContainerView: NSView {
     }
     
     override func mouseEntered(with event: NSEvent) {
-        webView?.evaluateJavaScript("setExpanded(true)") { _, _ in }
+        expandDock()
     }
     
     override func mouseExited(with event: NSEvent) {
-        webView?.evaluateJavaScript("setExpanded(false)") { _, _ in }
+        // Keep dock expanded - don't collapse on mouse exit
+    }
+    
+    private func expandDock() {
+        if !isExpanded {
+            let state = ZenithState.shared
+            if state.hapticFeedback {
+                triggerHaptic()
+            }
+            isExpanded = true
+            webView?.evaluateJavaScript("setExpanded(true)") { _, _ in }
+        }
+    }
+    
+    private func collapseDock() {
+        // Called manually when needed
+        if isExpanded {
+            isExpanded = false
+            webView?.evaluateJavaScript("setExpanded(false)") { _, _ in }
+        }
+    }
+    
+    private func triggerHaptic() {
+        let now = Date()
+        guard now.timeIntervalSince(lastHapticTime) > 0.3 else { return }
+        lastHapticTime = now
+        
+        let generator = NSFeedbackHelper()
+        generator.lightTap()
     }
     
     func startMouseTracking() {
-        var wasInNotch = false
-        mouseTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            guard let self = self, let webView = self.webView, let window = self.window else { return }
+        var wasInHoverArea = false
+        mouseTimer = Timer.scheduledTimer(withTimeInterval: 0.08, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            
             let mouseLoc = NSEvent.mouseLocation
+            guard let window = self.window else { return }
             let windowLoc = window.convertPoint(fromScreen: mouseLoc)
             let localLoc = self.convert(windowLoc, from: nil)
             
-            // Check if mouse is in notch area OR dock area (top center area)
-            let hoverArea = NSRect(x: self.bounds.width/2 - 120, y: self.bounds.height - 180, width: 240, height: 180)
+            let state = ZenithState.shared
+            let hoverWidth = CGFloat(state.notchWidth)
+            let hoverHeight: CGFloat = 220
+            
+            let hoverArea = NSRect(
+                x: self.bounds.width/2 - hoverWidth/2 - 50,
+                y: self.bounds.height - hoverHeight,
+                width: hoverWidth + 100,
+                height: hoverHeight
+            )
+            
             let isInHoverArea = hoverArea.contains(localLoc)
             
-            if isInHoverArea && !wasInNotch {
-                wasInNotch = true
-                webView.evaluateJavaScript("setExpanded(true)") { _, _ in }
-            } else if !isInHoverArea && wasInNotch {
-                wasInNotch = false
-                webView.evaluateJavaScript("setExpanded(false)") { _, _ in }
+            if isInHoverArea && !wasInHoverArea {
+                wasInHoverArea = true
+                self.expandDock()
+            } else if !isInHoverArea && wasInHoverArea {
+                wasInHoverArea = false
+                self.collapseDock()
             }
         }
+    }
+}
+
+enum SettingsWindowStyle {
+    case centered
+    case sidePanel
+}
+
+class SilhouetteSettingsWindow: NSPanel {
+    var onClose: (() -> Void)?
+    let style: SettingsWindowStyle
+    private let windowWidth: CGFloat = 400
+    private let windowHeight: CGFloat = 700
+    
+    init(style: SettingsWindowStyle = .centered) {
+        self.style = style
+        
+        super.init(
+            contentRect: NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight),
+            styleMask: [.titled, .closable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        
+        self.title = "Settings"
+        self.isOpaque = true
+        self.backgroundColor = NSColor.windowBackgroundColor
+        self.level = .modalPanel
+        self.hasShadow = true
+        self.isReleasedWhenClosed = false
+        self.isRestorable = false
+        self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        
+        let settingsView = SettingsPanelView(onClose: { [weak self] in
+            self?.closePanel()
+        })
+        let hostingView = NSHostingView(rootView: settingsView)
+        hostingView.frame = NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight)
+        
+        self.contentView = hostingView
+    }
+    
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { false }
+    
+    func positionOnScreen() {
+        guard let screen = NSScreen.main else { return }
+        let screenFrame = screen.visibleFrame
+        
+        switch style {
+        case .centered:
+            let windowX = screenFrame.origin.x + (screenFrame.width - windowWidth) / 2
+            let windowY = screenFrame.origin.y + (screenFrame.height - windowHeight) / 2
+            self.setFrameOrigin(NSPoint(x: windowX, y: windowY))
+            
+        case .sidePanel:
+            let windowX = screenFrame.origin.x - windowWidth
+            let windowY = screenFrame.origin.y + (screenFrame.height - windowHeight) / 2
+            self.setFrameOrigin(NSPoint(x: windowX, y: windowY))
+        }
+    }
+    
+    func show(animated: Bool = true) {
+        positionOnScreen()
+        
+        if style == .sidePanel && animated {
+            if let screen = NSScreen.main {
+                let screenFrame = screen.visibleFrame
+                let targetX = screenFrame.origin.x + 20
+                
+                var startFrame = self.frame
+                startFrame.origin.x = screenFrame.origin.x - windowWidth
+                self.setFrame(startFrame, display: false)
+                
+                NSAnimationContext.runAnimationGroup { context in
+                    context.duration = 0.3
+                    context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                    var targetFrame = self.frame
+                    targetFrame.origin.x = targetX
+                    self.animator().setFrame(targetFrame, display: true)
+                }
+            }
+        }
+        
+        self.makeKeyAndOrderFront(nil)
+    }
+    
+    func closePanel() {
+        if style == .sidePanel {
+            if let screen = NSScreen.main {
+                let screenFrame = screen.visibleFrame
+                
+                NSAnimationContext.runAnimationGroup { context in
+                    context.duration = 0.25
+                    context.timingFunction = CAMediaTimingFunction(name: .easeIn)
+                    var exitFrame = self.frame
+                    exitFrame.origin.x = screenFrame.origin.x - self.windowWidth
+                    self.animator().setFrame(exitFrame, display: true)
+                } completionHandler: {
+                    self.close()
+                    self.onClose?()
+                }
+            }
+        } else {
+            self.close()
+            onClose?()
+        }
+    }
+}
+
+// Settings panel view with all options
+struct SettingsPanelView: View {
+    let onClose: () -> Void
+    @ObservedObject private var state = ZenithState.shared
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header with title and close button
+            HStack {
+                Text("ZENITH")
+                    .font(.system(size: 13, weight: .bold))
+                Spacer()
+                Button(action: onClose) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 18))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color(NSColor.controlBackgroundColor))
+            
+            Divider()
+            
+            // Scrollable content
+            ScrollView([.vertical], showsIndicators: true) {
+                VStack(alignment: .leading, spacing: 20) {
+                    barSection()
+                    appearanceSection()
+                    customizationSection()
+                    dockButtonsSection()
+                    behaviorSection()
+                    aboutSection()
+                }
+                .padding(20)
+            }
+        }
+        .frame(width: 400, height: 700)
+        .background(Color(NSColor.windowBackgroundColor))
+    }
+    
+    @ViewBuilder
+    private func barSection() -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("BAR").font(.system(size: 11, weight: .semibold)).foregroundColor(.secondary)
+            
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text("Height")
+                    Spacer()
+                    Text("\(Int(state.barHeight))px")
+                        .foregroundColor(.secondary)
+                }
+                .font(.subheadline)
+                Slider(value: $state.barHeight, in: 4...30, step: 1)
+            }
+            
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text("Opacity")
+                    Spacer()
+                    Text("\(Int(state.barOpacity * 100))%")
+                        .foregroundColor(.secondary)
+                }
+                .font(.subheadline)
+                Slider(value: $state.barOpacity, in: 0.1...1, step: 0.05)
+            }
+        }
+        .padding(16)
+        .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
+        .cornerRadius(10)
+    }
+    
+    @ViewBuilder
+    private func appearanceSection() -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("APPEARANCE").font(.system(size: 11, weight: .semibold)).foregroundColor(.secondary)
+            
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Accent Color")
+                    .font(.subheadline)
+                Picker("Accent Color", selection: $state.accentColor) {
+                    ForEach(AccentColor.allCases, id: \.self) { color in
+                        Text(color.displayName).tag(color)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+            
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text("Contrast")
+                    Spacer()
+                    Text("\(Int(state.contrastLevel * 100))%")
+                        .foregroundColor(.secondary)
+                }
+                .font(.subheadline)
+                Slider(value: $state.contrastLevel, in: 0...1, step: 0.05)
+            }
+            
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text("Dock Opacity")
+                    Spacer()
+                    Text("\(Int(state.dockOpacity * 100))%")
+                        .foregroundColor(.secondary)
+                }
+                .font(.subheadline)
+                Slider(value: $state.dockOpacity, in: 0.2...1, step: 0.05)
+            }
+        }
+        .padding(16)
+        .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
+        .cornerRadius(10)
+    }
+    
+    @ViewBuilder
+    private func customizationSection() -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("SIZE & SPACING").font(.system(size: 11, weight: .semibold)).foregroundColor(.secondary)
+            
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text("Arc Spread")
+                    Spacer()
+                    Text("\(Int(state.arcSpread))")
+                        .foregroundColor(.secondary)
+                }
+                .font(.subheadline)
+                Slider(value: $state.arcSpread, in: 20...150, step: 1)
+            }
+            
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text("Icon Size")
+                    Spacer()
+                    Text("\(Int(state.iconSize))")
+                        .foregroundColor(.secondary)
+                }
+                .font(.subheadline)
+                Slider(value: $state.iconSize, in: 10...30, step: 1)
+            }
+            
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text("Notch Width")
+                    Spacer()
+                    Text("\(Int(state.notchWidth))")
+                        .foregroundColor(.secondary)
+                }
+                .font(.subheadline)
+                Slider(value: $state.notchWidth, in: 50...250, step: 10)
+            }
+            
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text("Border Width")
+                    Spacer()
+                    Text("\(Int(state.borderWidth))px")
+                        .foregroundColor(.secondary)
+                }
+                .font(.subheadline)
+                Slider(value: $state.borderWidth, in: 0...3, step: 0.5)
+            }
+        }
+        .padding(16)
+        .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
+        .cornerRadius(10)
+    }
+    
+    @ViewBuilder
+    private func dockButtonsSection() -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("DOCK BUTTONS").font(.system(size: 11, weight: .semibold)).foregroundColor(.secondary)
+                Spacer()
+                Button("Reset") {
+                    state.dockButtons = DockButton.defaultButtons
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            }
+            
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Style")
+                    .font(.subheadline)
+                Picker("Style", selection: $state.dockStyle) {
+                    ForEach(DockButton.DockStyle.allCases, id: \.self) { style in
+                        Text(style.displayName).tag(style)
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+            
+            if state.dockStyle == .minimal {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Outline Color")
+                        .font(.subheadline)
+                    Picker("Outline", selection: $state.useWhiteOutline) {
+                        Text("White").tag(true)
+                        Text("Accent").tag(false)
+                    }
+                    .pickerStyle(.segmented)
+                }
+            }
+        }
+        .padding(16)
+        .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
+        .cornerRadius(10)
+    }
+    
+    @ViewBuilder
+    private func behaviorSection() -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("BEHAVIOR").font(.system(size: 11, weight: .semibold)).foregroundColor(.secondary)
+            
+            Toggle("Haptic Feedback", isOn: $state.hapticFeedback)
+                .font(.subheadline)
+        }
+        .padding(16)
+        .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
+        .cornerRadius(10)
+    }
+    
+    @ViewBuilder
+    private func aboutSection() -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("ABOUT").font(.system(size: 11, weight: .semibold)).foregroundColor(.secondary)
+            
+            HStack {
+                Text("Version")
+                    .font(.subheadline)
+                Spacer()
+                Text("1.0.0")
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(16)
+        .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
+        .cornerRadius(10)
+    }
+}
+
+class NSFeedbackHelper {
+    func lightTap() {
+        let event = CGEvent(source: nil)
+        event?.type = .flagsChanged
+        event?.post(tap: .cghidEventTap)
     }
 }
 
 class RadialDockCoordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
     weak var webView: WKWebView?
     var settingsCheckTimer: Timer?
+    private var isWebViewReady = false
+    private var pendingSettingsUpdate: String?
+    private var pendingButtonsUpdate: String?
+    private var settingsCancellable: AnyCancellable?
     
     override init() {
         super.init()
@@ -61,6 +478,84 @@ class RadialDockCoordinator: NSObject, WKNavigationDelegate, WKScriptMessageHand
     
     func setWebView(_ webView: WKWebView) {
         self.webView = webView
+        setupReactiveSync()
+    }
+    
+    private func setupReactiveSync() {
+        Timer.scheduledTimer(withTimeInterval: 0.3, repeats: true) { [weak self] _ in
+            self?.syncSettingsReactive()
+        }
+    }
+    
+    func syncSettingsReactive() {
+        let state = ZenithState.shared
+        let accentColors: [String: String] = [
+            "white": "#FFFFFF",
+            "blue": "#007AFF",
+            "purple": "#AF52DE",
+            "pink": "#FF2D55",
+            "orange": "#FF9500",
+            "green": "#34C759"
+        ]
+        let color = accentColors[state.accentColor.rawValue] ?? "#FFFFFF"
+        
+        let settingsJson = """
+        {
+            "buttonShape": "\(state.buttonShape.rawValue)",
+            "accentColor": "\(color)",
+            "iconSize": \(state.iconSize),
+            "opacity": \(state.dockOpacity * 0.15),
+            "contrast": \(state.contrastLevel * 0.3),
+            "arcSpread": \(state.arcSpread),
+            "dropDepth": \(state.dropDepth),
+            "hoverLift": \(state.hoverLift),
+            "borderWidth": \(state.borderWidth),
+            "notchWidth": \(state.notchWidth),
+            "dockStyle": "\(state.dockStyle.rawValue)"
+        }
+        """
+        
+        if isWebViewReady {
+            webView?.evaluateJavaScript("updateSettings(\(settingsJson))") { _, error in
+                if let error = error {
+                    print("Settings sync error: \(error)")
+                }
+            }
+            
+            let encoder = JSONEncoder()
+            if let data = try? encoder.encode(state.dockButtons),
+               let buttonsJson = String(data: data, encoding: .utf8) {
+                webView?.evaluateJavaScript("updateButtons(\(buttonsJson))") { _, error in
+                    if let error = error {
+                        print("Buttons sync error: \(error)")
+                    }
+                }
+            }
+        } else {
+            pendingSettingsUpdate = settingsJson
+            if let data = try? JSONEncoder().encode(state.dockButtons),
+               let buttonsJson = String(data: data, encoding: .utf8) {
+                pendingButtonsUpdate = buttonsJson
+            }
+        }
+    }
+    
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        isWebViewReady = true
+        
+        if let settings = pendingSettingsUpdate {
+            webView.evaluateJavaScript("updateSettings(\(settings))") { _, _ in }
+            pendingSettingsUpdate = nil
+        }
+        if let buttons = pendingButtonsUpdate {
+            webView.evaluateJavaScript("updateButtons(\(buttons))") { _, _ in }
+            pendingButtonsUpdate = nil
+        }
+    }
+    
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        print("WebView navigation failed: \(error)")
+        isWebViewReady = false
     }
     
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
@@ -71,8 +566,6 @@ class RadialDockCoordinator: NSObject, WKNavigationDelegate, WKScriptMessageHand
         print(">>> Received message: \(type)")
         
         if type == "openSettings" {
-            print(">>> Opening settings via shared...")
-            print(">>> AppDelegate.shared: \(AppDelegate.shared)")
             AppDelegate.shared?.openSettings()
         } else if type == "checkSettings" {
             DispatchQueue.main.async { [weak self] in
@@ -92,68 +585,290 @@ class RadialDockCoordinator: NSObject, WKNavigationDelegate, WKScriptMessageHand
     private func handleButtonAction(type: String, value: String) {
         switch type {
         case "settings":
-            AppDelegate.shared?.openSettings()
+            AppDelegate.shared.openSettings()
+            
         case "app":
             if !value.isEmpty {
-                NSWorkspace.shared.open(URL(string: value)!)
+                openApplication(bundleId: value)
             }
+            
         case "url":
             if !value.isEmpty, let url = URL(string: value) {
                 NSWorkspace.shared.open(url)
             }
+            
         case "folder":
             if !value.isEmpty {
-                NSWorkspace.shared.open(URL(fileURLWithPath: value))
+                openFolder(path: value)
             }
+            
         case "script":
             if !value.isEmpty {
-                var error: NSDictionary?
-                if let script = NSAppleScript(source: value) {
-                    script.executeAndReturnError(&error)
-                }
+                runAppleScript(value)
             }
+            
+        case "music":
+            runMusicAction(value)
+            
+        case "clipboard":
+            handleClipboard()
+            
         default:
             break
         }
     }
+    
+    private func openApplication(bundleId: String) {
+        if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) {
+            NSWorkspace.shared.openApplication(at: appURL, configuration: NSWorkspace.OpenConfiguration())
+        } else {
+            print(">>> Could not find app with bundle ID: \(bundleId)")
+        }
+    }
+    
+    private func openFolder(path: String) {
+        let folderURL = URL(fileURLWithPath: path)
+        if FileManager.default.fileExists(atPath: path) {
+            NSWorkspace.shared.open(folderURL)
+        } else {
+            print(">>> Folder does not exist: \(path)")
+        }
+    }
+    
+    private func runAppleScript(_ script: String) {
+        var error: NSDictionary?
+        if let appleScript = NSAppleScript(source: script) {
+            appleScript.executeAndReturnError(&error)
+            if let error = error {
+                print(">>> AppleScript error: \(error)")
+            }
+        }
+    }
+    
+    private func runMusicAction(_ action: String) {
+        let script: String
+        switch action {
+        case "playPause":
+            script = "tell application \"Music\" to playpause"
+        case "next":
+            script = "tell application \"Music\" to next track"
+        case "previous":
+            script = "tell application \"Music\" to previous track"
+        case "volumeUp":
+            script = "set volume output volume ((output volume of (get volume settings)) + 10)"
+        case "volumeDown":
+            script = "set volume output volume ((output volume of (get volume settings)) - 10)"
+        case "mute":
+            script = "set volume with output muted"
+        default:
+            script = "tell application \"Music\" to playpause"
+        }
+        runAppleScript(script)
+    }
+    
+    private func handleClipboard() {
+        let pasteboard = NSPasteboard.general
+        if let clipboardString = pasteboard.string(forType: .string) {
+            pasteboard.clearContents()
+            pasteboard.setString(clipboardString, forType: .string)
+        }
+    }
 }
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, NativeRadialDockDelegate {
     static var shared: AppDelegate!
     
     var statusItem: NSStatusItem?
-    var zenithWindow: ZenithWindow?
-    var settingsWindow: NSWindow?
+    var zenithWindow: NSWindow?
+    var settingsWindow: SilhouetteSettingsWindow?
+    var quickNoteWindow: QuickNoteWindow?
+    var musicPopupWindow: MusicPopupWindow?
     var dockCoordinator: RadialDockCoordinator?
-    var zenitSettingsWindow: NSWindow?
+    var dockView: NSView?
+    private var globalMouseMonitor: Any?
+    private var hoverTimer: Timer?
+    private var cancellables = Set<AnyCancellable>()
+    
+    func notchClicked() {
+        // Toggle dock expansion
+    }
+    
+    private func isMouseInNotchZone(_ location: NSPoint) -> Bool {
+        guard let screen = NSScreen.main else { return false }
+        let screenFrame = screen.frame
+        
+        let notchZone = NSRect(
+            x: screenFrame.width / 2 - 75,
+            y: screenFrame.height - 50,
+            width: 150,
+            height: 50
+        )
+        
+        return notchZone.contains(location)
+    }
+    
+    private func isMouseInZenithArea() -> Bool {
+        guard let window = zenithWindow else { return false }
+        let mouseLocation = NSEvent.mouseLocation
+        let windowFrame = window.frame
+        
+        let windowRect = NSRect(
+            x: windowFrame.origin.x,
+            y: windowFrame.origin.y,
+            width: windowFrame.width,
+            height: windowFrame.height
+        )
+        
+        return windowRect.contains(mouseLocation)
+    }
+    
+    private func startGlobalMouseMonitoring() {
+        globalMouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { [weak self] _ in
+            self?.checkMousePosition()
+        }
+    }
+    
+    private func checkMousePosition() {
+        let mouseLocation = NSEvent.mouseLocation
+        let isInNotchZone = isMouseInNotchZone(mouseLocation)
+        let isInZenithArea = isMouseInZenithArea()
+        
+        if isInNotchZone || isInZenithArea {
+            hoverTimer?.invalidate()
+            showNotchFromGlobal()
+        } else {
+            hoverTimer?.invalidate()
+            hoverTimer = Timer.scheduledTimer(withTimeInterval: 0.15, repeats: false) { [weak self] _ in
+                self?.hideNotchFromGlobal()
+            }
+        }
+    }
+    
+    private func showNotchFromGlobal() {
+        if let nativeDockView = zenithWindow?.contentView as? NativeRadialDockView {
+            nativeDockView.showNotchFromExternal()
+        } else if let listDockView = zenithWindow?.contentView as? ListDockView {
+            listDockView.showFromExternal()
+        }
+    }
+    
+    private func hideNotchFromGlobal() {
+        if let nativeDockView = zenithWindow?.contentView as? NativeRadialDockView {
+            nativeDockView.hideNotchFromExternal()
+        } else if let listDockView = zenithWindow?.contentView as? ListDockView {
+            listDockView.hideFromExternal()
+        }
+    }
+    
+    func iconClicked(button: DockButton) {
+        handleButtonAction(button)
+    }
+    
+    private func handleButtonAction(_ button: DockButton) {
+        switch button.actionType {
+        case .settings:
+            if settingsWindow == nil {
+                openSettings()
+            } else {
+                closeSettings()
+            }
+        case .music:
+            switch ZenithState.shared.musicDisplayMode {
+            case .icon:
+                if !button.actionValue.isEmpty {
+                    ZenithState.shared.executeMusicAction(button.actionValue, service: button.musicService)
+                }
+            case .artwork:
+                if !button.actionValue.isEmpty {
+                    ZenithState.shared.executeMusicAction(button.actionValue, service: button.musicService)
+                }
+            case .popup:
+                toggleMusicPopup()
+            }
+        case .note:
+            openQuickNote()
+        case .app:
+            if !button.actionValue.isEmpty {
+                if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: button.actionValue) {
+                    NSWorkspace.shared.openApplication(at: appURL, configuration: NSWorkspace.OpenConfiguration())
+                }
+            }
+        case .folder:
+            if !button.actionValue.isEmpty {
+                let url = URL(fileURLWithPath: button.actionValue)
+                NSWorkspace.shared.open(url)
+            }
+        case .url:
+            if let url = URL(string: button.actionValue) {
+                NSWorkspace.shared.open(url)
+            }
+        case .script:
+            if !button.actionValue.isEmpty {
+                ZenithState.shared.runAppleScript(button.actionValue)
+            }
+        case .clipboard:
+            ZenithState.shared.handleClipboard()
+        case .icon:
+            break
+        }
+    }
     
     func openSettings() {
         print(">>> openSettings called")
         
-        if zenitSettingsWindow == nil {
-            print(">>> Creating settings window")
+        if settingsWindow == nil {
+            print(">>> Creating settings side panel")
             
-            let settingsView = ZenithSettingsView()
-            let hostingView = NSHostingView(rootView: settingsView)
-            hostingView.frame = NSRect(x: 0, y: 0, width: 450, height: 600)
+            let window = SilhouetteSettingsWindow(style: .sidePanel)
+            window.onClose = { [weak self] in
+                self?.closeSettings()
+            }
+            settingsWindow = window
             
-            let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 450, height: 600),
-                styleMask: [.titled, .closable, .miniaturizable],
-                backing: .buffered,
-                defer: false
-            )
-            window.contentView = hostingView
-            window.title = "Zenith Settings"
-            window.isReleasedWhenClosed = false
-            window.center()
-            window.level = .floating
+            // Show the notch when settings opens (preview mode)
+            ZenithState.shared.isSettingsOpen = true
             
-            zenitSettingsWindow = window
+            // Slide in from right
+            window.show(animated: true)
+        } else {
+            settingsWindow?.makeKeyAndOrderFront(nil)
         }
+    }
+    
+    func closeSettings() {
+        ZenithState.shared.isSettingsOpen = false
         
-        zenitSettingsWindow?.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
+        if let window = settingsWindow {
+            window.closePanel()
+            settingsWindow = nil
+        }
+    }
+    
+    func openQuickNote() {
+        if quickNoteWindow == nil {
+            quickNoteWindow = QuickNoteWindow(
+                onSave: { [weak self] text in
+                    if !text.isEmpty {
+                        TodoStore.shared.addNote(text)
+                    }
+                    self?.quickNoteWindow = nil
+                },
+                onCancel: { [weak self] in
+                    self?.quickNoteWindow = nil
+                }
+            )
+        }
+        quickNoteWindow?.show()
+    }
+    
+    func toggleMusicPopup() {
+        if let existingWindow = musicPopupWindow {
+            existingWindow.close()
+            musicPopupWindow = nil
+        } else {
+            musicPopupWindow = MusicPopupWindow()
+            musicPopupWindow?.show()
+        }
     }
     
     func syncDockSettings() {
@@ -251,256 +966,142 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if self.zenithWindow == nil {
             print(">>> Creating Zenith Window...")
             
-            let screen = NotchManager.shared.findBuiltInScreen() ?? NSScreen.main ?? NSScreen.screens[0]
-            let screenWidth = screen.frame.width
-            let safeTop = screen.safeAreaInsets.top
-            let notchFrame = NotchManager.shared.notchFrame
+            let screen = NSScreen.main ?? NSScreen.screens[0]
+            let screenFrame = screen.frame
+            let visibleFrame = screen.visibleFrame
             
-            print(">>> Screen: \(screenWidth), safeTop: \(safeTop)")
-            print(">>> Notch: \(notchFrame)")
-            print(">>> Visible frame: \(screen.visibleFrame)")
+            print(">>> Screen frame: \(screenFrame)")
+            print(">>> Visible frame: \(visibleFrame)")
+            print(">>> Screen height: \(screenFrame.height)")
             
-            // Use a compact top-floating window so it sits high under menu bar
-            let windowHeight: CGFloat = 260
-            let windowWidth: CGFloat = 800
+            // Window dimensions - T-SHAPE: extended upward with narrower top (HALVED)
+            let windowWidth: CGFloat = 500
+            let windowHeight: CGFloat = (screenFrame.height / 3 + 200) / 2  // Half of previous size
 
-            // Position at the top of visible frame
-            let windowY = screen.visibleFrame.origin.y + screen.visibleFrame.height - 40
-            let windowX = (screen.frame.width - windowWidth) / 2
+            // Position at TOP CENTER of screen - y = 0 is BOTTOM
+            let windowX = (screenFrame.width - windowWidth) / 2
+            // Position at the top of the visible area, then extend upward
+            // The window extends 200px above the visible area
+            let windowY = visibleFrame.origin.y + visibleFrame.height - windowHeight
 
             print(">>> Window X: \(windowX), Y: \(windowY)")
+            print(">>> Window will be at screen coordinates: (\(windowX), \(windowY))")
 
             let windowFrame = NSRect(x: windowX, y: windowY, width: windowWidth, height: windowHeight)
             
             let window = NSWindow(
                 contentRect: windowFrame,
-                styleMask: NSWindow.StyleMask.borderless,
-                backing: NSWindow.BackingStoreType.buffered,
+                styleMask: [.borderless],
+                backing: .buffered,
                 defer: false
             )
             
-            window.backgroundColor = NSColor.clear
+            // Transparent window
+            window.backgroundColor = .clear
             window.isOpaque = false
-            window.ignoresMouseEvents = false
-            window.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.floatingWindow)))
-            window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
+            window.level = .statusBar
+            window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
             window.hasShadow = false
             window.isRestorable = false
             window.isReleasedWhenClosed = false
+            window.acceptsMouseMovedEvents = true
+            window.ignoresMouseEvents = false
+            window.isMovableByWindowBackground = false
             
-            print(">>> Window frame: \(window.frame)")
-            print(">>> Screen: \(screen.frame)")
+            print(">>> Window frame after creation: \(window.frame)")
             
-            // Create WebView container
-            let containerView = RadialDockContainerView(frame: NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight))
-            containerView.wantsLayer = true
+            // Create dock view based on layout setting
+            let dockFrame = NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight)
             
-            // Create WKWebView directly
-            let config = WKWebViewConfiguration()
-            let userContentController = WKUserContentController()
-            self.dockCoordinator = RadialDockCoordinator()
-            userContentController.add(self.dockCoordinator!, name: "radialDock")
-            config.userContentController = userContentController
-            
-            let webView = WKWebView(frame: NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight), configuration: config)
-            webView.navigationDelegate = self.dockCoordinator
-            webView.setValue(false, forKey: "drawsBackground")
-            webView.autoresizingMask = [.width, .height]
-            self.dockCoordinator?.webView = webView
-            containerView.webView = webView
-            
-            // Start settings sync timer
-            Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-                self?.syncDockSettings()
-            }
-            
-            // Start tracking mouse for hover
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                containerView.startMouseTracking()
-            }
-            
-            // Add tracking area for mouse movement
-            let trackingArea = NSTrackingArea(
-                rect: containerView.bounds,
-                options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
-                owner: containerView,
-                userInfo: nil
-            )
-            containerView.addTrackingArea(trackingArea)
-            
-            // Load radial dock HTML - minimalistic professional design
-            let html = """
-            <!DOCTYPE html>
-            <html>
-            <head>
-            <meta charset="UTF-8">
-            <style>
-            * { box-sizing: border-box; margin: 0; padding: 0; }
-            html, body { width: 100%; height: 100%; background: transparent; overflow: hidden; }
-            #notch { position: fixed; top: 0; left: 50%; transform: translateX(-50%); width: 150px; height: 8px; background: rgba(255,255,255,0.15); border-radius: 0 0 4px 4px; cursor: pointer; }
-            #dock { position: fixed; top: 8px; left: 50%; transform: translateX(-50%); width: 380px; height: 200px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
-            #dock.show, #dock.preview { opacity: 1; pointer-events: auto; }
-            .icon { position: absolute; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.12s, background 0.12s, opacity 0.12s; }
-            .icon:hover { transform: translateY(var(--hover-lift, -6px)); }
-            
-            /* Dock Styles */
-            .style-minimal .icon { background: transparent !important; border: none !important; box-shadow: none !important; }
-            .style-bold .icon { border-width: 2px !important; font-weight: bold; }
-            .style-glow .icon { box-shadow: 0 0 15px var(--glow-color, rgba(255,255,255,0.5)); }
-            </style>
-            </head>
-            <body>
-            <div id="notch"></div>
-            <div id="dock"></div>
-            <script>
-            let dockButtons = [];
-            const dock = document.getElementById('dock');
-            
-            let settings = {
-                buttonShape: 'rounded',
-                accentColor: '#FFFFFF',
-                iconSize: 38,
-                opacity: 0.12,
-                contrast: 0.2,
-                arcSpread: 70,
-                dropDepth: 30,
-                hoverLift: 6,
-                borderWidth: 1,
-                notchWidth: 150,
-                dockStyle: 'normal'
-            };
-            
-            function updateIconStyle(btn, shape, color, size, opacity, contrast, borderW) {
-                btn.style.width = size + 'px';
-                btn.style.height = size + 'px';
-                btn.style.background = color + Math.round(opacity * 255).toString(16).padStart(2, '0');
-                btn.style.border = borderW + 'px solid ' + color + Math.round(contrast * 255).toString(16).padStart(2, '0');
-                btn.style.fontSize = (size * 0.47) + 'px';
+            if ZenithState.shared.dockLayout == .radial {
+                let nativeDockView = NativeRadialDockView(frame: dockFrame)
+                nativeDockView.delegate = self
+                nativeDockView.wantsLayer = true
+                nativeDockView.layer?.backgroundColor = NSColor.clear.cgColor
+                dockView = nativeDockView
                 
-                switch(shape) {
-                    case 'square':
-                        btn.style.borderRadius = '0px';
-                        break;
-                    case 'rounded':
-                        btn.style.borderRadius = (size * 0.2) + 'px';
-                        break;
-                    case 'circle':
-                        btn.style.borderRadius = '50%';
-                        break;
-                    case 'pill':
-                        btn.style.borderRadius = (size * 0.5) + 'px';
-                        break;
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    nativeDockView.updateLayout()
+                    print(">>> Radial dock updateLayout called")
+                }
+            } else {
+                let listDockView = ListDockView(frame: dockFrame)
+                listDockView.delegate = self
+                listDockView.wantsLayer = true
+                listDockView.layer?.backgroundColor = NSColor.clear.cgColor
+                dockView = listDockView
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    listDockView.updateLayout()
+                    print(">>> List dock updateLayout called")
                 }
             }
             
-            function createDock() {
-                const cx = 190, r = settings.arcSpread;
-                dock.innerHTML = '';
-                dock.className = '';
-                
-                // Apply dock style
-                if (settings.dockStyle === 'minimal') {
-                    dock.classList.add('style-minimal');
-                } else if (settings.dockStyle === 'bold') {
-                    dock.classList.add('style-bold');
-                } else if (settings.dockStyle === 'glow') {
-                    dock.classList.add('style-glow');
-                    dock.style.setProperty('--glow-color', settings.accentColor + '80');
-                }
-                
-                // Update notch
-                const notch = document.getElementById('notch');
-                notch.style.width = settings.notchWidth + 'px';
-                
-                const buttons = dockButtons.length > 0 ? dockButtons : [{icon: '⚙️', actionType: 'settings'}];
-                
-                buttons.forEach((button, i) => {
-                    if (!button.isEnabled) return;
-                    
-                    const btn = document.createElement('button');
-                    btn.className = 'icon';
-                    btn.textContent = button.icon;
-                    btn.dataset.actionType = button.actionType;
-                    btn.dataset.actionValue = button.actionValue || '';
-                    btn.dataset.title = button.title;
-                    
-                    // Evenly distribute icons from angle π (left) to 0 (right)
-                    const angle = Math.PI * (1 - i / (buttons.length - 1 || 1));
-                    btn.style.left = (cx + r * Math.cos(angle)) + 'px';
-                    btn.style.top = (settings.dropDepth + r * Math.sin(angle) * 0.3) + 'px';
-                    btn.style.transform = 'translate(-50%, -50%)';
-                    btn.style.setProperty('--hover-lift', '-' + settings.hoverLift + 'px');
-                    updateIconStyle(btn, settings.buttonShape, settings.accentColor, settings.iconSize, settings.opacity, settings.contrast, settings.borderWidth);
-                    dock.appendChild(btn);
-                });
-            }
-            
-            window.updateButtons = function(buttons) {
-                dockButtons = buttons;
-                createDock();
-            };
-            
-            createDock();
-            
-            document.addEventListener('click', function(e) {
-                const btn = e.target.closest('.icon');
-                if (btn) {
-                    e.preventDefault();
-                    const actionType = btn.dataset.actionType;
-                    const actionValue = btn.dataset.actionValue;
-                    window.webkit.messageHandlers.radialDock.postMessage({
-                        type: 'buttonClick',
-                        actionType: actionType,
-                        actionValue: actionValue
-                    });
-                }
-            });
-            
-            window.setExpanded = function(show) {
-                dock.classList.toggle('show', show);
-            };
-            
-            window.setPreviewMode = function(preview) {
-                if (preview) {
-                    dock.classList.add('preview');
-                } else {
-                    dock.classList.remove('preview');
-                }
-            };
-            
-            window.updateSettings = function(newSettings) {
-                settings = {...settings, ...newSettings};
-                createDock();
-            };
-            
-            // Check every second if settings window is open
-            setInterval(function() {
-                window.webkit.messageHandlers.radialDock.postMessage({type: 'checkSettings'});
-            }, 500);
-            </script>
-            </body>
-            </html>
-            """
-            webView.loadHTMLString(html, baseURL: nil)
-            
-            containerView.addSubview(webView)
-            window.contentView = containerView
+            window.contentView = dockView
+            window.contentView?.wantsLayer = true
             
             window.orderFrontRegardless()
             window.makeKeyAndOrderFront(nil as Any?)
             
-            print(">>> Window created and ordered front")
+            print(">>> Window frame final: \(window.frame)")
+            print(">>> Window ordered front")
             
-            self.zenithWindow = window as? ZenithWindow
+            self.zenithWindow = window
         }
         
         ShortcutManager.shared.startMonitoring { [weak self] type in
-            if type == .pulse {
-                DispatchQueue.main.async {
-                    self?.zenithWindow?.pulse()
-                }
+            switch type {
+            case .toggle:
+                self?.handleZenModeToggle()
+            case .pulse:
+                self?.handlePulseShortcut()
             }
         }
+        
+        // Start global mouse monitoring for notch/camera hover detection
+        startGlobalMouseMonitoring()
+        
+        // Observe dock layout changes
+        ZenithState.shared.$dockLayout
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.recreateDockView()
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func recreateDockView() {
+        guard let window = zenithWindow else { return }
+        
+        let currentLayout = ZenithState.shared.dockLayout
+        
+        let dockFrame = window.contentView?.bounds ?? NSRect(x: 0, y: 0, width: 500, height: 250)
+        
+        dockView?.removeFromSuperview()
+        
+        if currentLayout == .radial {
+            let nativeDockView = NativeRadialDockView(frame: dockFrame)
+            nativeDockView.delegate = self
+            nativeDockView.wantsLayer = true
+            nativeDockView.layer?.backgroundColor = NSColor.clear.cgColor
+            dockView = nativeDockView
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                nativeDockView.updateLayout()
+            }
+        } else {
+            let listDockView = ListDockView(frame: dockFrame)
+            listDockView.delegate = self
+            listDockView.wantsLayer = true
+            listDockView.layer?.backgroundColor = NSColor.clear.cgColor
+            dockView = listDockView
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                listDockView.updateLayout()
+            }
+        }
+        
+        window.contentView?.addSubview(dockView!)
     }
     
     private func setupStatusItem() {
@@ -513,16 +1114,53 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem.separator())
         
         let quitItem = NSMenuItem(title: "Quit Zenith", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        quitItem.target = self
         menu.addItem(quitItem)
         
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         statusItem?.menu = menu
+        statusItem?.button?.action = #selector(showSettingsWindow)
+        statusItem?.button?.target = self
         statusItem?.button?.image = createZIcon()
     }
     
     @objc func showSettingsWindow() {
+        openSettingsCentered()
+    }
+    
+    func openSettingsCentered() {
         NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-        NSApp.activate(ignoringOtherApps: true)
+    }
+    
+    private func handleZenModeToggle() {
+        let state = ZenithState.shared
+        if state.zenModeEnabled {
+            if state.zenModeHidden {
+                state.zenModeHidden = false
+                forceShowDock()
+            } else {
+                state.zenModeHidden = true
+                hideDockCompletely()
+            }
+        } else {
+            forceShowDock()
+        }
+    }
+    
+    private func handlePulseShortcut() {
+        NotificationCenter.default.post(name: .zenithPulseRequested, object: nil)
+    }
+    
+    private func forceShowDock() {
+        if let nativeDockView = (zenithWindow?.contentView as? NativeRadialDockView) {
+            nativeDockView.forceShowNotch()
+        }
+    }
+    
+    private func hideDockCompletely() {
+        if let nativeDockView = (zenithWindow?.contentView as? NativeRadialDockView) {
+            nativeDockView.hideNotchCompletely()
+        }
     }
     
     func applicationWillTerminate(_ notification: Notification) {
