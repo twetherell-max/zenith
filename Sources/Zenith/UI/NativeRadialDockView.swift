@@ -36,16 +36,26 @@ class NativeRadialDockView: NSView {
         wantsLayer = true
         layer?.backgroundColor = NSColor.clear.cgColor
         
+        // Simple test view - full width red bar at top
+        let testBar = NSView(frame: NSRect(x: 0, y: bounds.height - 50, width: bounds.width, height: 50))
+        testBar.wantsLayer = true
+        testBar.layer?.backgroundColor = NSColor.red.cgColor
+        testBar.layer?.borderColor = NSColor.black.cgColor
+        testBar.layer?.borderWidth = 4
+        testBar.identifier = NSUserInterfaceItemIdentifier("testBar")
+        addSubview(testBar)
+        
+        // BAR - always visible at top, rounded rectangle
+        barView = BarView()
+        addSubview(barView)
+        print(">>> Added barView as subview")
+        
         // NOTCH container - below bar
         notchContainerView = NSView()
         notchContainerView.wantsLayer = true
         notchContainerView.layer?.backgroundColor = NSColor.clear.cgColor
         notchContainerView.isHidden = true
         addSubview(notchContainerView)
-        
-        // BAR - always visible at top, rounded rectangle
-        barView = BarView()
-        addSubview(barView)
         
         // Top box - for hover detection only, nearly invisible
         let topBox = NSView()
@@ -84,6 +94,7 @@ class NativeRadialDockView: NSView {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
     
     override func mouseEntered(with event: NSEvent) {
+        print(">>> NativeRadialDockView mouseEntered!")
         isInteracting = true
         isHovering = true
         if !previewModeActive {
@@ -343,17 +354,18 @@ class NativeRadialDockView: NSView {
             )
         }
         
-        // BAR - always visible at top, rounded rectangle
-        let barWidth = max(CGFloat(state.notchWidth), 100)
-        let barHeight = CGFloat(state.barHeight)
-        // Position bar at the TOP of the window - 10px from top edge
-        let barY = bounds.height - barHeight - 10
+        // BAR - full width at top
+        barView.wantsLayer = true
+        let barWidth = bounds.width
+        let barHeight: CGFloat = 40
+        let barY: CGFloat = bounds.height - barHeight - 5
         barView.frame = NSRect(
-            x: cx - barWidth / 2,
+            x: 0,
             y: barY,
             width: barWidth,
             height: barHeight
         )
+        barView.layer?.backgroundColor = NSColor.red.cgColor
         barView.updateAppearance()
         
         // NOTCH container - spans the window for icon positioning
@@ -399,11 +411,13 @@ class NativeRadialDockView: NSView {
                 iconViews[index].frame = NSRect(x: x - iconSize/2, y: iconY, width: iconSize, height: iconSize)
                 iconViews[index].configure(with: button, state: state, iconIndex: index)
                 iconViews[index].delegate = self
+                iconViews[index].isHidden = false
             } else {
                 let iconView = DockIconView()
                 iconView.frame = NSRect(x: x - iconSize/2, y: iconY, width: iconSize, height: iconSize)
                 iconView.configure(with: button, state: state, iconIndex: index)
                 iconView.delegate = self
+                iconView.isHidden = false
                 notchContainerView.addSubview(iconView)
                 iconViews.append(iconView)
             }
@@ -422,7 +436,6 @@ class NativeRadialDockView: NSView {
         if barView.frame.contains(localPoint) {
             return barView
         }
-        
         // Check if point is on ICONS - CAPTURE click
         if !notchContainerView.isHidden || ZenithState.shared.isSettingsOpen {
             // Check in notchContainerView's coordinate space
@@ -438,6 +451,17 @@ class NativeRadialDockView: NSView {
         if let topBox = subviews.first(where: { $0.identifier?.rawValue == "topBox" }),
            topBox.frame.contains(localPoint) {
             return topBox
+        }
+
+        // Capture hover area to trigger mouseEntered while preserving icon hit tests above.
+        let expandedHoverArea = NSRect(
+            x: 0,
+            y: -200,
+            width: bounds.width,
+            height: bounds.height + 250
+        )
+        if expandedHoverArea.contains(localPoint) {
+            return self
         }
         
         // EVERYTHING ELSE - PASS THROUGH (return nil) - creates stencil holes
@@ -598,24 +622,11 @@ class BarView: NSView {
     }
     
     func updateAppearance() {
-        // Solid rounded bar - subtle for stencil effect
-        let opacity = CGFloat(ZenithState.shared.barOpacity)
-        let color = NSColor.white.withAlphaComponent(opacity)
-        
-        // Rounded rectangle with fully rounded ends
-        let radius = bounds.height / 2
-        layer?.cornerRadius = max(1, radius)
-        layer?.backgroundColor = color.cgColor
-        
-        // Subtle border
-        layer?.borderColor = NSColor.white.withAlphaComponent(opacity * 0.5).cgColor
-        layer?.borderWidth = 1
-        
-        // Minimal shadow
-        layer?.shadowColor = NSColor.black.cgColor
-        layer?.shadowOpacity = 0.2
-        layer?.shadowRadius = 3
-        layer?.shadowOffset = CGSize(width: 0, height: 1)
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.red.cgColor
+        layer?.borderColor = NSColor.black.cgColor
+        layer?.borderWidth = 3
+        needsDisplay = true
     }
     
     private func setupTrackingArea() {
@@ -625,7 +636,7 @@ class BarView: NSView {
         let area = NSTrackingArea(
             rect: bounds,
             options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
-            owner: superview,
+            owner: self,
             userInfo: nil
         )
         trackingArea = area
@@ -927,9 +938,11 @@ class DockIconView: NSView {
         }
         
         guard let panel = quickActionsPanel else { return }
+        guard let window = self.window else { return }
         
-        let anchorRect = self.convert(self.bounds, to: nil)
-        panel.displayAt(anchorRect: anchorRect)
+        let windowRect = self.convert(self.bounds, to: nil)
+        let screenRect = window.convertToScreen(windowRect)
+        panel.displayAt(anchorRect: screenRect, on: window.screen)
     }
     
     private func dismissQuickActions() {

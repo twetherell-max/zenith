@@ -72,11 +72,11 @@ class ZenithState: ObservableObject {
         didSet { saveSettings() }
     }
     
-    @Published var barHeight: Double = 8 {
+    @Published var barHeight: Double = 20 {
         didSet { saveSettings() }
     }
     
-    @Published var barOpacity: Double = 0.35 {
+    @Published var barOpacity: Double = 0.6 {
         didSet { saveSettings() }
     }
     
@@ -196,6 +196,35 @@ class ZenithState: ObservableObject {
     
     // Deep Shortcuts
     @Published var shortcutsIntegrationEnabled: Bool = false {
+        didSet { saveSettings() }
+    }
+    
+    // Minimal Notch Mode
+    @Published var appMode: AppMode = .productivity {
+        didSet { saveSettings() }
+    }
+    
+    @Published var notchOverlayEnabled: Bool = true {
+        didSet { saveSettings() }
+    }
+    
+    @Published var notchColor: NotchColor = .black {
+        didSet { saveSettings() }
+    }
+    
+    @Published var notchOpacity: Double = 1.0 {
+        didSet { saveSettings() }
+    }
+    
+    @Published var notchCornerRadius: Double = 18.0 {
+        didSet { saveSettings() }
+    }
+    
+    @Published var notchHeight: Double = 30.0 {
+        didSet { saveSettings() }
+    }
+    
+    @Published var multiMonitorMode: MultiMonitorMode = .primaryOnly {
         didSet { saveSettings() }
     }
     
@@ -368,6 +397,13 @@ class ZenithState: ObservableObject {
         self.forgeEnabled = settings.forgeEnabled
         self.forgeScriptsPath = settings.forgeScriptsPath
         self.shortcutsIntegrationEnabled = settings.shortcutsIntegrationEnabled
+        self.appMode = settings.appMode
+        self.notchOverlayEnabled = settings.notchOverlayEnabled
+        self.notchColor = settings.notchColor
+        self.notchOpacity = settings.notchOpacity
+        self.notchCornerRadius = settings.notchCornerRadius
+        self.notchHeight = settings.notchHeight
+        self.multiMonitorMode = settings.multiMonitorMode
         
         if let customSegments = persistence.loadCustomSegments() {
             self.arcSegments = customSegments
@@ -419,7 +455,14 @@ class ZenithState: ObservableObject {
             heavyHapticWeight: heavyHapticWeight,
             forgeEnabled: forgeEnabled,
             forgeScriptsPath: forgeScriptsPath,
-            shortcutsIntegrationEnabled: shortcutsIntegrationEnabled
+            shortcutsIntegrationEnabled: shortcutsIntegrationEnabled,
+            appMode: appMode,
+            notchOverlayEnabled: notchOverlayEnabled,
+            notchColor: notchColor,
+            notchOpacity: notchOpacity,
+            notchCornerRadius: notchCornerRadius,
+            notchHeight: notchHeight,
+            multiMonitorMode: multiMonitorMode
         )
         persistence.saveUserSettings(settings)
     }
@@ -485,6 +528,13 @@ class ZenithState: ObservableObject {
             forgeEnabled = settings.forgeEnabled
             forgeScriptsPath = settings.forgeScriptsPath
             shortcutsIntegrationEnabled = settings.shortcutsIntegrationEnabled
+            appMode = settings.appMode
+            notchOverlayEnabled = settings.notchOverlayEnabled
+            notchColor = settings.notchColor
+            notchOpacity = settings.notchOpacity
+            notchCornerRadius = settings.notchCornerRadius
+            notchHeight = settings.notchHeight
+            multiMonitorMode = settings.multiMonitorMode
             
             if let customSegments = persistence.loadCustomSegments() {
                 arcSegments = customSegments
@@ -605,4 +655,28 @@ class ZenithState: ObservableObject {
         }
         runAppleScript(script)
     }
+}
+
+enum AppMode: String, Codable {
+    case minimal = "minimal"
+    case productivity = "productivity"
+}
+
+enum NotchColor: String, Codable, CaseIterable {
+    case black = "black"
+    case darkGray = "darkGray"
+    case auraInspired = "auraInspired"
+    
+    var color: NSColor {
+        switch self {
+        case .black: return .black
+        case .darkGray: return NSColor(white: 0.2, alpha: 1.0)
+        case .auraInspired: return NSColor(red: 0.15, green: 0.15, blue: 0.18, alpha: 1.0)
+        }
+    }
+}
+
+enum MultiMonitorMode: String, Codable {
+    case primaryOnly = "primary"
+    case allMonitors = "all"
 }

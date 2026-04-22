@@ -77,6 +77,7 @@ class ListDockView: NSView {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
     
     override func mouseEntered(with event: NSEvent) {
+        print(">>> ListDockView mouseEntered!")
         isInteracting = true
         isHovering = true
         if !previewModeActive {
@@ -296,11 +297,13 @@ class ListDockView: NSView {
                 iconViews[index].frame = NSRect(x: x, y: iconStartY, width: iconSize, height: iconSize)
                 iconViews[index].configure(with: button, state: state, iconIndex: index)
                 iconViews[index].delegate = self
+                iconViews[index].isHidden = false
             } else {
                 let iconView = DockIconView()
                 iconView.frame = NSRect(x: x, y: iconStartY, width: iconSize, height: iconSize)
                 iconView.configure(with: button, state: state, iconIndex: index)
                 iconView.delegate = self
+                iconView.isHidden = false
                 iconContainerView.addSubview(iconView)
                 iconViews.append(iconView)
             }
@@ -324,7 +327,6 @@ class ListDockView: NSView {
         if barView.frame.contains(localPoint) {
             return barView
         }
-        
         if !iconContainerView.isHidden || ZenithState.shared.isSettingsOpen {
             let pointInContainer = convert(localPoint, to: iconContainerView)
             for iconView in iconViews where !iconView.isHidden {
@@ -337,6 +339,17 @@ class ListDockView: NSView {
         if let topBox = subviews.first(where: { $0.identifier?.rawValue == "topBox" }),
            topBox.frame.contains(localPoint) {
             return topBox
+        }
+
+        // Capture hover in an extended region so the dock can expand before icon hit tests.
+        let expandedHoverArea = NSRect(
+            x: 0,
+            y: -200,
+            width: bounds.width,
+            height: bounds.height + 250
+        )
+        if expandedHoverArea.contains(localPoint) {
+            return self
         }
         
         return nil

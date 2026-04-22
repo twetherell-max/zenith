@@ -231,6 +231,15 @@ struct UserSettings: Codable {
     var forgeEnabled: Bool = false
     var forgeScriptsPath: String = ""
     var shortcutsIntegrationEnabled: Bool = false
+    
+    // Minimal Notch Mode
+    var appMode: AppMode = .productivity
+    var notchOverlayEnabled: Bool = true
+    var notchColor: NotchColor = .black
+    var notchOpacity: Double = 1.0
+    var notchCornerRadius: Double = 18.0
+    var notchHeight: Double = 30.0
+    var multiMonitorMode: MultiMonitorMode = .primaryOnly
 }
 
 enum ButtonShape: String, Codable, CaseIterable {

@@ -81,7 +81,7 @@ class AIHelper: ObservableObject {
             "model": "gpt-3.5-turbo",
             "messages": messages,
             "max_tokens": 500,
-            "stream": true
+            "stream": false
         ]
         
         guard let url = URL(string: "https://api.openai.com/v1/chat/completions") else {

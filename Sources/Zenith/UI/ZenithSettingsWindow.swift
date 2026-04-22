@@ -700,16 +700,42 @@ struct ZenithSettingsView: View {
         VStack(alignment: .leading, spacing: 20) {
             GroupBox(label: Label("Dock Layout", systemImage: "square.grid.2x2")) {
                 VStack(alignment: .leading, spacing: 12) {
-                    Picker("Style", selection: $state.dockLayout) {
-                        ForEach(DockButton.DockLayout.allCases, id: \.self) { layout in
-                            Text(layout.displayName).tag(layout)
+                    HStack(spacing: 12) {
+                        Button(action: { state.dockLayout = .radial }) {
+                            VStack(spacing: 8) {
+                                ZStack {
+                                    Circle()
+                                        .fill(state.dockLayout == .radial ? Color.orange.opacity(0.3) : Color.gray.opacity(0.1))
+                                        .frame(width: 60, height: 60)
+                                    Image(systemName: "circle.dashed")
+                                        .font(.system(size: 28))
+                                        .foregroundColor(state.dockLayout == .radial ? .orange : .secondary)
+                                }
+                                Text("Radial")
+                                    .font(.caption)
+                                    .foregroundColor(state.dockLayout == .radial ? .orange : .secondary)
+                            }
                         }
-                    }
-                    .pickerStyle(.segmented)
-                    
-                    HStack(spacing: 20) {
-                        layoutPreviewIcon(icon: "🌙", label: "Radial Arc")
-                        layoutPreviewIcon(icon: "━", label: "Horizontal")
+                        .buttonStyle(.plain)
+                        
+                        Button(action: { state.dockLayout = .list }) {
+                            VStack(spacing: 8) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(state.dockLayout == .list ? Color.orange.opacity(0.3) : Color.gray.opacity(0.1))
+                                        .frame(width: 60, height: 60)
+                                    Image(systemName: "line.3.horizontal")
+                                        .font(.system(size: 28))
+                                        .foregroundColor(state.dockLayout == .list ? .orange : .secondary)
+                                }
+                                Text("Horizontal")
+                                    .font(.caption)
+                                    .foregroundColor(state.dockLayout == .list ? .orange : .secondary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        
+                        Spacer()
                     }
                     .padding(.vertical, 8)
                 }

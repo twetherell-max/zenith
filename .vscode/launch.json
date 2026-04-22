@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:zenith}",
+            "name": "Debug Zenith",
+            "target": "Zenith",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug Zenith"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:zenith}",
+            "name": "Release Zenith",
+            "target": "Zenith",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release Zenith"
+        }
+    ]
+}

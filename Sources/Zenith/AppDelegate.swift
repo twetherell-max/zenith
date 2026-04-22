@@ -240,6 +240,7 @@ struct SettingsPanelView: View {
             // Scrollable content
             ScrollView([.vertical], showsIndicators: true) {
                 VStack(alignment: .leading, spacing: 20) {
+                    notchSection()
                     barSection()
                     appearanceSection()
                     customizationSection()
@@ -435,6 +436,100 @@ struct SettingsPanelView: View {
         .padding(16)
         .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
         .cornerRadius(10)
+    }
+    
+    @ViewBuilder
+    private func notchSection() -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("MODE").font(.system(size: 11, weight: .semibold)).foregroundColor(.secondary)
+            
+            Picker("App Mode", selection: $state.appMode) {
+                Text("Minimal (Notch Only)").tag(ZenithState.AppMode.minimal)
+                Text("Productivity (Full Suite)").tag(ZenithState.AppMode.productivity)
+            }
+            .pickerStyle(.segmented)
+        }
+        .padding(16)
+        .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
+        .cornerRadius(10)
+        
+        if state.appMode == .minimal {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("NOTCH APPEARANCE").font(.system(size: 11, weight: .semibold)).foregroundColor(.secondary)
+                
+                // Color picker
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Color").font(.subheadline)
+                    Picker("Notch Color", selection: $state.notchColor) {
+                        ForEach(NotchColor.allCases, id: \.self) { color in
+                            Text(color.rawValue.capitalized).tag(color)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+                
+                // Height
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("Height")
+                        Spacer()
+                        Text("\(Int(state.notchHeight))px")
+                            .foregroundColor(.secondary)
+                    }
+                    .font(.subheadline)
+                    Slider(value: $state.notchHeight, in: 20...50, step: 1)
+                }
+                
+                // Width
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("Width")
+                        Spacer()
+                        Text("\(Int(state.notchWidth))px")
+                            .foregroundColor(.secondary)
+                    }
+                    .font(.subheadline)
+                    Slider(value: $state.notchWidth, in: 100...300, step: 5)
+                }
+                
+                // Corner radius
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("Corner Radius")
+                        Spacer()
+                        Text("\(Int(state.notchCornerRadius))px")
+                            .foregroundColor(.secondary)
+                    }
+                    .font(.subheadline)
+                    Slider(value: $state.notchCornerRadius, in: 0...30, step: 1)
+                }
+                
+                // Opacity
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("Opacity")
+                        Spacer()
+                        Text("\(Int(state.notchOpacity * 100))%")
+                            .foregroundColor(.secondary)
+                    }
+                    .font(.subheadline)
+                    Slider(value: $state.notchOpacity, in: 0.3...1.0, step: 0.05)
+                }
+                
+                // Multi-monitor
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Multi-Monitor").font(.subheadline)
+                    Picker("Monitors", selection: $state.multiMonitorMode) {
+                        Text("Primary Only").tag(ZenithState.MultiMonitorMode.primaryOnly)
+                        Text("All Monitors").tag(ZenithState.MultiMonitorMode.allMonitors)
+                    }
+                    .pickerStyle(.segmented)
+                }
+            }
+            .padding(16)
+            .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
+            .cornerRadius(10)
+        }
     }
     
     @ViewBuilder
@@ -685,6 +780,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NativeRadialDockDelegate {
     var musicPopupWindow: MusicPopupWindow?
     var dockCoordinator: RadialDockCoordinator?
     var dockView: NSView?
+    private var dockContainerView: NSView?
     private var globalMouseMonitor: Any?
     private var hoverTimer: Timer?
     private var cancellables = Set<AnyCancellable>()
@@ -745,17 +841,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, NativeRadialDockDelegate {
     }
     
     private func showNotchFromGlobal() {
-        if let nativeDockView = zenithWindow?.contentView as? NativeRadialDockView {
+        if let nativeDockView = dockView as? NativeRadialDockView {
             nativeDockView.showNotchFromExternal()
-        } else if let listDockView = zenithWindow?.contentView as? ListDockView {
+        } else if let listDockView = dockView as? ListDockView {
             listDockView.showFromExternal()
         }
     }
     
     private func hideNotchFromGlobal() {
-        if let nativeDockView = zenithWindow?.contentView as? NativeRadialDockView {
+        if let nativeDockView = dockView as? NativeRadialDockView {
             nativeDockView.hideNotchFromExternal()
-        } else if let listDockView = zenithWindow?.contentView as? ListDockView {
+        } else if let listDockView = dockView as? ListDockView {
             listDockView.hideFromExternal()
         }
     }
@@ -962,6 +1058,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NativeRadialDockDelegate {
         
         // FORCE MENU BAR
         setupStatusItem()
+        
+        // Initialize notch window manager for minimal mode
+        _ = NotchWindowManager.shared
 
         if self.zenithWindow == nil {
             print(">>> Creating Zenith Window...")
@@ -974,50 +1073,48 @@ class AppDelegate: NSObject, NSApplicationDelegate, NativeRadialDockDelegate {
             print(">>> Visible frame: \(visibleFrame)")
             print(">>> Screen height: \(screenFrame.height)")
             
-            // Window dimensions - T-SHAPE: extended upward with narrower top (HALVED)
-            let windowWidth: CGFloat = 500
-            let windowHeight: CGFloat = (screenFrame.height / 3 + 200) / 2  // Half of previous size
-
-            // Position at TOP CENTER of screen - y = 0 is BOTTOM
-            let windowX = (screenFrame.width - windowWidth) / 2
-            // Position at the top of the visible area, then extend upward
-            // The window extends 200px above the visible area
-            let windowY = visibleFrame.origin.y + visibleFrame.height - windowHeight
-
-            print(">>> Window X: \(windowX), Y: \(windowY)")
-            print(">>> Window will be at screen coordinates: (\(windowX), \(windowY))")
+            // Use a fixed, simple window position
+            let windowWidth: CGFloat = 400
+            let windowHeight: CGFloat = 200
+            
+            // Position at bottom of screen (easier to see)
+            let windowX: CGFloat = 100
+            let windowY: CGFloat = 100
 
             let windowFrame = NSRect(x: windowX, y: windowY, width: windowWidth, height: windowHeight)
             
             let window = NSWindow(
                 contentRect: windowFrame,
-                styleMask: [.borderless],
+                styleMask: [.titled, .closable, .resizable],
                 backing: .buffered,
                 defer: false
             )
             
-            // Transparent window
-            window.backgroundColor = .clear
-            window.isOpaque = false
-            window.level = .statusBar
-            window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
-            window.hasShadow = false
-            window.isRestorable = false
-            window.isReleasedWhenClosed = false
-            window.acceptsMouseMovedEvents = true
-            window.ignoresMouseEvents = false
-            window.isMovableByWindowBackground = false
+            // Simple colored window
+            window.backgroundColor = NSColor.systemPink
+            window.isOpaque = true
+            window.title = "Zenith"
+            window.level = .normal
+            window.hasShadow = true
+            
+            window.titlebarAppearsTransparent = false
+            window.standardWindowButton(.closeButton)?.isHidden = false
+            window.standardWindowButton(.miniaturizeButton)?.isHidden = false
+            window.standardWindowButton(.zoomButton)?.isHidden = false
             
             print(">>> Window frame after creation: \(window.frame)")
+            print(">>> Window origin: x=\(window.frame.origin.x), y=\(window.frame.origin.y)")
+            print(">>> Window size: w=\(window.frame.width), h=\(window.frame.height)")
             
             // Create dock view based on layout setting
             let dockFrame = NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight)
+            print(">>> dockFrame: \(dockFrame)")
             
             if ZenithState.shared.dockLayout == .radial {
                 let nativeDockView = NativeRadialDockView(frame: dockFrame)
                 nativeDockView.delegate = self
                 nativeDockView.wantsLayer = true
-                nativeDockView.layer?.backgroundColor = NSColor.clear.cgColor
+                nativeDockView.layer?.backgroundColor = NSColor.cyan.cgColor
                 dockView = nativeDockView
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -1028,7 +1125,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NativeRadialDockDelegate {
                 let listDockView = ListDockView(frame: dockFrame)
                 listDockView.delegate = self
                 listDockView.wantsLayer = true
-                listDockView.layer?.backgroundColor = NSColor.clear.cgColor
+                listDockView.layer?.backgroundColor = NSColor.cyan.cgColor
                 dockView = listDockView
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -1037,8 +1134,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, NativeRadialDockDelegate {
                 }
             }
             
-            window.contentView = dockView
-            window.contentView?.wantsLayer = true
+            window.contentView = nil
+            
+            let container = NSView(frame: NSRect(x: 0, y: 0, width: windowWidth, height: windowHeight))
+            container.wantsLayer = true
+            container.layer?.backgroundColor = NSColor.systemPink.cgColor
+            container.layer?.borderColor = NSColor.black.cgColor
+            container.layer?.borderWidth = 10
+            
+            if let dockView = dockView {
+                dockView.frame = container.bounds
+                dockView.autoresizingMask = [.width, .height]
+                container.addSubview(dockView)
+            }
+            
+            window.contentView = container
+            dockContainerView = container
             
             window.orderFrontRegardless()
             window.makeKeyAndOrderFront(nil as Any?)
@@ -1064,18 +1175,27 @@ class AppDelegate: NSObject, NSApplicationDelegate, NativeRadialDockDelegate {
         // Observe dock layout changes
         ZenithState.shared.$dockLayout
             .receive(on: RunLoop.main)
-            .sink { [weak self] _ in
+            .sink { [weak self] layout in
+                print(">>> dockLayout changed to: \(layout)")
                 self?.recreateDockView()
             }
             .store(in: &cancellables)
     }
     
     private func recreateDockView() {
-        guard let window = zenithWindow else { return }
+        guard let window = zenithWindow else { 
+            print(">>> recreateDockView: no window")
+            return 
+        }
+        guard let container = dockContainerView ?? window.contentView else {
+            print(">>> recreateDockView: no container")
+            return
+        }
         
         let currentLayout = ZenithState.shared.dockLayout
+        print(">>> recreateDockView: layout = \(currentLayout)")
         
-        let dockFrame = window.contentView?.bounds ?? NSRect(x: 0, y: 0, width: 500, height: 250)
+        let dockFrame = container.bounds
         
         dockView?.removeFromSuperview()
         
@@ -1083,31 +1203,42 @@ class AppDelegate: NSObject, NSApplicationDelegate, NativeRadialDockDelegate {
             let nativeDockView = NativeRadialDockView(frame: dockFrame)
             nativeDockView.delegate = self
             nativeDockView.wantsLayer = true
-            nativeDockView.layer?.backgroundColor = NSColor.clear.cgColor
+            nativeDockView.layer?.backgroundColor = NSColor.cyan.cgColor
             dockView = nativeDockView
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                 nativeDockView.updateLayout()
             }
         } else {
             let listDockView = ListDockView(frame: dockFrame)
             listDockView.delegate = self
             listDockView.wantsLayer = true
-            listDockView.layer?.backgroundColor = NSColor.clear.cgColor
+            listDockView.layer?.backgroundColor = NSColor.cyan.cgColor
             dockView = listDockView
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                 listDockView.updateLayout()
             }
         }
         
-        window.contentView?.addSubview(dockView!)
+        if let dockView = dockView {
+            dockView.frame = container.bounds
+            dockView.autoresizingMask = [.width, .height]
+            container.addSubview(dockView)
+        }
     }
     
     private func setupStatusItem() {
         let menu = NSMenu()
         
-        let settingsItem = NSMenuItem(title: "Settings...", action: #selector(showSettingsWindow), keyEquivalent: ",")
+        // Toggle mode
+        let toggleModeItem = NSMenuItem(title: "Switch to Minimal Mode", action: #selector(toggleAppMode), keyEquivalent: "m")
+        toggleModeItem.target = self
+        menu.addItem(toggleModeItem)
+        
+        menu.addItem(NSMenuItem.separator())
+        
+        let settingsItem = NSMenuItem(title: "Settings...", action: #selector(openSettingsAction), keyEquivalent: ",")
         settingsItem.target = self
         menu.addItem(settingsItem)
         
@@ -1119,9 +1250,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, NativeRadialDockDelegate {
         
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         statusItem?.menu = menu
-        statusItem?.button?.action = #selector(showSettingsWindow)
-        statusItem?.button?.target = self
         statusItem?.button?.image = createZIcon()
+    }
+    
+    @objc private func toggleAppMode() {
+        let state = ZenithState.shared
+        state.appMode = state.appMode == .minimal ? .productivity : .minimal
+        
+        // Update menu title
+        if let menu = statusItem?.menu, let item = menu.item(at: 0) {
+            item.title = state.appMode == .minimal ? "Switch to Productivity Mode" : "Switch to Minimal Mode"
+        }
+    }
+    
+    @objc private func openSettingsAction() {
+        NSApp.activate(ignoringOtherApps: true)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        }
     }
     
     @objc func showSettingsWindow() {
@@ -1152,14 +1299,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NativeRadialDockDelegate {
     }
     
     private func forceShowDock() {
-        if let nativeDockView = (zenithWindow?.contentView as? NativeRadialDockView) {
+        if let nativeDockView = dockView as? NativeRadialDockView {
             nativeDockView.forceShowNotch()
+        } else if let listDockView = dockView as? ListDockView {
+            listDockView.showFromExternal()
         }
     }
     
     private func hideDockCompletely() {
-        if let nativeDockView = (zenithWindow?.contentView as? NativeRadialDockView) {
+        if let nativeDockView = dockView as? NativeRadialDockView {
             nativeDockView.hideNotchCompletely()
+        } else if let listDockView = dockView as? ListDockView {
+            listDockView.hideFromExternal()
         }
     }
     
