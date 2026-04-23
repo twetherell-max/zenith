@@ -29,7 +29,7 @@ struct RadialMenuItem: Identifiable, Codable {
             case .script: return "AppleScript"
             case .music: return "Music Control"
             case .settings: return "Settings"
-            case .search: return "Search/Query"
+            case .search: return "Search"
             case .clipboard: return "Clipboard"
             case .custom: return "Custom"
             }
@@ -66,7 +66,7 @@ struct RadialMenuItem: Identifiable, Codable {
         
         var nsColor: NSColor {
             switch self {
-            case .auto: return .white
+            case .auto: return .orange
             case .white: return .white
             case .blue: return .systemBlue
             case .red: return .systemRed

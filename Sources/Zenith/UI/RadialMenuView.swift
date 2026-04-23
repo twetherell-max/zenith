@@ -8,54 +8,57 @@ struct RadialMenuView: View {
     
     var body: some View {
         ZStack {
-            // Background overlay (optional, for focus)
+            // Subtle background overlay
             if state.radialMenuIsOpen {
                 Color.black
-                    .opacity(0.1)
+                    .opacity(0.05)
                     .ignoresSafeArea()
                     .onTapGesture {
                         closeMenu()
                     }
             }
             
-            // Center notch/trigger point
+            // Center notch indicator
             ZStack {
                 Circle()
                     .fill(state.notchColor.color)
                     .opacity(state.notchOpacity)
-                    .frame(width: 30, height: 30)
                 
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 12, weight: .semibold))
+                Image(systemName: "chevron.up")
+                    .font(.system(size: 10, weight: .semibold))
                     .foregroundColor(.white)
-                    .rotationEffect(.degrees(state.radialMenuIsOpen ? 180 : 0))
+                    .rotationEffect(.degrees(state.radialMenuIsOpen ? 0 : 180))
             }
-            .frame(width: 40, height: 40)
+            .frame(width: 35, height: 35)
+            .zIndex(10)
             
             // Radial menu items
             if state.radialMenuIsOpen {
                 ForEach(Array(state.radialMenuItems.enumerated()), id: \.element.id) { index, item in
-                    RadialMenuItemView(
-                        item: item,
-                        index: index,
-                        totalItems: state.radialMenuItems.count,
-                        radius: state.radialMenuRadius,
-                        itemSize: state.radialMenuItemSize,
-                        isHovered: hoveredItemId == item.id,
-                        isAnimating: isAnimating
-                    )
-                    .onHover { isHovered in
-                        hoveredItemId = isHovered ? item.id : nil
-                        if isHovered {
-                            NSFeedbackHelper().lightTap()
+                    if item.isEnabled {
+                        RadialMenuItemView(
+                            item: item,
+                            index: index,
+                            totalItems: state.radialMenuItems.filter { $0.isEnabled }.count,
+                            radius: state.radialMenuRadius,
+                            itemSize: state.radialMenuItemSize,
+                            isHovered: hoveredItemId == item.id,
+                            isAnimating: isAnimating
+                        )
+                        .onHover { isHovered in
+                            hoveredItemId = isHovered ? item.id : nil
+                            if isHovered {
+                                NSFeedbackHelper().lightTap()
+                            }
                         }
-                    }
-                    .onTapGesture {
-                        executeMenuAction(item)
+                        .onTapGesture {
+                            executeMenuAction(item)
+                        }
                     }
                 }
             }
         }
+        .frame(width: state.notchWidth, height: state.notchHeight + 20)
         .onAppear {
             if state.radialMenuIsOpen {
                 animateMenuOpen()
@@ -87,7 +90,6 @@ struct RadialMenuView: View {
     }
     
     private func executeMenuAction(_ item: RadialMenuItem) {
-        // Execute based on action type
         switch item.actionType {
         case .app:
             if !item.actionValue.isEmpty {
@@ -117,7 +119,6 @@ struct RadialMenuView: View {
             break
         }
         
-        // Close menu after action
         closeMenu()
     }
     
@@ -150,9 +151,7 @@ struct RadialMenuView: View {
     }
     
     private func openSearchDialog(query: String) {
-        // Open Spotlight or similar search
         NSApplication.shared.keyWindow?.makeKey()
-        // Could integrate with system search or custom search
     }
     
     private func handleClipboard() {
@@ -197,74 +196,12 @@ struct RadialMenuItemView: View {
             x: isAnimating ? x : 0,
             y: isAnimating ? y : 0
         )
-        .help(item.title) // Tooltip
+        .help(item.title)
     }
     
     private func calculateAngle(index: Int, totalItems: Int) -> Double {
         let angleStep = (2 * Double.pi) / Double(totalItems)
-        let startAngle = -Double.pi / 2 // Start at top
+        let startAngle = -Double.pi / 2
         return startAngle + Double(index) * angleStep
-    }
-}
-
-// MARK: - Radial Menu Coordinator
-
-class RadialMenuCoordinator: NSObject {
-    private var clickDetector: Any?
-    private var hoverDetector: Timer?
-    
-    func setup(notchView: NSView) {
-        let state = ZenithState.shared
-        
-        switch state.radialMenuMode {
-        case .click:
-            setupClickDetection(notchView: notchView)
-        case .hover:
-            setupHoverDetection(notchView: notchView)
-        case .longPress:
-            setupLongPressDetection(notchView: notchView)
-        }
-    }
-    
-    private func setupClickDetection(notchView: NSView) {
-        let gesture = NSClickGestureRecognizer(target: self, action: #selector(handleClick))
-        notchView.addGestureRecognizer(gesture)
-    }
-    
-    private func setupHoverDetection(notchView: NSView) {
-        let trackingArea = NSTrackingArea(
-            rect: notchView.bounds,
-            options: [.mouseEnteredAndExited, .activeAlways],
-            owner: self,
-            userInfo: nil
-        )
-        notchView.addTrackingArea(trackingArea)
-    }
-    
-    private func setupLongPressDetection(notchView: NSView) {
-        let gesture = NSPressGestureRecognizer(target: self, action: #selector(handleLongPress))
-        gesture.minimumPressDuration = 0.5
-        notchView.addGestureRecognizer(gesture)
-    }
-    
-    @objc private func handleClick() {
-        ZenithState.shared.radialMenuIsOpen.toggle()
-    }
-    
-    @objc private func handleLongPress(_ gesture: NSPressGestureRecognizer) {
-        if gesture.state == .began {
-            ZenithState.shared.radialMenuIsOpen = true
-        }
-    }
-    
-    override func mouseEntered(with event: NSEvent) {
-        ZenithState.shared.radialMenuIsOpen = true
-    }
-    
-    override func mouseExited(with event: NSEvent) {
-        hoverDetector?.invalidate()
-        hoverDetector = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { _ in
-            ZenithState.shared.radialMenuIsOpen = false
-        }
     }
 }

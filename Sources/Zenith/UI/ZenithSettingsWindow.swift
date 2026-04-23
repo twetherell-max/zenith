@@ -1171,7 +1171,7 @@ struct ZenithSettingsView: View {
             // Enable/Disable
             GroupBox(label: Label("Radial Menu", systemImage: "circle.hexagongrid")) {
                 VStack(alignment: .leading, spacing: 12) {
-                    Toggle("Enable Radial Menu from Notch", isOn: $state.radialMenuEnabled)
+                    Toggle("Enable Radial Menu", isOn: $state.radialMenuEnabled)
                     
                     if state.radialMenuEnabled {
                         Text("Click the notch to reveal a radial pie menu with quick actions")
@@ -1193,7 +1193,7 @@ struct ZenithSettingsView: View {
                         }
                         .pickerStyle(.segmented)
                         
-                        Text("Click: Tap notch to toggle | Hover: Show on mouse over | Long Press: Hold for menu")
+                        Text("Click: Tap notch | Hover: Mouse over | Long Press: Hold 0.5s")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
@@ -1594,10 +1594,13 @@ struct RadialMenuItemEditor: View {
                     .pickerStyle(.menu)
                     
                     if item.actionType == .app {
-                        TextField("Bundle ID", text: $item.actionValue)
+                        TextField("Bundle ID or Name", text: $item.actionValue)
                             .textFieldStyle(.roundedBorder)
                     } else if item.actionType == .url {
                         TextField("URL", text: $item.actionValue)
+                            .textFieldStyle(.roundedBorder)
+                    } else if item.actionType == .folder {
+                        TextField("Folder Path", text: $item.actionValue)
                             .textFieldStyle(.roundedBorder)
                     }
                     
