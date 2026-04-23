@@ -227,7 +227,38 @@ class ZenithState: ObservableObject {
     @Published var multiMonitorMode: MultiMonitorMode = .primaryOnly {
         didSet { saveSettings() }
     }
-    
+
+    // Radial Menu
+    @Published var radialMenuItems: [RadialMenuItem] = RadialMenuItem.defaultItems {
+        didSet { saveRadialMenuItems() }
+    }
+
+    @Published var radialMenuEnabled: Bool = false {
+        didSet { saveSettings() }
+    }
+
+    @Published var radialMenuMode: RadialMenuMode = .click {
+        didSet { saveSettings() }
+    }
+
+    @Published var radialMenuRadius: Double = 110.0 {
+        didSet { saveSettings() }
+    }
+
+    @Published var radialMenuItemSize: Double = 44.0 {
+        didSet { saveSettings() }
+    }
+
+    @Published var radialMenuAnimationStyle: RadialAnimationStyle = .spring {
+        didSet { saveSettings() }
+    }
+
+    @Published var radialMenuShowLabels: Bool = true {
+        didSet { saveSettings() }
+    }
+
+    @Published var radialMenuIsOpen: Bool = false
+
     // Arc Level System
     @Published var currentLevel: Int = 1
     @Published var expandedCategoryId: UUID?
@@ -404,6 +435,13 @@ class ZenithState: ObservableObject {
         self.notchCornerRadius = settings.notchCornerRadius
         self.notchHeight = settings.notchHeight
         self.multiMonitorMode = settings.multiMonitorMode
+        self.radialMenuEnabled = settings.radialMenuEnabled
+        self.radialMenuMode = settings.radialMenuMode
+        self.radialMenuRadius = settings.radialMenuRadius
+        self.radialMenuItemSize = settings.radialMenuItemSize
+        self.radialMenuAnimationStyle = settings.radialMenuAnimationStyle
+        self.radialMenuShowLabels = settings.radialMenuShowLabels
+        self.radialMenuItems = persistence.loadRadialMenuItems() ?? RadialMenuItem.defaultItems
         
         if let customSegments = persistence.loadCustomSegments() {
             self.arcSegments = customSegments
@@ -462,7 +500,13 @@ class ZenithState: ObservableObject {
             notchOpacity: notchOpacity,
             notchCornerRadius: notchCornerRadius,
             notchHeight: notchHeight,
-            multiMonitorMode: multiMonitorMode
+            multiMonitorMode: multiMonitorMode,
+            radialMenuEnabled: radialMenuEnabled,
+            radialMenuMode: radialMenuMode,
+            radialMenuRadius: radialMenuRadius,
+            radialMenuItemSize: radialMenuItemSize,
+            radialMenuAnimationStyle: radialMenuAnimationStyle,
+            radialMenuShowLabels: radialMenuShowLabels
         )
         persistence.saveUserSettings(settings)
     }
@@ -535,6 +579,12 @@ class ZenithState: ObservableObject {
             notchCornerRadius = settings.notchCornerRadius
             notchHeight = settings.notchHeight
             multiMonitorMode = settings.multiMonitorMode
+            radialMenuEnabled = settings.radialMenuEnabled
+            radialMenuMode = settings.radialMenuMode
+            radialMenuRadius = settings.radialMenuRadius
+            radialMenuItemSize = settings.radialMenuItemSize
+            radialMenuAnimationStyle = settings.radialMenuAnimationStyle
+            radialMenuShowLabels = settings.radialMenuShowLabels
             
             if let customSegments = persistence.loadCustomSegments() {
                 arcSegments = customSegments
@@ -550,6 +600,10 @@ class ZenithState: ObservableObject {
     
     func saveDockButtons() {
         persistence.saveDockButtons(dockButtons)
+    }
+
+    func saveRadialMenuItems() {
+        persistence.saveRadialMenuItems(radialMenuItems)
     }
     
     func addDockButton() {
@@ -660,6 +714,34 @@ class ZenithState: ObservableObject {
 enum AppMode: String, Codable {
     case minimal = "minimal"
     case productivity = "productivity"
+}
+
+enum RadialMenuMode: String, Codable, CaseIterable {
+    case click = "click"
+    case hover = "hover"
+    case longPress = "longPress"
+
+    var displayName: String {
+        switch self {
+        case .click: return "Click"
+        case .hover: return "Hover"
+        case .longPress: return "Long Press"
+        }
+    }
+}
+
+enum RadialAnimationStyle: String, Codable, CaseIterable {
+    case spring = "spring"
+    case easeOut = "easeOut"
+    case bounce = "bounce"
+
+    var displayName: String {
+        switch self {
+        case .spring: return "Spring"
+        case .easeOut: return "Ease Out"
+        case .bounce: return "Bounce"
+        }
+    }
 }
 
 enum NotchColor: String, Codable, CaseIterable {
