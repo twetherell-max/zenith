@@ -228,6 +228,69 @@ class ZenithState: ObservableObject {
         didSet { saveSettings() }
     }
     
+    // Enhanced Notch Management
+    @Published var notchRenderMode: NotchRenderMode = .notchOnly {
+        didSet { saveSettings() }
+    }
+    
+    @Published var notchPreset: NotchPreset = .standard {
+        didSet { 
+            applyNotchPreset(notchPreset)
+            saveSettings() 
+        }
+    }
+    
+    @Published var enableMultiMonitor: Bool = true {
+        didSet { saveSettings() }
+    }
+    
+    @Published var edgeToEdgeOpacity: Double = 0.3 {
+        didSet { saveSettings() }
+    }
+    
+    @Published var notchAnimationDuration: Double = 0.2 {
+        didSet { saveSettings() }
+    }
+    
+    @Published var keyboardShortcutEnabled: Bool = true {
+        didSet { saveSettings() }
+    }
+    
+    @Published var toggleNotchShortcut: String = "cmd+shift+n" {
+        didSet { saveSettings() }
+    }
+    
+    // Radial Menu System
+    @Published var radialMenuItems: [RadialMenuItem] {
+        didSet { saveRadialMenuItems() }
+    }
+    
+    @Published var radialMenuEnabled: Bool = true {
+        didSet { saveSettings() }
+    }
+    
+    @Published var radialMenuMode: RadialMenuMode = .click {
+        didSet { saveSettings() }
+    }
+    
+    @Published var radialMenuRadius: Double = 120.0 {
+        didSet { saveSettings() }
+    }
+    
+    @Published var radialMenuItemSize: Double = 50.0 {
+        didSet { saveSettings() }
+    }
+    
+    @Published var radialMenuAnimationStyle: RadialAnimationStyle = .spring {
+        didSet { saveSettings() }
+    }
+    
+    @Published var radialMenuShowLabels: Bool = true {
+        didSet { saveSettings() }
+    }
+    
+    @Published var radialMenuIsOpen: Bool = false
+    
     // Arc Level System
     @Published var currentLevel: Int = 1
     @Published var expandedCategoryId: UUID?
@@ -292,6 +355,28 @@ class ZenithState: ObservableObject {
         if level == 1 {
             expandedCategoryId = nil
             currentLevel = 1
+        }
+    }
+    
+    private func applyNotchPreset(_ preset: NotchPreset) {
+        switch preset {
+        case .standard:
+            notchWidth = 150
+            notchHeight = 30
+            notchCornerRadius = 18
+            
+        case .mini:
+            notchWidth = 100
+            notchHeight = 25
+            notchCornerRadius = 12
+            
+        case .large:
+            notchWidth = 200
+            notchHeight = 35
+            notchCornerRadius = 20
+            
+        case .custom:
+            break // User customizes manually
         }
     }
     
@@ -404,6 +489,20 @@ class ZenithState: ObservableObject {
         self.notchCornerRadius = settings.notchCornerRadius
         self.notchHeight = settings.notchHeight
         self.multiMonitorMode = settings.multiMonitorMode
+        self.notchRenderMode = settings.notchRenderMode
+        self.notchPreset = settings.notchPreset
+        self.enableMultiMonitor = settings.enableMultiMonitor
+        self.edgeToEdgeOpacity = settings.edgeToEdgeOpacity
+        self.notchAnimationDuration = settings.notchAnimationDuration
+        self.keyboardShortcutEnabled = settings.keyboardShortcutEnabled
+        self.toggleNotchShortcut = settings.toggleNotchShortcut
+        self.radialMenuItems = persistence.loadRadialMenuItems() ?? RadialMenuItem.defaults
+        self.radialMenuEnabled = settings.radialMenuEnabled
+        self.radialMenuMode = settings.radialMenuMode
+        self.radialMenuRadius = settings.radialMenuRadius
+        self.radialMenuItemSize = settings.radialMenuItemSize
+        self.radialMenuAnimationStyle = settings.radialMenuAnimationStyle
+        self.radialMenuShowLabels = settings.radialMenuShowLabels
         
         if let customSegments = persistence.loadCustomSegments() {
             self.arcSegments = customSegments
@@ -462,9 +561,26 @@ class ZenithState: ObservableObject {
             notchOpacity: notchOpacity,
             notchCornerRadius: notchCornerRadius,
             notchHeight: notchHeight,
-            multiMonitorMode: multiMonitorMode
+            multiMonitorMode: multiMonitorMode,
+            notchRenderMode: notchRenderMode,
+            notchPreset: notchPreset,
+            enableMultiMonitor: enableMultiMonitor,
+            edgeToEdgeOpacity: edgeToEdgeOpacity,
+            notchAnimationDuration: notchAnimationDuration,
+            keyboardShortcutEnabled: keyboardShortcutEnabled,
+            toggleNotchShortcut: toggleNotchShortcut,
+            radialMenuEnabled: radialMenuEnabled,
+            radialMenuMode: radialMenuMode,
+            radialMenuRadius: radialMenuRadius,
+            radialMenuItemSize: radialMenuItemSize,
+            radialMenuAnimationStyle: radialMenuAnimationStyle,
+            radialMenuShowLabels: radialMenuShowLabels
         )
         persistence.saveUserSettings(settings)
+    }
+    
+    private func saveRadialMenuItems() {
+        persistence.saveRadialMenuItems(radialMenuItems)
     }
     
     func saveCustomSegments(_ segments: [ArcSegment]) {
@@ -535,6 +651,19 @@ class ZenithState: ObservableObject {
             notchCornerRadius = settings.notchCornerRadius
             notchHeight = settings.notchHeight
             multiMonitorMode = settings.multiMonitorMode
+            notchRenderMode = settings.notchRenderMode
+            notchPreset = settings.notchPreset
+            enableMultiMonitor = settings.enableMultiMonitor
+            edgeToEdgeOpacity = settings.edgeToEdgeOpacity
+            notchAnimationDuration = settings.notchAnimationDuration
+            keyboardShortcutEnabled = settings.keyboardShortcutEnabled
+            toggleNotchShortcut = settings.toggleNotchShortcut
+            radialMenuEnabled = settings.radialMenuEnabled
+            radialMenuMode = settings.radialMenuMode
+            radialMenuRadius = settings.radialMenuRadius
+            radialMenuItemSize = settings.radialMenuItemSize
+            radialMenuAnimationStyle = settings.radialMenuAnimationStyle
+            radialMenuShowLabels = settings.radialMenuShowLabels
             
             if let customSegments = persistence.loadCustomSegments() {
                 arcSegments = customSegments
@@ -679,4 +808,58 @@ enum NotchColor: String, Codable, CaseIterable {
 enum MultiMonitorMode: String, Codable {
     case primaryOnly = "primary"
     case allMonitors = "all"
+}
+
+enum NotchRenderMode: String, Codable, CaseIterable {
+    case notchOnly = "notchOnly"
+    case edgeToEdge = "edgeToEdge"
+    case hiddenNotch = "hidden"
+    
+    var displayName: String {
+        switch self {
+        case .notchOnly: return "Notch Only"
+        case .edgeToEdge: return "Edge-to-Edge"
+        case .hiddenNotch: return "Hidden"
+        }
+    }
+}
+
+enum NotchPreset: String, Codable, CaseIterable {
+    case standard = "standard"
+    case mini = "mini"
+    case large = "large"
+    case custom = "custom"
+    
+    var displayName: String {
+        switch self {
+        case .standard: return "Standard"
+        case .mini: return "Mini"
+        case .large: return "Large"
+        case .custom: return "Custom"
+        }
+    }
+}
+
+enum RadialMenuMode: String, Codable, CaseIterable {
+    case click = "click"
+    case hover = "hover"
+    case longPress = "longPress"
+    
+    var displayName: String {
+        switch self {
+        case .click: return "Click"
+        case .hover: return "Hover"
+        case .longPress: return "Long Press"
+        }
+    }
+}
+
+enum RadialAnimationStyle: String, Codable, CaseIterable {
+    case spring = "spring"
+    case easeOut = "easeOut"
+    case bounce = "bounce"
+    
+    var displayName: String {
+        self.rawValue.capitalized
+    }
 }

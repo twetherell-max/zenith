@@ -19,6 +19,10 @@ class PersistenceManager {
         appSupportDirectory.appendingPathComponent("dock_buttons.json")
     }
     
+    private var radialMenuItemsFile: URL {
+        appSupportDirectory.appendingPathComponent("radial_menu_items.json")
+    }
+    
     private init() {
         let paths = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)
         appSupportDirectory = paths[0].appendingPathComponent("Zenith")
@@ -172,6 +176,31 @@ class PersistenceManager {
             return nil
         }
     }
+    
+    func saveRadialMenuItems(_ items: [RadialMenuItem]) {
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            let data = try encoder.encode(items)
+            try data.write(to: radialMenuItemsFile)
+        } catch {
+            print("Failed to save radial menu items: \(error)")
+        }
+    }
+    
+    func loadRadialMenuItems() -> [RadialMenuItem]? {
+        guard fileManager.fileExists(atPath: radialMenuItemsFile.path) else { return nil }
+        
+        do {
+            let data = try Data(contentsOf: radialMenuItemsFile)
+            let decoder = JSONDecoder()
+            return try decoder.decode([RadialMenuItem].self, from: data)
+        } catch {
+            print("Failed to load radial menu items: \(error)")
+            backupCorruptedFile(at: radialMenuItemsFile)
+            return nil
+        }
+    }
 }
 
 struct UserSettings: Codable {
@@ -240,6 +269,23 @@ struct UserSettings: Codable {
     var notchCornerRadius: Double = 18.0
     var notchHeight: Double = 30.0
     var multiMonitorMode: MultiMonitorMode = .primaryOnly
+    
+    // Enhanced Notch Management
+    var notchRenderMode: NotchRenderMode = .notchOnly
+    var notchPreset: NotchPreset = .standard
+    var enableMultiMonitor: Bool = true
+    var edgeToEdgeOpacity: Double = 0.3
+    var notchAnimationDuration: Double = 0.2
+    var keyboardShortcutEnabled: Bool = true
+    var toggleNotchShortcut: String = "cmd+shift+n"
+    
+    // Radial Menu
+    var radialMenuEnabled: Bool = true
+    var radialMenuMode: RadialMenuMode = .click
+    var radialMenuRadius: Double = 120.0
+    var radialMenuItemSize: Double = 50.0
+    var radialMenuAnimationStyle: RadialAnimationStyle = .spring
+    var radialMenuShowLabels: Bool = true
 }
 
 enum ButtonShape: String, Codable, CaseIterable {

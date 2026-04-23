@@ -377,6 +377,8 @@ enum SettingsSection: String, CaseIterable, Identifiable {
     case interaction = "Interaction"
     case sound = "Sound"
     case widgets = "Widgets"
+    case notchCustomization = "Notch"
+    case radialMenu = "Radial Menu"
     case dockButtons = "Dock Buttons"
     case advanced = "Advanced"
     case shortcuts = "Shortcuts"
@@ -393,6 +395,8 @@ enum SettingsSection: String, CaseIterable, Identifiable {
         case .interaction: return "hand.point.up.fill"
         case .sound: return "speaker.wave.3.fill"
         case .widgets: return "puzzlepiece.fill"
+        case .notchCustomization: return "rectangle.fill"
+        case .radialMenu: return "circle.hexagongrid"
         case .dockButtons: return "square.grid.3x3.fill"
         case .advanced: return "gearshape.2.fill"
         case .shortcuts: return "keyboard"
@@ -526,6 +530,10 @@ struct ZenithSettingsView: View {
                     soundSection
                 case .widgets:
                     widgetsSection
+                case .notchCustomization:
+                    notchCustomizationSection
+                case .radialMenu:
+                    radialMenuSection
                 case .dockButtons:
                     dockButtonsSection
                 case .advanced:
@@ -1041,6 +1049,221 @@ struct ZenithSettingsView: View {
         }
     }
     
+    private var notchCustomizationSection: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            // App Mode selector
+            GroupBox(label: Label("Application Mode", systemImage: "slider.horizontal")) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Picker("Mode", selection: $state.appMode) {
+                        Text("Minimal (Notch Only)").tag(ZenithState.AppMode.minimal)
+                        Text("Productivity (Full Suite)").tag(ZenithState.AppMode.productivity)
+                    }
+                    .pickerStyle(.segmented)
+                }
+                .padding(.vertical, 8)
+            }
+            
+            if state.appMode == .minimal {
+                // Render mode selector
+                GroupBox(label: Label("Render Mode", systemImage: "rectangle.fill")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Picker("Render Mode", selection: $state.notchRenderMode) {
+                            ForEach(ZenithState.NotchRenderMode.allCases, id: \.self) { mode in
+                                Text(mode.displayName).tag(mode)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        
+                        Text("Notch Only: Just the notch shape | Edge-to-Edge: Full top bar overlay")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 8)
+                }
+                
+                // Presets
+                GroupBox(label: Label("Quick Presets", systemImage: "wand.and.stars")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(spacing: 8) {
+                            ForEach(ZenithState.NotchPreset.allCases, id: \.self) { preset in
+                                Button(action: { state.notchPreset = preset }) {
+                                    Text(preset.displayName)
+                                        .font(.caption)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(6)
+                                        .background(state.notchPreset == preset ? Color.orange : Color.gray.opacity(0.2))
+                                        .foregroundColor(state.notchPreset == preset ? .white : .primary)
+                                        .cornerRadius(4)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                    .padding(.vertical, 8)
+                }
+                
+                // Appearance
+                GroupBox(label: Label("Appearance", systemImage: "paintbrush")) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        sliderRow(label: "Width", value: $state.notchWidth, range: 100...300, displayTransform: { "\(Int($0))px" })
+                        sliderRow(label: "Height", value: $state.notchHeight, range: 20...50, displayTransform: { "\(Int($0))px" })
+                        sliderRow(label: "Corner Radius", value: $state.notchCornerRadius, range: 0...30, displayTransform: { "\(Int($0))px" })
+                        sliderRow(label: "Opacity", value: $state.notchOpacity, range: 0.3...1.0, displayTransform: { "\(Int($0 * 100))%" })
+                        
+                        Divider()
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Color").font(.caption)
+                            Picker("Color", selection: $state.notchColor) {
+                                ForEach(ZenithState.NotchColor.allCases, id: \.self) { color in
+                                    Text(color.rawValue.capitalized).tag(color)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                        }
+                        
+                        if state.notchRenderMode == .edgeToEdge {
+                            VStack(alignment: .leading, spacing: 4) {
+                                sliderRow(label: "Overlay Opacity", value: $state.edgeToEdgeOpacity, range: 0.1...1.0, displayTransform: { "\(Int($0 * 100))%" })
+                            }
+                        }
+                    }
+                    .padding(.vertical, 8)
+                }
+                
+                // Multi-Monitor
+                GroupBox(label: Label("Display Options", systemImage: "display")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Toggle("Enable Multi-Monitor", isOn: $state.enableMultiMonitor)
+                        Text("Show notch on all connected monitors when enabled")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 8)
+                }
+                
+                // Keyboard Shortcut
+                GroupBox(label: Label("Keyboard Shortcut", systemImage: "keyboard")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Toggle("Enable Keyboard Shortcut", isOn: $state.keyboardShortcutEnabled)
+                        
+                        if state.keyboardShortcutEnabled {
+                            HStack {
+                                TextField("Shortcut", text: $state.toggleNotchShortcut)
+                                    .textFieldStyle(.roundedBorder)
+                                Text("e.g., cmd+shift+n")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                            Text("Press keyboard shortcut to toggle notch visibility")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 8)
+                }
+            }
+        }
+    }
+    
+    private var radialMenuSection: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            // Enable/Disable
+            GroupBox(label: Label("Radial Menu", systemImage: "circle.hexagongrid")) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Toggle("Enable Radial Menu from Notch", isOn: $state.radialMenuEnabled)
+                    
+                    if state.radialMenuEnabled {
+                        Text("Click the notch to reveal a radial pie menu with quick actions")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(.vertical, 8)
+            }
+            
+            if state.radialMenuEnabled && state.appMode == .minimal {
+                // Interaction Mode
+                GroupBox(label: Label("Trigger Mode", systemImage: "hand.tap.fill")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Picker("How to trigger menu", selection: $state.radialMenuMode) {
+                            ForEach(ZenithState.RadialMenuMode.allCases, id: \.self) { mode in
+                                Text(mode.displayName).tag(mode)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        
+                        Text("Click: Tap notch to toggle | Hover: Show on mouse over | Long Press: Hold for menu")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 8)
+                }
+                
+                // Menu Appearance
+                GroupBox(label: Label("Menu Appearance", systemImage: "paintbrush")) {
+                    VStack(alignment: .leading, spacing: 16) {
+                        sliderRow(
+                            label: "Menu Radius",
+                            value: $state.radialMenuRadius,
+                            range: 80...160,
+                            displayTransform: { "\(Int($0))px" }
+                        )
+                        
+                        sliderRow(
+                            label: "Item Size",
+                            value: $state.radialMenuItemSize,
+                            range: 30...70,
+                            displayTransform: { "\(Int($0))px" }
+                        )
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Animation Style").font(.caption)
+                            Picker("", selection: $state.radialMenuAnimationStyle) {
+                                ForEach(ZenithState.RadialAnimationStyle.allCases, id: \.self) { style in
+                                    Text(style.displayName).tag(style)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                        }
+                        
+                        Toggle("Show Item Labels", isOn: $state.radialMenuShowLabels)
+                    }
+                    .padding(.vertical, 8)
+                }
+                
+                // Menu Items Configuration
+                GroupBox(label: Label("Menu Items", systemImage: "circle.grid.3x3")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text("Items: \(state.radialMenuItems.count)")
+                                .font(.caption)
+                            
+                            Spacer()
+                            
+                            Button("Add Item") {
+                                var newItem = RadialMenuItem()
+                                newItem.title = "New Item"
+                                state.radialMenuItems.append(newItem)
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                        }
+                        
+                        Divider()
+                        
+                        ForEach(Array(state.radialMenuItems.enumerated()), id: \.element.id) { index, _ in
+                            RadialMenuItemEditor(item: $state.radialMenuItems[index]) {
+                                state.radialMenuItems.remove(at: index)
+                            }
+                        }
+                    }
+                    .padding(.vertical, 8)
+                }
+            }
+        }
+    }
+    
     private var dockButtonsSection: some View {
         VStack(alignment: .leading, spacing: 20) {
             GroupBox(label: Label("Configuration", systemImage: "square.grid.3x3")) {
@@ -1326,6 +1549,79 @@ struct ZenithSettingsView: View {
             }
             Slider(value: value, in: range)
         }
+    }
+}
+
+struct RadialMenuItemEditor: View {
+    @Binding var item: RadialMenuItem
+    let onDelete: () -> Void
+    @State private var isExpanded = false
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: item.icon)
+                    .font(.title2)
+                    .frame(width: 32)
+                
+                VStack(alignment: .leading) {
+                    TextField("Title", text: $item.title)
+                        .textFieldStyle(.roundedBorder)
+                    
+                    Text(item.actionType.displayName)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                Button(action: onDelete) {
+                    Image(systemName: "trash")
+                        .foregroundColor(.red)
+                }
+                .buttonStyle(.plain)
+            }
+            
+            if isExpanded {
+                Divider()
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    Picker("Action Type", selection: $item.actionType) {
+                        ForEach(RadialMenuItem.ActionType.allCases, id: \.self) { type in
+                            Text(type.displayName).tag(type)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    
+                    if item.actionType == .app {
+                        TextField("Bundle ID", text: $item.actionValue)
+                            .textFieldStyle(.roundedBorder)
+                    } else if item.actionType == .url {
+                        TextField("URL", text: $item.actionValue)
+                            .textFieldStyle(.roundedBorder)
+                    }
+                    
+                    Picker("Color", selection: $item.color) {
+                        ForEach(RadialMenuItem.MenuItemColor.allCases, id: \.self) { color in
+                            Text(color.displayName).tag(color)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+            }
+            
+            Button(isExpanded ? "Less" : "More") {
+                withAnimation {
+                    isExpanded.toggle()
+                }
+            }
+            .font(.caption)
+            .buttonStyle(.plain)
+            .foregroundColor(.blue)
+        }
+        .padding(12)
+        .background(Color.gray.opacity(0.1))
+        .cornerRadius(10)
     }
 }
 

@@ -3,14 +3,20 @@ import AppKit
 
 struct MinimalNotchView: View {
     @ObservedObject private var state = ZenithState.shared
+    @State private var isNotchHovered = false
     
     var body: some View {
         ZStack {
             if state.appMode == .minimal {
-                // MINIMAL MODE: Only notch overlay
-                VStack {
-                    notchShape()
-                    Spacer()
+                if state.radialMenuEnabled && state.radialMenuIsOpen {
+                    // Show radial menu
+                    RadialMenuView()
+                } else {
+                    // Show only notch
+                    VStack {
+                        notchShape()
+                        Spacer()
+                    }
                 }
             } else {
                 // PRODUCTIVITY MODE: Keep existing views
@@ -18,6 +24,25 @@ struct MinimalNotchView: View {
             }
         }
         .background(Color.clear)
+        .onHover { isHovered in
+            isNotchHovered = isHovered
+            if state.radialMenuEnabled && state.radialMenuMode == .hover {
+                if isHovered {
+                    state.radialMenuIsOpen = true
+                } else {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        if !isNotchHovered {
+                            state.radialMenuIsOpen = false
+                        }
+                    }
+                }
+            }
+        }
+        .onTapGesture {
+            if state.radialMenuEnabled && state.radialMenuMode == .click {
+                state.radialMenuIsOpen.toggle()
+            }
+        }
     }
     
     @ViewBuilder
@@ -27,15 +52,27 @@ struct MinimalNotchView: View {
                 Spacer()
                     .frame(maxWidth: .infinity)
                 
-                // The notch shape
-                UnevenRoundedRectangle(
-                    topLeadingRadius: state.notchCornerRadius,
-                    topTrailingRadius: state.notchCornerRadius,
-                    bottomLeadingRadius: 0,
-                    bottomTrailingRadius: 0
-                )
-                .fill(state.notchColor.color)
-                .opacity(state.notchOpacity)
+                // The notch shape with interactive areas
+                ZStack {
+                    UnevenRoundedRectangle(
+                        topLeadingRadius: state.notchCornerRadius,
+                        topTrailingRadius: state.notchCornerRadius,
+                        bottomLeadingRadius: 0,
+                        bottomTrailingRadius: 0
+                    )
+                    .fill(state.notchColor.color)
+                    .opacity(state.notchOpacity)
+                    
+                    // Dropdown indicator
+                    if state.radialMenuEnabled {
+                        VStack(spacing: 2) {
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 8, weight: .semibold))
+                                .foregroundColor(.white)
+                                .opacity(0.6)
+                        }
+                    }
+                }
                 .frame(width: state.notchWidth, height: state.notchHeight)
                 
                 Spacer()

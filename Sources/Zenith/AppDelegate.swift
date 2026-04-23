@@ -1061,6 +1061,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NativeRadialDockDelegate {
         
         // Initialize notch window manager for minimal mode
         _ = NotchWindowManager.shared
+        
+        // Initialize notch keyboard shortcut manager
+        NotchShortcutManager.shared.setup()
 
         if self.zenithWindow == nil {
             print(">>> Creating Zenith Window...")
