@@ -444,8 +444,8 @@ struct SettingsPanelView: View {
             Text("MODE").font(.system(size: 11, weight: .semibold)).foregroundColor(.secondary)
             
             Picker("App Mode", selection: $state.appMode) {
-                Text("Minimal (Notch Only)").tag(ZenithState.AppMode.minimal)
-                Text("Productivity (Full Suite)").tag(ZenithState.AppMode.productivity)
+                Text("Minimal (Notch Only)").tag(AppMode.minimal)
+                Text("Productivity (Full Suite)").tag(AppMode.productivity)
             }
             .pickerStyle(.segmented)
         }
@@ -520,8 +520,8 @@ struct SettingsPanelView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Multi-Monitor").font(.subheadline)
                     Picker("Monitors", selection: $state.multiMonitorMode) {
-                        Text("Primary Only").tag(ZenithState.MultiMonitorMode.primaryOnly)
-                        Text("All Monitors").tag(ZenithState.MultiMonitorMode.allMonitors)
+                        Text("Primary Only").tag(MultiMonitorMode.primaryOnly)
+                        Text("All Monitors").tag(MultiMonitorMode.allMonitors)
                     }
                     .pickerStyle(.segmented)
                 }

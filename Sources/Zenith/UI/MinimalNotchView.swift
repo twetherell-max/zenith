@@ -38,11 +38,11 @@ struct MinimalNotchView: View {
                     // The notch shape
                     UnevenRoundedRectangle(
                         topLeadingRadius: state.notchCornerRadius,
-                        topTrailingRadius: state.notchCornerRadius,
                         bottomLeadingRadius: 0,
-                        bottomTrailingRadius: 0
+                        bottomTrailingRadius: 0,
+                        topTrailingRadius: state.notchCornerRadius
                     )
-                    .fill(state.notchColor.color)
+                    .fill(Color(state.notchColor.color))
                     .opacity(state.notchOpacity)
                     .frame(width: state.notchWidth, height: state.notchHeight)
 

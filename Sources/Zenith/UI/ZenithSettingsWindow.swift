@@ -530,6 +530,8 @@ struct ZenithSettingsView: View {
                     widgetsSection
                 case .dockButtons:
                     dockButtonsSection
+                case .radialMenu:
+                    radialMenuSection
                 case .advanced:
                     advancedSection
                 case .shortcuts:
@@ -1104,15 +1106,99 @@ struct ZenithSettingsView: View {
         }
     }
     
+    private var radialMenuSection: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            GroupBox(label: Label("Enable Radial Menu", systemImage: "circle.hexagongrid.fill")) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Toggle("Enable Radial Menu", isOn: $state.radialMenuEnabled)
+
+                    if state.radialMenuEnabled {
+                        Text("A circular quick-action menu appears around the notch when triggered.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Trigger Mode")
+                                .font(.caption)
+                            Picker("Trigger", selection: $state.radialMenuMode) {
+                                ForEach(RadialMenuMode.allCases, id: \.self) { mode in
+                                    Text(mode.displayName).tag(mode)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                        }
+                    }
+                }
+                .padding(.vertical, 8)
+            }
+
+            if state.radialMenuEnabled {
+                GroupBox(label: Label("Appearance", systemImage: "paintbrush")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        sliderRow(label: "Radius", value: $state.radialMenuRadius, range: 80...160, displayTransform: { "\(Int($0))px" })
+                        sliderRow(label: "Item Size", value: $state.radialMenuItemSize, range: 30...70, displayTransform: { "\(Int($0))px" })
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Animation Style")
+                                .font(.caption)
+                            Picker("Animation", selection: $state.radialMenuAnimationStyle) {
+                                ForEach(RadialAnimationStyle.allCases, id: \.self) { style in
+                                    Text(style.displayName).tag(style)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                        }
+
+                        Toggle("Show Labels", isOn: $state.radialMenuShowLabels)
+                    }
+                    .padding(.vertical, 8)
+                }
+
+                GroupBox(label: Label("Menu Items", systemImage: "list.bullet")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text("Items")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                            Spacer()
+                            Button("Reset to Defaults") {
+                                state.radialMenuItems = RadialMenuItem.defaultItems
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+
+                            Button("Add Item") {
+                                state.radialMenuItems.append(RadialMenuItem(
+                                    title: "New Item",
+                                    icon: "⭐️",
+                                    actionType: .app
+                                ))
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                        }
+
+                        ForEach(Array(state.radialMenuItems.enumerated()), id: \.element.id) { index, _ in
+                            RadialMenuItemEditor(item: $state.radialMenuItems[index]) {
+                                state.radialMenuItems.remove(at: index)
+                            }
+                        }
+                    }
+                    .padding(.vertical, 8)
+                }
+            }
+        }
+    }
+
     private var shortcutsSection: some View {
         VStack(alignment: .leading, spacing: 20) {
             GroupBox(label: Label("Keyboard Shortcuts", systemImage: "keyboard")) {
                 VStack(alignment: .leading, spacing: 16) {
                     shortcutRow(keys: "Cmd+Shift+Z", description: "Toggle Zen Mode / Show Dock")
                     shortcutRow(keys: "Cmd+Option+J", description: "Pulse Animation")
-                    
+
                     Divider()
-                    
+
                     HStack {
                         Image(systemName: "info.circle.fill")
                             .foregroundColor(.blue)
@@ -1327,6 +1413,112 @@ struct ZenithSettingsView: View {
                     .frame(width: 50, alignment: .trailing)
             }
             Slider(value: value, in: range)
+        }
+    }
+}
+
+// MARK: - RadialMenuItemEditor
+
+struct RadialMenuItemEditor: View {
+    @Binding var item: RadialMenuItem
+    let onDelete: () -> Void
+    @State private var isExpanded = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(item.icon)
+                    .font(.title2)
+                    .frame(width: 36)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    TextField("Title", text: $item.title)
+                        .textFieldStyle(.roundedBorder)
+                    Text(item.actionType.displayName)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                Toggle("", isOn: $item.isEnabled)
+                    .labelsHidden()
+
+                Button(action: onDelete) {
+                    Image(systemName: "trash")
+                        .foregroundColor(.red)
+                }
+                .buttonStyle(.plain)
+
+                Button(isExpanded ? "Less" : "More") {
+                    withAnimation { isExpanded.toggle() }
+                }
+                .font(.caption)
+                .buttonStyle(.plain)
+                .foregroundColor(.blue)
+            }
+
+            if isExpanded {
+                Divider()
+
+                HStack {
+                    Text("Icon:")
+                        .font(.caption)
+                        .frame(width: 60, alignment: .leading)
+                    TextField("Emoji", text: $item.icon)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 60)
+                }
+
+                HStack {
+                    Text("Action:")
+                        .font(.caption)
+                        .frame(width: 60, alignment: .leading)
+                    Picker("", selection: $item.actionType) {
+                        ForEach(RadialMenuItem.ActionType.allCases, id: \.self) { type in
+                            Text(type.displayName).tag(type)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                }
+
+                if item.actionType != .settings && item.actionType != .clipboard {
+                    HStack {
+                        Text("Value:")
+                            .font(.caption)
+                            .frame(width: 60, alignment: .leading)
+                        TextField(actionValuePlaceholder, text: $item.actionValue)
+                            .textFieldStyle(.roundedBorder)
+                    }
+                }
+
+                HStack {
+                    Text("Color:")
+                        .font(.caption)
+                        .frame(width: 60, alignment: .leading)
+                    TextField("#FFFFFF", text: $item.color)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 80)
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color(hex: item.color))
+                        .frame(width: 20, height: 20)
+                }
+            }
+        }
+        .padding(10)
+        .background(Color.gray.opacity(0.08))
+        .cornerRadius(8)
+    }
+
+    private var actionValuePlaceholder: String {
+        switch item.actionType {
+        case .app: return "com.apple.Safari"
+        case .folder: return "/Users/me/Downloads"
+        case .url: return "https://example.com"
+        case .script: return "tell application..."
+        case .music: return "playPause"
+        case .search: return "query"
+        default: return "value"
         }
     }
 }
